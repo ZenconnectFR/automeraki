@@ -1,14 +1,6 @@
 # AutoMeraki
 
-This template should help get you started developing with Vue 3 in Vite.
-
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+Chrome extension to add templating to Meraki Dashboard.
 
 ## Project Setup
 
@@ -16,14 +8,22 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Compile and Hot-Reload for Development (App only)
 
 ```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+### Compile for Development
 
 ```sh
 npm run build
+```
+Reload the extension in the Chrome extension page.
+
+### Compile for production ()
+
+```sh
+npm run build
+# ./make-extension    # For later use, will create a folder with only the necessary files for the extension.
 ```
