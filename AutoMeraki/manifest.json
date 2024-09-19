@@ -3,15 +3,21 @@
     "name": "Auto Meraki",
     "description": "Templating app for fast network configuration in Meraki Dashboard",
     "version": "0.0.1",
-    "permissions": ["tabs", "storage", "activeTab"],
-    "host_permissions": ["https://*.meraki.com/*"],
+    "permissions": [
+        "tabs", "storage", "activeTab", "webNavigation", "webRequest", "webRequestBlocking",
+        "https://*.meraki.com/*", "*://localhost:8000/*", "*://localhost:8000"
+    ],
+    "host_permissions": ["https://*.meraki.com/*", "*://localhost:8000/*", "*://localhost:8000"],
     "content_scripts": [
         {
-            "matches": ["https://*.meraki.com/*/manage/networks/new"],
-            "js": ["./extension/contentScript.js"],
+            "matches": ["https://*.meraki.com/*/manage/networks/new", "https://*.meraki.com/*/manage/*/new_network"],
+            "js": ["./extension/contentScript.js", "./extension/messageHandler.js"],
             "css": ["./extension/extension.css"]
         }
     ],
+    "background": {
+        "service_worker": "./extension/background.js"
+    },
     "web_accessible_resources": [
         {
             "resources": ["dist/assets/*.js", "dist/assets/*.css"],

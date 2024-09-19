@@ -25,6 +25,12 @@ closeButton.onclick = () => {
 // Get the new network setup container (where the options for creating a new network are displayed)
 let setupContainer = document.querySelectorAll("[data-testid=set_up_container]")[0];
 
+// Might be null if the page has the old ui
+if (!setupContainer) {
+    // Get the container on the old ui
+    setupContainer = document.querySelectorAll("[data-testid=\"Network configuration-config-item\"]")[0];
+}
+
 // Add the close button to the popup window
 popupWindow.appendChild(closeButton);
 
@@ -84,3 +90,5 @@ function addButton() {
 
 // Call the function to add the button
 addButton();
+
+// Retrive the org ID from window.dataLayer and pass it to the Vue app via the
