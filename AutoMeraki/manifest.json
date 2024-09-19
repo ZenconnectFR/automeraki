@@ -11,13 +11,10 @@
     "content_scripts": [
         {
             "matches": ["https://*.meraki.com/*/manage/networks/new", "https://*.meraki.com/*/manage/*/new_network"],
-            "js": ["./extension/contentScript.js", "./extension/messageHandler.js"],
+            "js": ["./extension/contentScript.js"],
             "css": ["./extension/extension.css"]
         }
     ],
-    "background": {
-        "service_worker": "./extension/background.js"
-    },
     "web_accessible_resources": [
         {
             "resources": ["dist/assets/*.js", "dist/assets/*.css"],
