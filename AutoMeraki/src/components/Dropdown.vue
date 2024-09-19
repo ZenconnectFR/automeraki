@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 
 const search = ref('')
 const showDropdown = ref(false)
@@ -13,9 +14,15 @@ const props = defineProps({
     }
 })
 
-const toggleDropdown = () => {
-    showDropdown.value = !showDropdown.value
+const openDropdown = () => {
+    showDropdown.value = true
 }
+
+const closeDropdown = () => {
+    showDropdown.value = false
+}
+
+onClickOutside(document.body, closeDropdown)
 
 const filterOptions = () => {
     const searchValue = search.value.toLowerCase()
@@ -28,10 +35,13 @@ const filterOptions = () => {
     filteredOptions.value = filteredValues
 }
 
+const emit = defineEmits(['select-option'])
+
 const selectOption = (option) => {
     selectedOption.value = option
     search.value = option.name
     showDropdown.value = false
+    emit('select-option', option)
 }
 
 watch(
@@ -48,7 +58,7 @@ watch(
 
 <template>
     <div id="dropdown-container">
-        <input v-model="search" type="text" placeholder="Select or search network" @click="toggleDropdown" @input="filterOptions" id="dropdown-input">
+        <input v-model="search" type="text" placeholder="Select or search network" @click="openDropdown" @input="filterOptions" id="dropdown-input">
 
         <ul v-if="showDropdown" id="dropdown-list">
             <li v-for="option in filteredOptions" :key="option.id" @click="selectOption(option)" class="dropdown-item">

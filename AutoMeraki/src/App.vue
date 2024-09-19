@@ -15,7 +15,6 @@ if (window.dataLayer) {
     orgId.value = '-1';
   }
 } else {
-  console.log('No dataLayer object found, setting to default orgId');
   orgId.value = '738027388935340172';
 }
 
@@ -38,20 +37,52 @@ const getNetworks = async () => {
 const networkOptions = ref([])
 
 const populateNetworkOptions = () => {
-  let i = 1;
   for (const network of Object.values(networks.value)) {
-    console.log(network.name)
     networkOptions.value.push({
-      id : i++,
+      id : network.id,
       name: network.name
     });
+  }
+}
+
+const selectedNetwork = ref({})
+
+// Set the selected network
+const setNetworkOption = (option) => {
+  selectedNetwork.value = option
+}
+
+const newNetworkNameInput = ref('')
+
+const newNetworkId = ref('')
+const newNetworkName = ref('')
+
+const cloneNetwork = async () => {
+  if (!selectedNetwork.value.id) {
+    console.log('No network selected')
+    return
+  }
+  if (!newNetworkNameInput.value) {
+    console.log('No new network name entered')
+    return
+  }
+  console.log('Cloning network with body: id: ', selectedNetwork.value.id, ' name: ', newNetworkNameInput.value)
+  try {
+    const response = await Axios.post(`http://localhost:8000/networks/clone`, {
+      network_id: selectedNetwork.value.id,
+      name: newNetworkNameInput.value,
+      org_id: orgId.value
+    })
+    newNetworkId.value = response.data.id
+    newNetworkName.value = response.data.name
+  } catch (error) {
+    console.error(error)
   }
 }
 
 const setup = async () => {
   await getNetworks()
   populateNetworkOptions()
-  console.log(networkOptions.value)
 }
 
 onMounted(()  => {
@@ -64,7 +95,13 @@ onMounted(()  => {
   <div id="welcome">
     <h1>Welcome to AutoMeraki</h1>
     <p>Organization ID: {{ orgId }}</p>
-    <Dropdown :options="networkOptions" />
+    <Dropdown :options="networkOptions" @select-option="setNetworkOption" />
+    <p v-if="selectedNetwork.name">Selected Network: {{ selectedNetwork.name }}</p>
+    <input v-if="selectedNetwork.name" v-model="newNetworkNameInput" type="text" placeholder="Enter new network name" />
+    <button v-if="selectedNetwork.name" @click="cloneNetwork">Clone Network</button>
+    <p v-if="selectedNetwork.name">Input is {{ newNetworkNameInput }}</p>
+    <p v-if="newNetworkId">New Network ID: {{ newNetworkId }}</p>
+    <p v-if="newNetworkName">New Network Name: {{ newNetworkName }}</p>
   </div>
 </template>
 
