@@ -1,37 +1,12 @@
 <script setup>
-import {ref, onMounted } from 'vue'
-import Dropdown from './components/Dropdown.vue'
-import Axios from 'axios'
 
-const orgId = ref('')
-
-// get the orgId from the window.dataLayer object
-if (window.dataLayer) {
-  const orgIdData = window.dataLayer.find((data) => data.organizationId)
-  if (orgIdData) {
-    orgId.value = orgIdData.organizationId
-  } else {
-    console.log('No organizationId found in the dataLayer object');
-    orgId.value = '-1';
-  }
-} else {
-  orgId.value = '738027388935340172';
-}
+// Get the organization ID, first we try to get it from the window.dataLayer object
+// if not present, prompt the user to enter it
 
 // Get the list of networks for the organization
 
-
+/*
 const networks = ref([])
-
-// Get the list of networks for the organization
-const getNetworks = async () => {
-  try {
-    const response = await Axios.get(`http://localhost:8000/networks/${orgId.value}`)
-    networks.value = response.data
-  } catch (error) {
-    console.error(error)
-  }
-}
 
 // Populate the network options for the dropdown
 const networkOptions = ref([])
@@ -52,36 +27,36 @@ const setNetworkOption = (option) => {
   selectedNetwork.value = option
 }
 
+
 const newNetworkNameInput = ref('')
+const newNetworkAdress = ref('')
 
 const newNetworkId = ref('')
 const newNetworkName = ref('')
 
-const cloneNetwork = async () => {
-  if (!selectedNetwork.value.id) {
-    console.log('No network selected')
-    return
+const cloneNetworkEvent = async () => {
+  const response = await cloneNetwork(selectedNetwork.value, newNetworkNameInput.value, orgId.value)
+  if (response) {
+    newNetworkId.value = response.newNetworkId
+    newNetworkName.value = response.newNetworkName
+  } else {
+    console.log('Error cloning network')
   }
-  if (!newNetworkNameInput.value) {
-    console.log('No new network name entered')
-    return
-  }
-  console.log('Cloning network with body: id: ', selectedNetwork.value.id, ' name: ', newNetworkNameInput.value)
-  try {
-    const response = await Axios.post(`http://localhost:8000/networks/clone`, {
-      network_id: selectedNetwork.value.id,
-      name: newNetworkNameInput.value,
-      org_id: orgId.value
-    })
-    newNetworkId.value = response.data.id
-    newNetworkName.value = response.data.name
-  } catch (error) {
-    console.error(error)
+}
+
+const newNetworkDevices = ref('')
+
+const addDevices = async () => {
+  const response = await ClaimDevices(newNetworkId.value, newNetworkDevices.value)
+  if (response) {
+    console.log('Devices added to network', response)
+  } else {
+    console.log('Error adding devices to network')
   }
 }
 
 const setup = async () => {
-  await getNetworks()
+  networks.value = await getNetworks(orgId.value)
   populateNetworkOptions()
 }
 
@@ -89,19 +64,53 @@ onMounted(()  => {
   setup();
 })
 
+----------------
+<div id="welcome">
+  <h1>Welcome to AutoMeraki</h1>
+  <template v-if="orgId === '-1'">
+    <Dropdown :options="organizationOptions" @select-option="setOrganizationOptions" />
+  </template>
+  <template v-if="orgId !== '-1'">
+    <p>Organization ID: {{ orgId }}</p>
+    <Dropdown :options="networkOptions" @select-option="setNetworkOption" />
+  </template>
+  <p v-if="selectedNetwork.name">Selected Network: {{ selectedNetwork.name }}</p>
+  <input v-if="selectedNetwork.name" v-model="newNetworkNameInput" type="text" placeholder="Enter new network name" />
+  <input v-if="selectedNetwork.name" v-model="newNetworkAdress" type="text" placeholder="Enter new network address" />
+  <button v-if="selectedNetwork.name" @click="cloneNetworkEvent">Clone Network</button>
+  <p v-if="newNetworkId">New Network ID: {{ newNetworkId }}</p>
+  <p v-if="newNetworkName">New Network Name: {{ newNetworkName }}</p>
+  <p v-if="newNetworkAdress">New Network Address: {{ newNetworkAdress }}</p>
+  <textarea v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials"></textarea>
+  <button v-if="newNetworkId" @click="addDevices">Add Devices</button>
+</div>
+----------------
+
+*/
+
+// ---------------------------------------------------
+
+/**
+ * Structure for the project :
+ * Main page (this) : Will allow to navigate to the different pages which will be components
+ * For now, only 3 pages will be implemented: Setup, Claim, and Vlan
+ * Pages :
+ * - Setup : page 1/3, sets up the organization and network to copy from, choose the name and address of the new network
+ * - Claim : page 2/3, Asks the user to enter the serials of the devices to claim, claims them to the new network on confirmation
+ * - Vlan : page 3/3, Shows the vlan configuration of the new network, the configuration can be edited and saved
+ *
+ * The pages will be components that will be displayed in the main page. Here we will implement the navigation between the pages.
+ */
+
+
+
 </script>
 
 <template>
   <div id="welcome">
     <h1>Welcome to AutoMeraki</h1>
-    <p>Organization ID: {{ orgId }}</p>
-    <Dropdown :options="networkOptions" @select-option="setNetworkOption" />
-    <p v-if="selectedNetwork.name">Selected Network: {{ selectedNetwork.name }}</p>
-    <input v-if="selectedNetwork.name" v-model="newNetworkNameInput" type="text" placeholder="Enter new network name" />
-    <button v-if="selectedNetwork.name" @click="cloneNetwork">Clone Network</button>
-    <p v-if="selectedNetwork.name">Input is {{ newNetworkNameInput }}</p>
-    <p v-if="newNetworkId">New Network ID: {{ newNetworkId }}</p>
-    <p v-if="newNetworkName">New Network Name: {{ newNetworkName }}</p>
+    <p>We are refactoring the project to avoid having too many modifications to do in the future.<br>
+    Come back later !</p>
   </div>
 </template>
 

@@ -8,6 +8,16 @@ popupWindow.id = "popup-window";
 // Since the popup window is a dialog element, it is hidden by default and can be shown by calling the showModal() method (see close button event)
 let vueContainer = document.createElement('div');
 vueContainer.id = "app";
+
+// ask background script for the org ID
+console.log('[IKO] asking for org id');
+chrome.runtime.sendMessage({ message: "getOrgId" }, (response) => {
+    console.log("[IKO] response", response);
+    if (response.orgId) {
+        vueContainer.setAttribute("data-org-id", response.orgId);
+    }
+});
+
 popupWindow.appendChild(vueContainer);
 
 // add close button to the popup window
@@ -48,12 +58,6 @@ injectVueApp = () => {
     // Inject the vue app script
     const script = document.createElement("script");
     script.src = chrome.runtime.getURL("dist/assets/app.js");
-    script.onload = () => {
-        const appElt = document.createElement("div");
-        appElt.id = "app";
-        document.getElementById("popup-window").appendChild(appElt);
-    }
-
     document.body.appendChild(script);
 }
 

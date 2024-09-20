@@ -58,7 +58,7 @@ watch(
 
 <template>
     <div id="dropdown-container">
-        <input v-model="search" type="text" placeholder="Select or search network" @click="openDropdown" @input="filterOptions" id="dropdown-input">
+        <input v-model="search" type="text" placeholder="Select or search" @click="openDropdown" @input="filterOptions" id="dropdown-input">
 
         <ul v-if="showDropdown" id="dropdown-list">
             <li v-for="option in filteredOptions" :key="option.id" @click="selectOption(option)" class="dropdown-item">
