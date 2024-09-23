@@ -4,7 +4,7 @@
  */
 
 import Axios from 'axios'
-import { parseDevices } from '../utils/Misc.vue'
+import { parseDevices } from '../../Utils/Misc.vue'
 
 export async function ClaimDevices(newNetworkId, newNetworkDevices) {
   if (!newNetworkId) {

@@ -35,6 +35,15 @@ def del_logs():
     os.system("rm meraki_api__log*")
     return {"Logs": "Deleted"}
 
+# delete new test networks (ie. all networks with id different from : L_738027388935340791)
+@app.get("/del_test_networks")
+def del_test_networks():
+    networks = dashboard.organizations.getOrganizationNetworks("738027388935340172", total_pages='all')
+    for network in networks:
+        if network["id"] != "L_738027388935340791":
+            dashboard.networks.deleteNetwork(network["id"])
+    return {"Networks": "Deleted"}
+
 
 # Get all organizations
 @app.get("/organizations")
