@@ -69,6 +69,10 @@ const configureVlans = () => {
     vlanIsAutoConfigured.value = true
 }
 
+const confirm = () => {
+    // TODO: call enpoint to save the changes
+}
+
 onMounted(() => {
     configureVlans()
 })
@@ -87,6 +91,7 @@ onMounted(() => {
                 <input v-model="vlan.ip" type="text" placeholder="IP"/>
                 <input v-model="vlan.mac" type="text" placeholder="MAC"/>
             </div>
+            <button @click="confirm">Save changes</button>
         </div>
     </div>
 </template>
