@@ -12,7 +12,7 @@ import Axios from 'axios'
  * @param {string} serial - The serial of the device
  * @param {string} address - The address to set
  */
-export async function setDeviceAddress(serial, address) {
+export async function changeDeviceAddress(serial, address) {
     try {
         const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/devices/address`, {
             serial: serial,

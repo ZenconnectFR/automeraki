@@ -10,8 +10,8 @@ import { useStatesStore } from '@/Stores/states'
 import { storeToRefs } from 'pinia'
 
 import Dropdown from '../Components/Dropdown.vue'
-import { set } from '@vueuse/core'
 
+// stores
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const states = useStatesStore()
@@ -19,80 +19,89 @@ const states = useStatesStore()
 // values from store
 const orgId = storeToRefs(ids.orgId)
 const networkId = storeToRefs(ids.networkId)
-const address = storeToRefs(devices.address)
 
+// Organizations and networks from API
 const organizations = ref([])
 const networks = ref([])
+
+// Network selection dropdown options and selected network
 const networkOptions = ref([])
 const selectedNetwork = ref({})
 
+// New network name and address fields inputs
 const newNetworkNameInput = ref('')
 const newNetworkAddress = ref('')
 
+// Loading states
 const loadingNetworks = ref(false)
 const networksLoaded = ref(false)
 
+// Actions to take once an organization is selected
 const setOrganizationOption = async (option) => {
+    // 1 - Set the orgId in this and the ids store
     orgId.value = option.id
     ids.$patch({orgId: option.id})
+
+    // 2 - Load networks for the selected org
     loadingNetworks.value = true
     networks.value = await getNetworks(orgId.value)
+
+    // 3 - Populate network options array and dropdown
     populateNetworkOptions()
+
+    // 4 - update loading states
     networksLoaded.value = true
     loadingNetworks.value = false
 }
 
+// Populate network options array
 const populateNetworkOptions = () => {
-  for (const network of Object.values(networks.value)) {
-    networkOptions.value.push({
-      id : network.id,
-      name: network.name
-    });
-  }
+    // map networks to options
+    for (const network of Object.values(networks.value)) {
+        networkOptions.value.push({
+            id : network.id,
+            name: network.name
+        });
+    }
 }
 
+// Set the selected network
 const setNetworkOption = (option) => {
-  selectedNetwork.value = option
-  networkId.value = option.id
-  console.log('Selected network:', selectedNetwork.value)
+    selectedNetwork.value = option
+    networkId.value = option.id
 }
 
+// Handle network cloning (when the clone network button is clicked)
 const cloneNetworkEvent = async () => {
-  const response = await cloneNetwork(selectedNetwork.value, newNetworkNameInput.value, orgId.value)
-  if (response) {
-    console.log('Cloned network id:', response.newNetworkId)
-    ids.$patch({newNetworkId: response.newNetworkId})
-    devices.$patch({address: newNetworkAddress.value})
-    // we can transition to the next page here
-    states.$patch({setupDone: true})
-  } else {
-    console.log('Error cloning network')
-  }
+    // Clone the network with the API
+    const response = await cloneNetwork(selectedNetwork.value, newNetworkNameInput.value, orgId.value)
+    if (response) {
+        console.log('Cloned network id:', response.newNetworkId)
+        // update stores values
+        ids.$patch({newNetworkId: response.newNetworkId})
+        devices.$patch({address: newNetworkAddress.value})
+        devices.$patch({network: newNetworkNameInput.value})
+        // update state store to move to the next step
+        states.$patch({setupDone: true})
+    } else {
+        console.log('Error cloning network')
+    }
 }
 
+// Setup function to run on page load
 const setup = async () => {
-  organizations.value = await getOrganizations()
-  if (orgId.value && orgId.value !== '-1') {
-    setOrganizationOption({id: orgId.value})
-  }
+    // Get organizations from the API
+    organizations.value = await getOrganizations()
+    if (orgId.value && orgId.value !== '-1') {
+        // if an orgId is already set in the root div, set it in the store
+        setOrganizationOption({id: orgId.value})
+    }
 };
 
+// Run setup function on page load
 onMounted(()  => {
   setup();
 })
-
-
-
-/**
- * Logic:
- * Page has 2 dropdowns: one for organizations and one for networks.
- * If the org is already selected, the org dropdown will have it selected and the networks dropdown will be populated with the networks of the selected org.
- * if the org is not selected, the org dropdown will ask the user to select an org and the networks dropdown will be disabled.
- * In the two cases, the org dropdown will be populated with the list of organizations.
- *
- * Once both an org and a network are selected, the user will be able to clone the network and add devices to it.
- * They will have to first provide a name and address for the new network, then click the clone button.
- */
 
 </script>
 

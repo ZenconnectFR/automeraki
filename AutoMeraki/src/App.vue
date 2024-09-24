@@ -3,29 +3,31 @@
 import { ref, onMounted } from 'vue'
 import Setup from './Pages/Setup.vue'
 import Claim from './Pages/Claim.vue'
-import Vlan from './Pages/Vlan.vue'
+import Naming from './Pages/Naming.vue'
 import { useStatesStore } from '@/Stores/states'
 import { useIdsStore } from '@/Stores/ids'
 import { storeToRefs } from 'pinia'
 
+// state control to wait for orgId to be set
 const ready = ref(false)
 
+// stores
 const ids = useIdsStore()
+const states = useStatesStore()
 
 // Check if the orgId is in the root div of the app
 const orgId = document.getElementById('app').getAttribute('data-org-id')
 if (orgId && orgId !== '-1') {
-  ids.$patch({orgId: orgId})
-  ready.value = true
+    // set the orgId in the store
+    ids.$patch({orgId: orgId})
+    // in both cases, set ready to true
+    ready.value = true
 } else {
-  ready.value = true
+    ready.value = true
 }
 
-const states = useStatesStore()
-
-console.log('states', states)
-
-const { setupDone, claimDone, vlanDone } = storeToRefs(states)
+// destructure states
+const { setupDone, claimDone, namingDone } = storeToRefs(states)
 
 </script>
 
@@ -38,8 +40,8 @@ const { setupDone, claimDone, vlanDone } = storeToRefs(states)
     <template v-if="setupDone && !claimDone">
       <Claim />
     </template>
-    <template v-if="claimDone && !vlanDone">
-      <Vlan />
+    <template v-if="claimDone && !namingDone">
+      <Naming />
     </template>
   </div>
 </template>

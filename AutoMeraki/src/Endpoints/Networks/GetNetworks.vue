@@ -13,7 +13,7 @@ import Axios from 'axios'
 
 export async function getNetworks(orgId) {
     try {
-        const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/networks/${orgId}`)
+        const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/organizations/${orgId}/networks`)
         console.log(response.data)
         return response.data
     } catch (error) {

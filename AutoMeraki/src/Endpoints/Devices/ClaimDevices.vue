@@ -4,23 +4,21 @@
  */
 
 import Axios from 'axios'
-import { parseDevices } from '../../Utils/Misc.vue'
 
-export async function ClaimDevices(newNetworkId, newNetworkDevices) {
+export async function claimDevices(newNetworkId, newNetworkDevices) {
   if (!newNetworkId) {
     console.log('No new network id')
     return null
   }
-  if (!newNetworkDevices) {
+  if (!newNetworkDevices || newNetworkDevices.length === 0) {
     console.log('No new network devices entered')
-    return null
+    return { serials: [] }
   }
-  let devices = parseDevices(newNetworkDevices)
-  console.log('Adding devices to network with body: id: ', newNetworkId, ' devices: ', devices)
+  console.log('Adding devices to network with body: id: ', newNetworkId, ' devices: ', newNetworkDevices)
   try {
     const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/networks/claim`, {
       network_id: newNetworkId,
-      serials: devices
+      serials: newNetworkDevices
     })
     console.log(response.data)
     return response.data
