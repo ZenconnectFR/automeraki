@@ -13,9 +13,9 @@ import Axios from 'axios'
 export async function getNetworkDevices(networkId) {
     try {
         const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/networks/${networkId}/devices`)
-        console.log(response.data)
+        console.log('[GET NETWORK DEVICES] Response: ', response.data)
     } catch (error) {
-        console.error(error)
+        console.error('[GET NETWORK DEVICES] Error: ', error)
     }
 }
 </script>

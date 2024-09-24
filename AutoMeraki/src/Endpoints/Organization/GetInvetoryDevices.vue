@@ -12,7 +12,7 @@ export async function getInventoryDevices(orgId) {
         const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/organizations/${orgId}/inventory`)
         return response.data
     } catch (error) {
-        console.error(error)
+        console.error('[GET INVENTORY DEVICES] Error: ', error)
         return null
     }
 }

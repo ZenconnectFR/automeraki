@@ -14,10 +14,10 @@ import Axios from 'axios'
 export async function getNetworks(orgId) {
     try {
         const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/organizations/${orgId}/networks`)
-        console.log(response.data)
+        console.log('[GET NETWORKS] Response: ', response.data)
         return response.data
     } catch (error) {
-        console.error(error)
+        console.error('[GET NETWORKS] Error: ', error)
     }
 }
 </script>

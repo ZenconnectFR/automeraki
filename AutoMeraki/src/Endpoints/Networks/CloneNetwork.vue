@@ -15,7 +15,7 @@ export async function cloneNetwork(selectedNetwork, newNetworkNameInput, orgId) 
     return null
   }
 
-  console.log('Cloning network with body: id: ', selectedNetwork.id, ' name: ', newNetworkNameInput)
+  console.log('[CLONE EP] Cloning network with body: id: ', selectedNetwork.id, ' name: ', newNetworkNameInput)
   try {
     const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/networks/clone`, {
       network_id: selectedNetwork.id,

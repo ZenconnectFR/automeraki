@@ -1,0 +1,19 @@
+{
+    "vlan": [
+        {
+            "id": 1,
+            "name": "VLAN 1",
+            "subnet": "127.0.0.1",
+            "fixedAssignments": [
+                {
+                    "expectedEquipment": "S1",
+                    "ip": "127.0.0.2"
+                },
+                {
+                    "expectedEquipment": "S2",
+                    "ip": "127.0.0.3"
+                }
+            ]
+        }
+    ]
+}

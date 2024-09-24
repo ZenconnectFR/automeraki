@@ -11,7 +11,7 @@ export async function getDevice(serial) {
         const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/devices/${serial}`)
         return response.data
     } catch (error) {
-        console.error(error)
+        console.error('[GET DEVICE] Error: ', error)
         return null
     }
 }

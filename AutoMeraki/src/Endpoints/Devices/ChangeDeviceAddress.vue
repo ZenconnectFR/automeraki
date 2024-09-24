@@ -18,9 +18,9 @@ export async function changeDeviceAddress(serial, address) {
             serial: serial,
             address: address
         })
-        console.log(response.data)
+        console.log('[CDA] Response: ', response.data)
     } catch (error) {
-        console.error(error)
+        console.error('[CDA] Error: ', error)
     }
 }
 </script>

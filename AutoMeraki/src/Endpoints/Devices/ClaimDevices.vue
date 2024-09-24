@@ -14,16 +14,16 @@ export async function claimDevices(newNetworkId, newNetworkDevices) {
     console.log('No new network devices entered')
     return { serials: [] }
   }
-  console.log('Adding devices to network with body: id: ', newNetworkId, ' devices: ', newNetworkDevices)
+  console.log('[CLAIM ENPOINT] Adding devices to network with body: id: ', newNetworkId, ' devices: ', newNetworkDevices)
   try {
     const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/networks/claim`, {
       network_id: newNetworkId,
       serials: newNetworkDevices
     })
-    console.log(response.data)
+    console.log('[CLAIM ENPOINT] Response: ', response.data)
     return response.data
   } catch (error) {
-    console.error(error)
+    console.error('[CLAIM ENPOINT] Error: ', error)
     return null
   }
 }

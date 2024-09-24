@@ -16,7 +16,7 @@ export async function removeDeviceFromNetwork(networkId, serial) {
         })
         return response.data
     } catch (error) {
-        console.error(error)
+        console.error('[REMOVE DEVICE FROM NETWORK] Error: ', error)
         return null
     }
 }

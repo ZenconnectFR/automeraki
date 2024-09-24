@@ -14,7 +14,7 @@ export async function getOrganizations() {
         const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/organizations`)
         return response.data
     } catch (error) {
-        console.error(error)
+        console.error('[GET ORGANIZATIONS] Error: ', error)
         return null
     }
 }

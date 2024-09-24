@@ -76,7 +76,7 @@ const cloneNetworkEvent = async () => {
     // Clone the network with the API
     const response = await cloneNetwork(selectedNetwork.value, newNetworkNameInput.value, orgId.value)
     if (response) {
-        console.log('Cloned network id:', response.newNetworkId)
+        console.log('[SETUP] Cloned network id:', response.newNetworkId)
         // update stores values
         ids.$patch({newNetworkId: response.newNetworkId})
         devices.$patch({address: newNetworkAddress.value})
@@ -84,7 +84,7 @@ const cloneNetworkEvent = async () => {
         // update state store to move to the next step
         states.$patch({setupDone: true})
     } else {
-        console.log('Error cloning network')
+        console.log('[SETUP] Error cloning network')
     }
 }
 

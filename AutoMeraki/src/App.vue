@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import Setup from './Pages/Setup.vue'
 import Claim from './Pages/Claim.vue'
 import Naming from './Pages/Naming.vue'
+import Vlan from './Pages/Vlan.vue'
 import { useStatesStore } from '@/Stores/states'
 import { useIdsStore } from '@/Stores/ids'
 import { storeToRefs } from 'pinia'
@@ -33,7 +34,7 @@ const { setupDone, claimDone, namingDone, vlanDone } = storeToRefs(states)
 
 <template>
   <div id="welcome">
-    <h1>Welcome to AutoMeraki</h1>
+    <h1>AutoMeraki</h1>
     <template v-if="!setupDone && ready">
       <Setup />
     </template>

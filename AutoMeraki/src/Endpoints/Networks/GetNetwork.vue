@@ -11,7 +11,7 @@ export async function getNetwork(networkId) {
         const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/networks/${networkId}`)
         return response.data
     } catch (error) {
-        console.error(error)
+        console.error('[GET NETWORK] Error: ', error)
         return null
     }
 }

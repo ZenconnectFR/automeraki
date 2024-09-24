@@ -132,6 +132,9 @@ const moveDevices = async () => {
     let serials = alreadyInNetworkWithInfo.value.map(obj => obj.serial).join('\n')
     newNetworkDevices.value = serials
 
+    // reset the alreadyInNetwork array
+    alreadyInNetwork.value = []
+
     // add the devices to the new network
     await addDevices()
 }

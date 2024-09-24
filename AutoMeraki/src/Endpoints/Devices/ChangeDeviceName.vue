@@ -7,9 +7,9 @@ export async function changeDeviceName(serial, name) {
             serial: serial,
             name: name
         })
-        console.log(response.data)
+        console.log('[CNE] Response: ', response.data)
     } catch (error) {
-        console.error(error)
+        console.error('[CNE] Error: ', error)
     }
 }
 </script>

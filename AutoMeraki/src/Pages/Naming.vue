@@ -25,7 +25,7 @@ const renameDevices = async() => {
     let apCount = 1;
     let otherCount = 1;
 
-    console.log(devicesList);
+    console.log('[NAMING] devicesList: ', devicesList.value)
 
     for (const device of devicesList.value) {
         let deviceType = 'O';

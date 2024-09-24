@@ -13,7 +13,7 @@ export async function getInventoryDevice(orgId, serial) {
         const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/organizations/${orgId}/inventory/${serial}`)
         return response.data
     } catch (error) {
-        console.error(error)
+        console.error('[GET INVENTORY DEVICE] Error: ', error)
         return null
     }
 }
