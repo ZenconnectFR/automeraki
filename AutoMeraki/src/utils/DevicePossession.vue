@@ -1,5 +1,5 @@
 <script>
-import { getInventoryDevice } from '../Endpoints/Organization/GetInventoryDevice.vue';
+import { getInventoryDevice } from '../endpoints/organization/GetInventoryDevice.vue';
 
 /**
  * For a device, check if it is used by another network

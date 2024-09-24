@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia';
-import { changeDeviceName } from '../Endpoints/Devices/ChangeDeviceName.vue';
-import { changeDeviceAddress } from '../Endpoints/Devices/ChangeDeviceAddress.vue';
-import { useDevicesStore } from '@/Stores/devices';
-import { useStatesStore } from '@/Stores/states';
+import { changeDeviceName } from '../endpoints/devices/ChangeDeviceName.vue';
+import { changeDeviceAddress } from '../endpoints/devices/ChangeDeviceAddress.vue';
+import { useDevicesStore } from '@/stores/devices';
+import { useStatesStore } from '@/stores/states';
 
 const devices = useDevicesStore()
 const states = useStatesStore()

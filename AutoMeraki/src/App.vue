@@ -1,12 +1,12 @@
 <script setup>
 
 import { ref, onMounted } from 'vue'
-import Setup from './Pages/Setup.vue'
-import Claim from './Pages/Claim.vue'
-import Naming from './Pages/Naming.vue'
-import Vlan from './Pages/Vlan.vue'
-import { useStatesStore } from '@/Stores/states'
-import { useIdsStore } from '@/Stores/ids'
+import Setup from './pages/Setup.vue'
+import Claim from './pages/Claim.vue'
+import Naming from './pages/Naming.vue'
+import Vlan from './pages/Vlan.vue'
+import { useStatesStore } from '@/stores/states'
+import { useIdsStore } from '@/stores/ids'
 import { storeToRefs } from 'pinia'
 
 // state control to wait for orgId to be set

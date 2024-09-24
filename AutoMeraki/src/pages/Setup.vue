@@ -1,15 +1,15 @@
 <script setup>
 
 import { ref, onMounted } from 'vue'
-import { getOrganizations } from '../Endpoints/Organization/GetOrganizations.vue'
-import { getNetworks } from '../Endpoints/Networks/GetNetworks.vue'
-import { cloneNetwork } from '../Endpoints/Networks/CloneNetwork.vue'
-import { useIdsStore } from '@/Stores/ids'
-import { useDevicesStore } from '@/Stores/devices'
-import { useStatesStore } from '@/Stores/states'
+import { getOrganizations } from '../endpoints/organization/GetOrganizations.vue'
+import { getNetworks } from '../endpoints/networks/GetNetworks.vue'
+import { cloneNetwork } from '../endpoints/networks/CloneNetwork.vue'
+import { useIdsStore } from '@/stores/ids'
+import { useDevicesStore } from '@/stores/devices'
+import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
-import Dropdown from '../Components/Dropdown.vue'
+import Dropdown from '../components/Dropdown.vue'
 
 // stores
 const ids = useIdsStore()

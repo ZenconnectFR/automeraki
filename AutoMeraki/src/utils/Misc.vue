@@ -1,5 +1,5 @@
 <script>
-import { getInventoryDevices } from '../endpoints/organization/GetInventoryDevices.vue';
+import { getInventoryDevices } from '../Endpoints/Organization/getInvetoryDevices.vue';
 
 /**
  * Parses a text containing 0 or more device serials into a list of serials.

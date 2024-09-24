@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { claimDevices } from '../Endpoints/Devices/ClaimDevices.vue'
-import { getDevice } from '../Endpoints/Devices/GetDevice.vue'
-import { removeDeviceFromNetwork } from '../Endpoints/Networks/RemoveDeviceFromNetwork.vue'
-import { getNetwork } from '../Endpoints/Networks/GetNetwork.vue'
+import { claimDevices } from '../endpoints/devices/ClaimDevices.vue'
+import { getDevice } from '../endpoints/devices/GetDevice.vue'
+import { removeDeviceFromNetwork } from '../endpoints/networks/RemoveDeviceFromNetwork.vue'
+import { getNetwork } from '../endpoints/networks/GetNetwork.vue'
 import { parseDevices, checkDeviceInInventory } from '../Utils/Misc.vue'
 import { checkDeviceInNetwork } from '../Utils/DevicePossession.vue'
-import { useIdsStore } from '@/Stores/ids'
-import { useDevicesStore } from '@/Stores/devices'
-import { useStatesStore } from '@/Stores/states'
+import { useIdsStore } from '@/stores/ids'
+import { useDevicesStore } from '@/stores/devices'
+import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
 const ids = useIdsStore()
@@ -24,6 +24,8 @@ const alreadyInNetwork = ref([])
 const alreadyInNetworkWithInfo = ref([])
 
 const devicesAdded = ref(false)
+
+const fullFinalDevices = ref([])
 
 /**
  * Checks if the devices are already claimed (ie. is in the organization inventory)
@@ -98,18 +100,12 @@ const addDevices = async () => {
         console.log('[CLAIM] Devices added to network: ', response.serials)
         // add devices to the devices store
         for (const serial of response.serials) {
-            devicesToAdd.push(serial)
+            const device = await getDevice(serial)
+            fullFinalDevices.value.push(device)
         }
 
-        // format the devicesToAdd array into an array of objects
-        devicesToAdd = devicesToAdd.map(serial => {
-            return { serial: serial, name: ''}
-        })
-
-        console.log('[CLAIM] Devices to add after mapping: ', devicesToAdd)
-
-        // patch the devices store
-        devices.$patch({devicesList: devicesToAdd})
+        // update the devices store with the new devices, we get full device info from the API
+        devices.$patch({devicesList: fullFinalDevices.value})
 
         devicesAdded.value = true
     } else {
