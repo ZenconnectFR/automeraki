@@ -27,7 +27,7 @@ if (orgId && orgId !== '-1') {
 }
 
 // destructure states
-const { setupDone, claimDone, namingDone } = storeToRefs(states)
+const { setupDone, claimDone, namingDone, vlanDone } = storeToRefs(states)
 
 </script>
 
@@ -42,6 +42,9 @@ const { setupDone, claimDone, namingDone } = storeToRefs(states)
     </template>
     <template v-if="claimDone && !namingDone">
       <Naming />
+    </template>
+    <template v-if="namingDone && !vlanDone">
+      <Vlan />
     </template>
   </div>
 </template>
