@@ -10,13 +10,14 @@ lerna-debug.log*
 node_modules
 .DS_Store
 dist
-!dist/assets/*
 dist-ssr
 coverage
 *.local
 
 /cypress/videos/
 /cypress/screenshots/
+
+*/__pycache__/
 
 # Editor directories and files
 .vscode/*
@@ -31,3 +32,6 @@ coverage
 *.tsbuildinfo
 
 # Personal ignores
+*.env
+*.env.local
+tmp

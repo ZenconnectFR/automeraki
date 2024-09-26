@@ -1,0 +1,36 @@
+{
+    "vlan": [
+        {
+            "id": 1,
+            "name": "VLAN 1",
+            "applianceIp": "127.0.0.1",
+            "subnet": "127.0.0.0/24",
+            "fixedAssignments": [
+                {
+                    "expectedEquipment": "S1",
+                    "ip": "127.0.0.3"
+                },
+                {
+                    "expectedEquipment": "S2",
+                    "ip": "127.0.0.4"
+                },
+                {
+                    "expectedEquipment": "Printer",
+                    "ip": "127.0.0.2"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "name": "VLAN 2",
+            "applianceIp": "127.0.1.1",
+            "subnet": "127.0.1.0/24",
+            "fixedAssignments": [
+                {
+                    "expectedEquipment": "someEquipment",
+                    "ip": "127.0.1.2"
+                }
+            ]
+        }
+    ]
+}

@@ -11,6 +11,7 @@
     border-radius: 12px;
     border : 0px;
     padding: 20px;
+    z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
 }
 
 .smol-text {
@@ -71,10 +72,6 @@ dialog[open]::backdrop {
     dialog[open]::backdrop {
       background-color: rgb(0 0 0 / 0%);
     }
-}
-
-#current-config {
-    display: none;
 }
 
 #popup-window-close {
