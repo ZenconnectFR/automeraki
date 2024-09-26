@@ -7,9 +7,14 @@ import Axios from 'axios';
  * @returns {Object[]} - The list of devices in the inventory
  */
 
-export async function getInventoryDevices(orgId) {
+export async function getInventoryDevices(orgId, serials=null) {
     try {
-        const response = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/organizations/${orgId}/inventory`)
+
+        const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/organizations/inventory`,{
+            org_id: orgId,
+            serials: serials
+        })
+        console.log('[GET INVENTORY DEVICES] Response: ', response.data)
         return response.data
     } catch (error) {
         console.error('[GET INVENTORY DEVICES] Error: ', error)

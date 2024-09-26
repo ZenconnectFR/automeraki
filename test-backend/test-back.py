@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
 import meraki
 import os
 from dotenv import load_dotenv
@@ -98,14 +99,16 @@ def get_device(serial: str):
 
 # ---------
 
-'''
-Get the devices in the inventory of an organization
-path: /organization/{org_id}/inventory
-method: GET
-'''
-@app.get("/organizations/{org_id}/inventory")
-def get_inventory(org_id: str):
-    devices = dashboard.organizations.getOrganizationInventoryDevices(org_id, total_pages='all')
+class GetInventory(BaseModel):
+    org_id: str
+    serials: Optional[list[str]] = None
+
+@app.post("/organizations/inventory")
+def get_inventory(inventory: GetInventory):
+    org_id = inventory.org_id
+    serials = inventory.serials
+
+    devices = dashboard.organizations.getOrganizationInventoryDevices(org_id, total_pages='all', serials=serials)
 
     return devices
 
@@ -121,6 +124,16 @@ def get_inventory_device(org_id: str, serial: str):
     device = dashboard.organizations.getOrganizationInventoryDevice(org_id, serial)
 
     return device
+
+# ---------
+'''
+get vlans in a network
+'''
+@app.get("/networks/{network_id}/vlans")
+def get_vlans(network_id: str):
+    vlans = dashboard.appliance.getNetworkApplianceVlans(network_id)
+
+    return vlans
 
 # ------------------ POST ------------------
 
@@ -209,12 +222,6 @@ class DeviceName(BaseModel):
     name: str
     serial: str
 
-'''
-Change the name of a device
-path: /devices/name
-method: POST
-body: {"name": "New Name", "serial": "QXXX-XXXX-XXXX"}
-'''
 @app.post("/devices/name")
 def change_name(network_name: DeviceName):
     name = network_name.name
@@ -231,12 +238,7 @@ def change_name(network_name: DeviceName):
 class DeviceNetwork(BaseModel):
     network_id: str
     serial: str
-'''
-Remove a device from a network
-path: /networks/removeDevice
-method: POST
-body: {"network_id": "L_XXXXX...", "serial": "QXXX-XXXX-XXXX"}
-'''
+
 @app.post("/networks/removeDevice")
 def remove_device(network_device: DeviceNetwork):
     network_id = network_device.network_id
@@ -248,4 +250,86 @@ def remove_device(network_device: DeviceNetwork):
     return removed_device
 
 
+# ----------
 
+class CreateVlan(BaseModel):
+    network_id: str
+    id: int
+    name: str
+    applianceIp: str
+    subnet: str
+
+@app.post("/networks/createVlan")
+def create_vlan(create_vlan: CreateVlan):
+    network_id = create_vlan.network_id
+    id_ = create_vlan.id
+    name = create_vlan.name
+    applianceIp = create_vlan.applianceIp
+    subnet = create_vlan.subnet
+
+
+    # create the vlan
+    new_vlan = dashboard.appliance.createNetworkApplianceVlan(network_id, id_, name, applianceIp=applianceIp, subnet=subnet)
+
+    return new_vlan
+
+
+# ------------------ PUT ------------------
+
+class UpdateNetworkVlan(BaseModel):
+    network_id: str
+    # options is an array of dictionaries
+    options: list[Any]
+
+
+@app.put("/networks/updateNetworkVlan")
+def update_network_vlan(update_network_vlan: UpdateNetworkVlan):
+    network_id = update_network_vlan.network_id
+    options = update_network_vlan.options
+
+    response = []
+
+    for option in options:
+        vlan_id = option["id"]
+        payload = option["payload"] # list of dictionaries
+
+        print('\nPayload:\n' + str(payload) + '\n')
+
+        #payloadResponse = []
+
+        for item in payload:
+            # turn item into kwargs
+
+            print('\nItem:\n' + str(item) + '\n')
+
+            kwargs = {}
+            if item:
+                kwargs.update(item)
+
+            print('\nkwargs:\n' + str(kwargs) + '\n')
+
+            try:
+                updated_vlan = dashboard.appliance.updateNetworkApplianceVlan(network_id, vlan_id, **kwargs)
+                response.append(updated_vlan)
+            except Exception as e:
+                return {"error": str(e)}
+
+
+            #payloadResponse.append("Updated VLAN " + str(vlan_id) + " with " + str(kwargs))
+
+        #response.append(payloadResponse)
+
+    return response
+
+
+# ----------
+
+# enableVlans
+@app.put("/networks/enableVlans/{network_id}")
+def enable_vlans(network_id: str):
+    try:
+        enabled_vlans = dashboard.appliance.updateNetworkApplianceVlansSettings(network_id, vlansEnabled=True)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return enabled_vlans

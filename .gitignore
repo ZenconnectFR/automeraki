@@ -33,3 +33,5 @@ coverage
 
 # Personal ignores
 *.env
+*.env.local
+tmp

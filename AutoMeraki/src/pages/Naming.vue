@@ -8,7 +8,7 @@ import { useStatesStore } from '@/stores/states';
 
 const devices = useDevicesStore()
 const states = useStatesStore()
-const { address, network, devicesList} = storeToRefs(devices) // !! devicesList will be empty by default, this page will start by automatically naming devices and then allow the user to change them
+const { address, network, devicesList} = storeToRefs(devices)
 
 const devicesLoaded = ref(false)
 
@@ -28,6 +28,7 @@ const renameDevices = async() => {
     console.log('[NAMING] devicesList: ', devicesList.value)
 
     for (const device of devicesList.value) {
+        console.log('[NAMING] device: ', device)
         let deviceType = 'O';
         switch(device.serial[1]) {
             case '2':

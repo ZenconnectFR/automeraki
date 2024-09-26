@@ -5,6 +5,12 @@ import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
+import { updateNetworkVlan } from '../endpoints/networks/UpdateNetworkVlan.vue'
+import { createVlansIfNotExists } from '../endpoints/networks/CreateVlansIfNotExists.vue'
+import { enableVlans } from '../endpoints/networks/EnableVlans.vue'
+
+import { createMac } from '../utils/Misc.vue'
+
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const states = useStatesStore()
@@ -21,7 +27,8 @@ const vlanAutoConfigured = ref([])
         {
             "id": 1,
             "name": "VLAN 1",
-            "subnet": "127.0.0.1",
+            "applianceIp": "127.0.0.1",
+            "subnet": "127.0.0.0/24",
             "fixedAssignments": [
                 {
                     "expectedEquipment": "S1",
@@ -53,24 +60,77 @@ const configureVlans = () => {
     console.log('[VLAN] devices: ', devices)
     console.log('[VLAN] vlans: ', vlans)
 
+    let autoMac = createMac()
+
     for (const vlan of vlans) {
+        vlanAutoConfigured.value.push(
+            {
+                id: vlan.id,
+                payload: [
+                    {
+                        name: vlan.name,
+                        applianceIp: vlan.applianceIp,
+                        subnet: vlan.subnet
+                    },
+                    {
+                        fixedIpAssignments: {}
+                    }
+                ]
+            }
+        );
+
+        console.log('[VLAN] vlanAutoConfigured: ', vlanAutoConfigured.value)
+
         for (const assignment of vlan.fixedAssignments) {
+            console.log('[VLAN] assignment: ', assignment)
+            let found = false
             for (const device of devices) {
                 if (device.name.includes(assignment.expectedEquipment)) {
-                    vlanAutoConfigured.value.push({
-                        name: device.name,
+                    // add the device to the vlanAutoConfigured payload with mac as key
+                    vlanAutoConfigured.value[vlanAutoConfigured.value.length - 1].payload[1].fixedIpAssignments[device.mac] = {
                         ip: assignment.ip,
-                        mac: device.mac
-                    })
+                        name: assignment.expectedEquipment
+                    }
+                    found = true
+                    console.log('[VLAN] Device found: ', device)
                 }
+            }
+            if (!found) {
+                console.log('[VLAN] Device not found, adding placeholder: ', autoMac, ' for ', assignment.expectedEquipment)
+                // add a placeholder device to the vlanAutoConfigured payload with mac as key
+                vlanAutoConfigured.value[vlanAutoConfigured.value.length - 1].payload[1].fixedIpAssignments[autoMac] = {
+                    ip: assignment.ip,
+                    name: assignment.expectedEquipment
+                }
+                autoMac = createMac(autoMac)
             }
         }
     }
     vlanIsAutoConfigured.value = true
 }
 
-const confirm = () => {
-    // TODO: call enpoint to save the changes
+const preEnableVlans = async() => {
+    console.log('[VLAN] Enabling vlans')
+    await enableVlans(newNetworkId.value)
+}
+
+const confirm = async () => {
+    // enable vlans
+    await preEnableVlans()
+
+    let createdVlans = await createVlansIfNotExists(newNetworkId.value, vlanAutoConfigured.value)
+
+    // filter payload[0] part out of vlanAutoConfigured when vlan id is in createdVlans
+    for (const vlan of vlanAutoConfigured.value) {
+        if (createdVlans.includes(vlan.id)) {
+            // remove the element at index 0 of vlan.payload
+            vlan.payload.shift()
+        }
+    }
+
+    // Save changes
+    console.log('[VLAN] Saving changes')
+    await updateNetworkVlan(newNetworkId.value, vlanAutoConfigured.value)
 }
 
 onMounted(() => {
@@ -86,10 +146,15 @@ onMounted(() => {
         <!-- The autoconfigured vlans will be displayed below and each info can be edited (thus we use an input to display them)-->
         <div v-if="vlanIsAutoConfigured">
             <h2>Auto configured VLANs</h2>
-            <div v-for="vlan in vlanAutoConfigured" :key="vlan.mac">
-                <input v-model="vlan.name" type="text" placeholder="Name"/>
-                <input v-model="vlan.ip" type="text" placeholder="IP"/>
-                <input v-model="vlan.mac" type="text" placeholder="MAC"/>
+            <div v-for="vlan in vlanAutoConfigured" :key="vlan.id">
+                <h3>{{vlan.payload[0].name}}</h3>
+                <div v-for="(assignment, mac) in vlan.payload[1].fixedIpAssignments" :key="mac">
+                    <div class="align-items-horizontally">
+                        <input class="margin-all-normal enboxed" v-model="assignment.ip" placeholder="IP address"/>
+                        <input class="margin-all-normal enboxed" v-model="assignment.name" placeholder="Name"/>
+                        <p class="margin-all-normal enboxed">{{mac}}</p>
+                    </div>
+                </div>
             </div>
             <button @click="confirm">Save changes</button>
         </div>
@@ -97,4 +162,31 @@ onMounted(() => {
 </template>
 
 <style scoped>
+    .align-items-horizontally {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .enboxed {
+        border: 1px solid black;
+        padding: 5px;
+        border-radius: 4px;
+    }
+
+    .lateral-margin-normal {
+        margin: 0 10px;
+    }
+
+    .lateral-margin-small {
+        margin: 0 5px;
+    }
+
+    .lateral-margin-big {
+        margin: 0 20px;
+    }
+
+    .margin-all-normal {
+        margin: 10px;
+    }
 </style>

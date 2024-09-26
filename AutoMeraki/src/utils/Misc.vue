@@ -1,6 +1,4 @@
 <script>
-import { getInventoryDevices } from '../endpoints/organization/getInvetoryDevices.vue';
-
 /**
  * Parses a text containing 0 or more device serials into a list of serials.
  * Serails are like QXXX-XXXX-XXXX or QXXX=XXXX=XXXX (because the scanner replaces dashes with equals)
@@ -16,24 +14,38 @@ export function parseDevices(text) {
 };
 
 /**
- * Checks if a device is in the organization inventory
- * @param {string} serial - The serial of the device to check
- * @returns {boolean} - True if the device is in the inventory, false otherwise
+ * Create placeholder mac address for devices which we don't have the mac address. Creates a mac address with another mac incremented by 1
+ * @param {string} mac - Default: "00:00:00:00:00:00"
+ * @returns {string} - The new mac address
  */
 
-export async function checkDeviceInInventory(serial, orgId) {
-    console.log('[MISC] Checking device in inventory: ', serial)
-    let inventoryDevices = await getInventoryDevices(orgId);
+export function createMac(mac="00:00:00:00:00:00") {
+    // check input is a mac address
+    const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 
-    // check if the serial is in the inventory
-    console.log('[MISC] Inventory devices: ', inventoryDevices)
-    for (const invDevice of inventoryDevices) {
-        console.log('[MISC] Device serial: ', invDevice.serial)
-        if (invDevice.serial === serial) {
-            return true;
+    if (!macRegex.test(mac)) {
+        console.error('[MISC] Invalid mac address: ', mac)
+        return "00:00:00:00:00:00"
+    }
+
+    // convert to integer
+    let macInt = mac.split(':').map(part => parseInt(part, 16))
+
+    // increment by 1
+    for (let i = macInt.length - 1; i >= 0; i--) {
+        macInt[i]++
+        if (macInt[i] <= 255) {
+            break;
+        } else {
+            macInt[i] = 0
         }
     }
-    return false;
+
+    // convert back to hex
+    const newMac = macInt.map(part => part.toString(16).padStart(2, '0')).join(':');
+
+    return newMac;
 }
+
 </script>
 
