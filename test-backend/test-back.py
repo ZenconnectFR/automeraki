@@ -44,6 +44,7 @@ def del_test_networks():
     for network in networks:
         if network["id"] != "L_738027388935340791":
             dashboard.networks.deleteNetwork(network["id"])
+
     return {"Networks": "Deleted"}
 
 
@@ -76,6 +77,16 @@ def get_networks(org_id: str):
 
     return processed_networks
 
+
+
+# ---------
+
+# Get all devices in a network
+@app.get("/networks/{network_id}/devices")
+def get_devices(network_id: str):
+    devices = dashboard.networks.getNetworkDevices(network_id)
+
+    return devices
 
 # ---------
 
@@ -134,6 +145,19 @@ def get_vlans(network_id: str):
     vlans = dashboard.appliance.getNetworkApplianceVlans(network_id)
 
     return vlans
+
+
+# ---------
+
+#blink device
+@app.get("/devices/{serial}/blink")
+def blink_device(serial: str):
+    try:
+        blink = dashboard.devices.blinkDeviceLeds(serial)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return blink
 
 # ------------------ POST ------------------
 
