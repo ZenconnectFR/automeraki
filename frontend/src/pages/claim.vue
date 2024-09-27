@@ -9,6 +9,7 @@ import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
+import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress'
 
 // stores
 const ids = useIdsStore()
@@ -139,8 +140,17 @@ const moveDevices = async () => {
     showMoveNetwork.value = false
 }
 
-const validate = () => {
+const { address } = storeToRefs(devices)
+
+const changeAddresses = async() => {
+    for (const device of fullFinalDevices.value) {
+        await changeDeviceAddress(device.serial, address.value);
+    }
+}
+
+const validate = async() => {
     // set the claimDone state to true
+    await changeAddresses()
     states.setClaimDone(true)
 }
 

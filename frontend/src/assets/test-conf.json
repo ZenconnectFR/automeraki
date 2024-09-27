@@ -3,32 +3,32 @@
         {
             "id": 1,
             "name": "VLAN 1",
-            "applianceIp": "127.0.0.1",
-            "subnet": "127.0.0.0/24",
+            "applianceIp": "10.101.1.1",
+            "subnet": "10.101.1.0/24",
             "fixedAssignments": [
                 {
                     "expectedEquipment": "S1",
-                    "ip": "127.0.0.3"
+                    "ip": "10.101.1.3"
                 },
                 {
                     "expectedEquipment": "S2",
-                    "ip": "127.0.0.4"
+                    "ip": "10.101.1.4"
                 },
                 {
                     "expectedEquipment": "Printer",
-                    "ip": "127.0.0.2"
+                    "ip": "10.101.1.2"
                 }
             ]
         },
         {
             "id": 2,
             "name": "VLAN 2",
-            "applianceIp": "127.0.1.1",
-            "subnet": "127.0.1.0/24",
+            "applianceIp": "10.101.2.1",
+            "subnet": "10.101.2.0/24",
             "fixedAssignments": [
                 {
                     "expectedEquipment": "someEquipment",
-                    "ip": "127.0.1.2"
+                    "ip": "10.101.2.2"
                 }
             ]
         }

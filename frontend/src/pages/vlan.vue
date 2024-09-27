@@ -140,6 +140,15 @@ const confirm = async () => {
     savingChanges.value = false
 }
 
+const validate = () => {
+    alert('VLANs have been configured')
+}
+
+const goBack = () => {
+    states.setNamingDone(false)
+    states.setVlanDone(false)
+}
+
 onMounted(() => {
     configureVlans()
 })
@@ -151,7 +160,7 @@ onMounted(() => {
         <h1>VLAN</h1>
         <!-- Show list of vlans from the config file, auto complete mac with the right equipement (filter name for the last group of letters) -->
         <!-- The autoconfigured vlans will be displayed below and each info can be edited (thus we use an input to display them)-->
-        <div v-if="vlanIsAutoConfigured">
+        <div class="make-column" v-if="vlanIsAutoConfigured">
             <h2>Auto configured VLANs</h2>
             <div v-for="vlan in vlanAutoConfigured" :key="vlan.id">
                 <h3>{{vlan.payload[0].name}}</h3>
@@ -165,6 +174,10 @@ onMounted(() => {
             </div>
             <p v-if="savingChanges">Saving changes...</p>
             <button @click="confirm">Save changes</button>
+            <div class="margin-all-normal make-row">
+                <button @click="goBack">Back</button>
+                <button @click="validate">Next</button>
+            </div>
         </div>
     </div>
 </template>
@@ -196,5 +209,17 @@ onMounted(() => {
 
     .margin-all-normal {
         margin: 10px;
+    }
+
+    .make-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .make-column {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 </style>

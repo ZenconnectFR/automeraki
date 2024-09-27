@@ -14,6 +14,7 @@ const { address, network, devicesList} = storeToRefs(devices)
 // UI states
 const renaming = ref(false)
 const changingAddresses = ref(false)
+const namesSaved = ref(false)
 
 const devicesLoaded = ref(false)
 
@@ -53,8 +54,6 @@ const renameDevices = () => {
             (deviceType === 'R' ? routerCount++ : deviceType === 'S' ? switchCount++ : deviceType === 'AP' ? apCount++ : otherCount++);
 
         device.name = newName;
-
-        changeDeviceName(device.serial, newName); // do not wait for the response, just rename them in the background
     }
 
     // patch the devices store
@@ -81,15 +80,20 @@ const changeNames = async() => {
         await changeDeviceName(device.serial, device.name);
     }
     renaming.value = false;
+    namesSaved.value = true;
 }
 
 const blink = (serial) => {
     blinkDevice(serial);
 }
 
+const goBack = () => {
+    states.setNamingDone(false);
+    states.setClaimDone(false);
+}
+
 const setup = async() => {
     renameDevices();
-    changeAddresses();
     devicesLoaded.value = true;
 }
 
@@ -107,9 +111,8 @@ onMounted(() => {
 <template>
     <div id="naming page">
         <h1>Names</h1>
-        <p>Names for devices have been auto-generated, you can change them if required</p>
         <div v-if="devicesLoaded" id="naming-form">
-            <!-- display all devices in deviceList-->
+            <p v-if="namesSaved === false">Warning: names have not been saved yet</p>
             <div v-for="device in devicesList" :key="device.serial">
                 <label class="margin-padding-all-normal">{{device.serial}}</label>
                 <input class="margin-padding-all-normal" v-model="device.name" type="text" />
@@ -124,7 +127,10 @@ onMounted(() => {
                 </div>
                 <button class="margin-padding-all-normal fit-width" @click="changeAddresses">Change Addresses</button>
                 <p class="margin-padding-all-normal" v-if="changingAddresses">Changing addresses...</p>
-                <button class="margin-padding-all-normal fit-width" @click="validate">Next</button>
+                <div class="make-row">
+                    <button class="margin-padding-all-normal fit-width" @click="goBack">back</button>
+                    <button class="margin-padding-all-normal fit-width" @click="validate">Next</button>
+                </div>
             </div>
         </div>
     </div>

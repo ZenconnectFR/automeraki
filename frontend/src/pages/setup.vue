@@ -47,6 +47,7 @@ const networksLoaded = ref(false)
 
 // UI states
 const cloningNetwork = ref(false)
+const deletingTestNetworks = ref(false)
 
 // Actions to take once an organization is selected
 const setOrganizationOption = async (option) => {
@@ -142,8 +143,10 @@ const setup = async () => {
 };
 
 const deleteTestNetworksEvent = async () => {
+    deletingTestNetworks.value = true
     let response = await deleteTestNetworks()
     console.log('[SETUP] Deleted test networks: ', response)
+    deletingTestNetworks.value = false
 }
 
 // Run setup function on page load
@@ -158,7 +161,10 @@ onMounted(()  => {
         <h1>Setup</h1>
         <p v-if="organizationsNotLoaded">Loading organizations...</p>
         <template class="make-column" v-if="organizationsNotLoaded === false">
-            <button class="margin-padding-all-normal button-top-right" @click="deleteTestNetworksEvent">Delete test networks</button>
+            <div class="margin-padding-all-normal button-top-right">
+                <button class="margin-padding-all-normal" @click="deleteTestNetworksEvent">Delete test networks</button>
+                <p v-if="deletingTestNetworks">Deleting test networks...</p>
+            </div>
             <div class="make-column">
                 <h3>Choose an org</h3>
                 <Dropdown :options="organizations" @select-option="setOrganizationOption"/>
