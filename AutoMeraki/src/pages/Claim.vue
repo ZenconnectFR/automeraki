@@ -36,6 +36,8 @@ const fullFinalDevices = ref([]) // full devices info after adding them to the n
 
 const usedByAnotherOrg = ref(false)
 
+const claiming = ref(false)
+
 // --------------------------- CLAIM REFACTORED ---------------------------
 
 const retrieveInventory = async (parsedDevices) => {
@@ -95,6 +97,7 @@ const addDevices = async () => {
 
     console.log('[CLAIM] Devices to claim: ', toClaim.value)
 
+    claiming.value = true
     // else, call the claimDevices endpoint
     const response = await claimDevices(newNetworkId.value, toClaim.value)
     if (response && response.serials) {
@@ -115,6 +118,7 @@ const addDevices = async () => {
         usedByAnotherOrg.value = true
         console.error('[CLAIM] Error adding devices to network, most likely the devices are already used by another organization')
     }
+    claiming.value = false
 }
 
 const moveDevices = async () => {
@@ -156,12 +160,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <div id="claim page">
+    <div id="claim-page">
         <h1>Claim Devices</h1>
-        <div id="claim-devices-form">
-            <textarea v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials"></textarea>
-            <button v-if="newNetworkId" @click="addDevices">Add Devices</button>
+        <div id="claim-devices-form" class="make-column">
+            <textarea class="margin-padding-all-normal round-normal fortywide" v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials"></textarea>
+            <button class="margin-padding-all-normal" v-if="newNetworkId" @click="addDevices">Add Devices</button>
         </div>
+        <p v-if="claiming">Claiming devices...</p>
         <template v-if="showMoveNetwork">
             <h2> WARNING: The following devices are already in a network : </h2>
             <ul>
@@ -169,17 +174,47 @@ onMounted(() => {
                     {{device.serial}} is in network {{device.network}}
                 </li>
             </ul>
-            <button @click="moveDevices">I understand, move them to the new network</button>
-            <button @click="showMoveNetwork = false; confirmMoveNetwork = true">Continue without those devices</button>
+            <button class="margin-padding-all-normal" @click="moveDevices">I understand, move them to the new network</button>
+            <button class="margin-padding-all-normal" @click="showMoveNetwork = false; confirmMoveNetwork = true">Continue without those devices</button>
         </template>
         <template v-if="usedByAnotherOrg">
             <p>Impossible to claim some devices, they most likely belong to another organization inventory</p>
         </template>
         <p v-if="devicesAdded">Devices added to network</p>
-        <button @click="validate">Next</button>
+        <button class="margin-padding-all-normal" @click="validate">Next</button>
     </div>
 </template>
 
 <style scoped>
+    .make-column {
+        display: flex;
+        flex-direction: column;
+    }
 
+    .margin-padding-all-normal {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    .round-normal {
+        border-radius: 4px;
+    }
+
+    .fortywide {
+        width: 40%;
+    }
+
+    #claim-devices-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    #claim-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 400%;
+    }
 </style>

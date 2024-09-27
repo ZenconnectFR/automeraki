@@ -3,7 +3,9 @@
 import { ref, onMounted } from 'vue'
 import { getOrganizations } from '../endpoints/organization/GetOrganizations.vue'
 import { getNetworks } from '../endpoints/networks/GetNetworks.vue'
+import { getNetworkDevices } from '@/endpoints/networks/GetNetworkDevices.vue'
 import { cloneNetwork } from '../endpoints/networks/CloneNetwork.vue'
+import { deleteTestNetworks } from '../endpoints/networks/DeleteTestNetworks.vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
@@ -35,6 +37,9 @@ const newNetworkAddress = ref('')
 // Loading states
 const loadingNetworks = ref(false)
 const networksLoaded = ref(false)
+
+// UI states
+const cloningNetwork = ref(false)
 
 // Actions to take once an organization is selected
 const setOrganizationOption = async (option) => {
@@ -74,6 +79,7 @@ const setNetworkOption = (option) => {
 // Handle network cloning (when the clone network button is clicked)
 const cloneNetworkEvent = async () => {
     // Clone the network with the API
+    cloningNetwork.value = true
     const response = await cloneNetwork(selectedNetwork.value, newNetworkNameInput.value, orgId.value)
     if (response) {
         console.log('[SETUP] Cloned network id:', response.newNetworkId)
@@ -88,6 +94,33 @@ const cloneNetworkEvent = async () => {
     }
 }
 
+/**
+ * Used only for test / debug process
+ * Avance direcly to the naming step whilst skipping the cloning and claiming steps
+ * We will need to get the devices from the API and set the devices store with them
+ */
+const configureNetwork = async () => {
+    ids.$patch({newNetworkId: networkId.value})
+
+    // retrieve devices from the API
+    let devicesList = await getNetworkDevices(networkId.value)
+    console.log('[SETUP] Devices in network: ', devicesList)
+    devices.$patch({devicesList: devicesList})
+    // add network name to the devices store
+    devices.$patch({network: selectedNetwork.value.name})
+
+    // get the network address from the first device in the list, if there is no device, leave the address empty
+    if (devicesList.length > 0) {
+        devices.$patch({address: devicesList[0].address})
+    } else {
+        devices.$patch({address: ''})
+    }
+
+    // update state store to move to the next step
+    states.$patch({setupDone: true})
+    states.$patch({claimDone: true})
+}
+
 // Setup function to run on page load
 const setup = async () => {
     // Get organizations from the API
@@ -97,6 +130,11 @@ const setup = async () => {
         setOrganizationOption({id: orgId.value})
     }
 };
+
+const deleteTestNetworksEvent = async () => {
+    let response = await deleteTestNetworks()
+    console.log('[SETUP] Deleted test networks: ', response)
+}
 
 // Run setup function on page load
 onMounted(()  => {
@@ -109,22 +147,51 @@ onMounted(()  => {
     <div id="setup-page">
         <h1>Setup</h1>
         <p v-if="organizations.length === 0">Loading organizations...</p>
-        <template v-if="organizations.length > 0">
-            <h3>Choose an org</h3>
-            <Dropdown :options="organizations" @select-option="setOrganizationOption"/>
-            <p v-if="loadingNetworks">Loading networks...</p>
-            <template v-if="networksLoaded">
-                <h3>Choose a network</h3>
-                <Dropdown :options="networks" @select-option="setNetworkOption"/>
-                <h3>Choose a new network name</h3>
-                <input v-model="newNetworkNameInput" type="text" placeholder="New network name"/>
-                <h3>Choose a new network address</h3>
-                <input v-model="newNetworkAddress" type="text" placeholder="New network address"/>
-                <button @click="cloneNetworkEvent">Clone network</button>
-            </template>
+        <template class="make-column" v-if="organizations.length > 0">
+            <button class="margin-padding-all-normal button-top-right" @click="deleteTestNetworksEvent">Delete test networks</button>
+            <div class="make-column">
+                <h3>Choose an org</h3>
+                <Dropdown :options="organizations" @select-option="setOrganizationOption"/>
+                <p v-if="loadingNetworks">Loading networks...</p>
+                <template v-if="networksLoaded">
+                    <h3>Choose a network</h3>
+                    <Dropdown :options="networks" @select-option="setNetworkOption"/>
+                    <button class="margin-padding-all-normal" @click="configureNetwork">Configure this network</button>
+                    <h3>Choose a new network name</h3>
+                    <input v-model="newNetworkNameInput" type="text" placeholder="New network name"/>
+                    <h3>Choose a new network address</h3>
+                    <input v-model="newNetworkAddress" type="text" placeholder="New network address"/>
+                    <button class="margin-padding-all-normal" @click="cloneNetworkEvent">Clone network</button>
+                    <p v-if="cloningNetwork">Cloning network...</p>
+                </template>
+            </div>
         </template>
     </div>
 </template>
 
 <style scoped>
+    .make-column {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .margin-padding-all-normal {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    .button-top-right {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
+    #setup-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 400%;
+        position: relative;
+    }
 </style>
