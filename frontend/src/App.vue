@@ -1,10 +1,10 @@
 <script setup>
 
 import { ref, onMounted } from 'vue'
-import Setup from './pages/Setup.vue'
-import Claim from './pages/Claim.vue'
-import Naming from './pages/Naming.vue'
-import Vlan from './pages/Vlan.vue'
+import Setup from './pages/setup.vue'
+import Claim from './pages/claim.vue'
+import Naming from './pages/naming.vue'
+import Vlan from './pages/vlan.vue'
 import { useStatesStore } from '@/stores/states'
 import { useIdsStore } from '@/stores/ids'
 import { storeToRefs } from 'pinia'

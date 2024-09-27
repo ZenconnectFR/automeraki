@@ -1,7 +1,7 @@
 <script setup>
 
 import { ref, onMounted } from 'vue'
-import { getOrganizations } from '../endpoints/organization/GetOrganizations.vue'
+import { getOrganizations } from '../endpoints/organizations/GetOrganizations.vue'
 import { getNetworks } from '../endpoints/networks/GetNetworks.vue'
 import { getNetworkDevices } from '@/endpoints/networks/GetNetworkDevices.vue'
 import { cloneNetwork } from '../endpoints/networks/CloneNetwork.vue'

@@ -6,15 +6,15 @@ Chrome extension to add templating to Meraki Dashboard.
 
 Install dependencies
 ```sh
-pip install -r requirement.txt
-cd AutoMeraki
+pip install -r backend/requirements.txt
+cd frontend
 npm install
 ```
 
 Run local server
 ```sh
-cd test-backend
-uvicorn test-back:app --port 8000 --reload
+cd backend
+uvicorn main:app --port 8000 --reload
 ```
 
 ### Compile and Hot-Reload for Development (App only)
