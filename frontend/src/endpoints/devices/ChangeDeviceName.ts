@@ -1,9 +1,8 @@
-<script>
-import Axios from 'axios'
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
-export async function changeDeviceName(serial, name) {
+export async function changeDeviceName(serial: string, name: string) {
     try {
-        const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/devices/name`, {
+        const response = await Axios.post(`/devices/name`, {
             serial: serial,
             name: name
         })
@@ -12,4 +11,3 @@ export async function changeDeviceName(serial, name) {
         console.error('[CNE] Error: ', error)
     }
 }
-</script>

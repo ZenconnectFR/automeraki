@@ -1,13 +1,11 @@
-<script>
-import Axios from 'axios'
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
-export function deleteTestNetworks(networks) {
+export async function deleteTestNetworks() : Promise<any> {
     try {
-        let response = Axios.get(`${import.meta.env.VITE_APP_API_URL}/del_test_networks`)
+        let response = await Axios.get(`/del_test_networks`)
         console.log('[DELETE TEST NETWORKS] Response: ', response.data)
         return response.data
     } catch (error) {
         console.error('[DELETE TEST NETWORKS] Error: ', error)
     }
 }
-</script>

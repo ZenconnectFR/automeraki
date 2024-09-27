@@ -1,11 +1,10 @@
-<script>
 /**
  * Script to claim devices to a network
  */
 
-import Axios from 'axios'
+import { axiosInstance as Axios } from '@/plugins/AxiosInstance'
 
-export async function claimDevices(newNetworkId, newNetworkDevices) {
+export async function claimDevices(newNetworkId : string, newNetworkDevices: string[]) {
   if (!newNetworkId) {
     console.log('No new network id')
     return null
@@ -16,7 +15,7 @@ export async function claimDevices(newNetworkId, newNetworkDevices) {
   }
   console.log('[CLAIM ENPOINT] Adding devices to network with body: id: ', newNetworkId, ' devices: ', newNetworkDevices)
   try {
-    const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/networks/claim`, {
+    const response = await Axios.post(`/networks/claim`, {
       network_id: newNetworkId,
       serials: newNetworkDevices
     })
@@ -27,4 +26,3 @@ export async function claimDevices(newNetworkId, newNetworkDevices) {
     return null
   }
 }
-</script>

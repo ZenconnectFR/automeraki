@@ -1,0 +1,19 @@
+{
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        },
+        "lib": ["es2015", "dom"],
+        "resolveJsonModule": true,
+
+        "esModuleInterop": true
+    }
+}

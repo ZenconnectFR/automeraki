@@ -1,10 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { claimDevices } from '@/endpoints/devices/ClaimDevices.vue'
-import { removeDeviceFromNetwork } from '@/endpoints/networks/RemoveDeviceFromNetwork.vue'
-import { getNetwork } from '@/endpoints/networks/GetNetwork.vue'
-import { getInventoryDevices } from '@/endpoints/organizations/GetInventoryDevices.vue'
-import { parseDevices } from '@/utils/Misc.vue'
+import { claimDevices } from '@/endpoints/devices/ClaimDevices'
+import { removeDeviceFromNetwork } from '@/endpoints/networks/RemoveDeviceFromNetwork'
+import { getNetwork } from '@/endpoints/networks/GetNetwork'
+import { getInventoryDevices } from '@/endpoints/organizations/GetInventoryDevices'
+import { parseDevices } from '@/utils/Misc'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
@@ -46,26 +46,17 @@ const retrieveInventory = async (parsedDevices) => {
 }
 
 /**
- * Check if a device is already in a network, the info will be in the details of the device in the inventoryDevices array
- * If no networkId is found, the device is not in a network, add it to the toClaim array
- * If a networkId is found, the device is in a network, add it to the alreadyInNetwork array
+ * Check if the devices are already in a network
+ * We only need to check the inventory for devices that are not already in a network
+ * if they are, add them to the alreadyInNetwork array
+ * else add them to the toClaim array
  */
 const checkDevicePossessions = () => {
-    for (const deviceProxy of Object.entries(inventoryDevices.value)) {
-        const device = deviceProxy[1]
-        // console.log('[CLAIM] Checking device possession: ', device)
-        for (const serial of parsedDevices.value) {
-            // console.log('[CLAIM] Checking device: ', device, ' against serial: ', serial)
-            if (device.serial === serial) {
-                // console.log('[CLAIM] Device found in inventory: ', device)
-                if (device.networkId) {
-                    console.log('[CLAIM] Device already in network: ', device)
-                    alreadyInNetwork.value.push(device)
-                } else {
-                    console.log('[CLAIM] Device not in network: ', device)
-                    toClaim.value.push(serial)
-                }
-            }
+    for (const device of inventoryDevices.value) {
+        if (device.networkId) {
+            alreadyInNetwork.value.push(device)
+        } else {
+            toClaim.value.push(device.serial)
         }
     }
 }
@@ -110,7 +101,7 @@ const addDevices = async () => {
 
         // update the devices store with the new devices, we get full device info from the API
         console.log('[CLAIM] Updating devices store with new devices: ', fullFinalDevices.value)
-        devices.$patch({devicesList: fullFinalDevices.value})
+        devices.setDevicesList(fullFinalDevices.value)
 
         devicesAdded.value = true
     } else {
@@ -150,7 +141,7 @@ const moveDevices = async () => {
 
 const validate = () => {
     // set the claimDone state to true
-    states.$patch({claimDone: true})
+    states.setClaimDone(true)
 }
 
 onMounted(() => {

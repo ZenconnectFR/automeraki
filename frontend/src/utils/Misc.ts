@@ -1,25 +1,13 @@
-<script>
-/**
- * Parses a text containing 0 or more device serials into a list of serials.
- * Serails are like QXXX-XXXX-XXXX or QXXX=XXXX=XXXX (because the scanner replaces dashes with equals)
- * @param {string} text - The text to parse
- * @returns {string[]} - The list of serials found in the text
- */
-export function parseDevices(text) {
+export function parseDevices(text: string): string[] {
     // Match serials like QXXX-XXXX-XXXX or QXXX=XXXX=XXXX
-    let serials = text.match(/Q[0-9A-Z]{3}[-=][0-9A-Z]{4}[-=][0-9A-Z]{4}/g);
+    let serials = text.match(/Q[0-9A-Z]{3}[-=][0-9A-Z]{4}[-=][0-9A-Z]{4}/g) as string[] | null;
     // replace = with - in serials
     serials = serials ? serials.map(serial => serial.replace('=', '-')) : [];
     return serials ? serials : [];
 };
 
-/**
- * Create placeholder mac address for devices which we don't have the mac address. Creates a mac address with another mac incremented by 1
- * @param {string} mac - Default: "00:00:00:00:00:00"
- * @returns {string} - The new mac address
- */
 
-export function createMac(mac="00:00:00:00:00:00") {
+export function createMac(mac: string="00:00:00:00:00:00"): string {
     // check input is a mac address
     const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 
@@ -46,6 +34,3 @@ export function createMac(mac="00:00:00:00:00:00") {
 
     return newMac;
 }
-
-</script>
-

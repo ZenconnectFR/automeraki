@@ -1,5 +1,4 @@
-<script>
-import Axios from 'axios'
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
 /**
  * Update a VLAN in a network
@@ -8,9 +7,9 @@ import Axios from 'axios'
  * @returns {Promise} - The response
  */
 
-export async function updateNetworkVlan(networkId, vlansConfigured) {
+export async function updateNetworkVlan(networkId: string, vlansConfigured: Array<any>): Promise<any> {
     console.log('[AVLAN] Updating network VLAN: ', networkId, vlansConfigured)
-    let response = await Axios.put(`${import.meta.env.VITE_APP_API_URL}/networks/updateNetworkVlan`, {
+    let response = await Axios.put(`/networks/updateNetworkVlan`, {
         network_id: networkId,
         options: vlansConfigured
     },
@@ -27,4 +26,3 @@ export async function updateNetworkVlan(networkId, vlansConfigured) {
         return null
     }
 }
-</script>

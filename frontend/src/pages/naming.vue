@@ -1,9 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia';
-import { changeDeviceName } from '@/endpoints/devices/ChangeDeviceName.vue';
-import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress.vue';
-import { blinkDevice } from '@/endpoints/devices/BlinkDevice.vue';
+import { changeDeviceName } from '@/endpoints/devices/ChangeDeviceName';
+import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress';
+import { blinkDevice } from '@/endpoints/devices/BlinkDevice';
 import { useDevicesStore } from '@/stores/devices';
 import { useStatesStore } from '@/stores/states';
 
@@ -58,7 +58,7 @@ const renameDevices = () => {
     }
 
     // patch the devices store
-    devices.$patch({devicesList: devicesList.value})
+    devices.setDevicesList(devicesList.value);
 
     // rename the devices
 }
@@ -95,7 +95,7 @@ const setup = async() => {
 
 const validate = () => {
     // set the namingDone state to true
-    states.$patch({namingDone: true})
+    states.setNamingDone(true)
 }
 
 onMounted(() => {

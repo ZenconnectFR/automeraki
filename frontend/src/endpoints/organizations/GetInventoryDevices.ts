@@ -1,16 +1,14 @@
-<script>
-import Axios from 'axios';
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
 /**
- * Get the list of devices in the organization inventory
+ * Gets the devices of an organization
  * @param {string} orgId - The id of the organization
- * @returns {Object[]} - The list of devices in the inventory
+ * @param {Array<string>} serials - The serials of the devices
  */
 
-export async function getInventoryDevices(orgId, serials=null) {
+export async function getInventoryDevices(orgId : string, serials: Array<string>=[]) : Promise<any> {
     try {
-
-        const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/organizations/inventory`,{
+        const response = await Axios.post(`/organizations/inventory`,{
             org_id: orgId,
             serials: serials
         })
@@ -21,4 +19,3 @@ export async function getInventoryDevices(orgId, serials=null) {
         return null
     }
 }
-</script>

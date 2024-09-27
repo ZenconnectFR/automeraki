@@ -1,19 +1,18 @@
-<script>
-import Axios from 'axios';
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
 /**
  * Create a new VLAN if it does not exist
  * @param {string} networkId - The id of the network
- * @param {Object[]} vlans - The list of vlans to create if they do not exist
- * @returns void
+ * @param {Array} vlans - The list of vlans to create if they do not exist
+ * @returns {Array} - The list of created vlans
  */
 
-export async function createVlansIfNotExists(networkId, vlans) {
+export async function createVlansIfNotExists(networkId: string, vlans: Array<any>): Promise<string[]> {
     try {
         let createdVlans = []
 
         // 1 - get the list of vlans in the network
-        const currentVlans = await Axios.get(`${import.meta.env.VITE_APP_API_URL}/networks/${networkId}/vlans`)
+        const currentVlans = await Axios.get(`/networks/${networkId}/vlans`)
         console.log('[VLAN] Existing vlans: ', currentVlans.data)
         // 2 - check if the vlans in the list are in the vlans array
         for (const vlan of vlans) {
@@ -27,7 +26,7 @@ export async function createVlansIfNotExists(networkId, vlans) {
             // 3 - if the vlan is not found, create it
             if (!found) {
                 console.log('[VLAN] Creating vlan: ', vlan)
-                const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/networks/createVlan`, {
+                const response = await Axios.post(`/networks/createVlan`, {
                     network_id: networkId,
                     id: vlan.id,
                     name: vlan.payload[0].name,
@@ -45,4 +44,3 @@ export async function createVlansIfNotExists(networkId, vlans) {
         return null
     }
 }
-</script>

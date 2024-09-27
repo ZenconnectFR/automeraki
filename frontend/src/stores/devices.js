@@ -6,9 +6,16 @@ export const useDevicesStore = defineStore('devices', () => {
     const address = ref('');
     const network = ref('');
 
+    const setDevicesList = (list) => devicesList.value = list;
+    const setAddress = (addr) => address.value = addr;
+    const setNetwork = (net) => network.value = net;
+
     return {
         devicesList,
         address,
         network,
+        setDevicesList,
+        setAddress,
+        setNetwork
     }
 });

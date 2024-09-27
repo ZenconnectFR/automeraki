@@ -1,5 +1,4 @@
-<script>
-import Axios from 'axios';
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
 /**
  * Remove a device from a network
@@ -8,9 +7,9 @@ import Axios from 'axios';
  * @returns {Object} - The response from the API
  */
 
-export async function removeDeviceFromNetwork(networkId, serial) {
+export async function removeDeviceFromNetwork(networkId : string, serial : string) : Promise<any> {
     try {
-        const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/networks/removeDevice`, {
+        const response = await Axios.post(`/networks/removeDevice`, {
             network_id: networkId,
             serial: serial
         })
@@ -20,4 +19,3 @@ export async function removeDeviceFromNetwork(networkId, serial) {
         return null
     }
 }
-</script>

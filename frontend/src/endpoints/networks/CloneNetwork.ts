@@ -1,11 +1,11 @@
-<script>
 /**
  * Script to clone a network from a network id
  */
 
-import Axios from 'axios'
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
-export async function cloneNetwork(selectedNetwork, newNetworkNameInput, orgId) {
+export async function cloneNetwork(selectedNetwork: { id?: string }, newNetworkNameInput: string, orgId: string)
+                                  : Promise<{ newNetworkId: string, newNetworkName: string}> {
   if (!selectedNetwork.id) {
     console.log('No network selected')
     return null
@@ -17,7 +17,7 @@ export async function cloneNetwork(selectedNetwork, newNetworkNameInput, orgId) 
 
   console.log('[CLONE EP] Cloning network with body: id: ', selectedNetwork.id, ' name: ', newNetworkNameInput)
   try {
-    const response = await Axios.post(`${import.meta.env.VITE_APP_API_URL}/networks/clone`, {
+    const response = await Axios.post(`/networks/clone`, {
       network_id: selectedNetwork.id,
       name: newNetworkNameInput,
       org_id: orgId
@@ -28,7 +28,6 @@ export async function cloneNetwork(selectedNetwork, newNetworkNameInput, orgId) 
     return { newNetworkId, newNetworkName }
   } catch (error) {
     console.error(error)
-    return null
+    return { newNetworkId: '', newNetworkName: '' }
   }
 }
-</script>

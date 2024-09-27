@@ -1,11 +1,11 @@
-<script setup>
+<script setup lang="ts">
 
 import { ref, onMounted } from 'vue'
-import { getOrganizations } from '@/endpoints/organizations/GetOrganizations.vue'
-import { getNetworks } from '@/endpoints/networks/GetNetworks.vue'
-import { getNetworkDevices } from '@/endpoints/networks/GetNetworkDevices.vue'
-import { cloneNetwork } from '@/endpoints/networks/CloneNetwork.vue'
-import { deleteTestNetworks } from '@/endpoints/networks/DeleteTestNetworks.vue'
+import { getOrganizations } from '@/endpoints/organizations/GetOrganizations'
+import { getNetworks } from '@/endpoints/networks/GetNetworks'
+import { getNetworkDevices } from '@/endpoints/networks/GetNetworkDevices'
+import { cloneNetwork } from '@/endpoints/networks/CloneNetwork'
+import { deleteTestNetworks } from '@/endpoints/networks/DeleteTestNetworks'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
@@ -22,13 +22,20 @@ const states = useStatesStore()
 const orgId = storeToRefs(ids.orgId)
 const networkId = storeToRefs(ids.networkId)
 
+const organizationsNotLoaded = ref(true)
+
 // Organizations and networks from API
 const organizations = ref([])
 const networks = ref([])
 
 // Network selection dropdown options and selected network
 const networkOptions = ref([])
-const selectedNetwork = ref({})
+interface Network {
+  id: string;
+  name: string;
+}
+
+const selectedNetwork = ref<Network | null>(null)
 
 // New network name and address fields inputs
 const newNetworkNameInput = ref('')
@@ -45,7 +52,7 @@ const cloningNetwork = ref(false)
 const setOrganizationOption = async (option) => {
     // 1 - Set the orgId in this and the ids store
     orgId.value = option.id
-    ids.$patch({orgId: option.id})
+    ids.setOrgId(option.id)
 
     // 2 - Load networks for the selected org
     loadingNetworks.value = true
@@ -62,12 +69,12 @@ const setOrganizationOption = async (option) => {
 // Populate network options array
 const populateNetworkOptions = () => {
     // map networks to options
-    for (const network of Object.values(networks.value)) {
-        networkOptions.value.push({
-            id : network.id,
+    networkOptions.value = networks.value.map(network => {
+        return {
+            id: network.id,
             name: network.name
-        });
-    }
+        }
+    })
 }
 
 // Set the selected network
@@ -84,11 +91,11 @@ const cloneNetworkEvent = async () => {
     if (response) {
         console.log('[SETUP] Cloned network id:', response.newNetworkId)
         // update stores values
-        ids.$patch({newNetworkId: response.newNetworkId})
-        devices.$patch({address: newNetworkAddress.value})
-        devices.$patch({network: newNetworkNameInput.value})
+        ids.setNewNetworkId(response.newNetworkId)
+        devices.setAddress(newNetworkAddress.value)
+        devices.setNetwork(newNetworkNameInput.value)
         // update state store to move to the next step
-        states.$patch({setupDone: true})
+        states.setSetupDone(true)
     } else {
         console.log('[SETUP] Error cloning network')
     }
@@ -102,23 +109,24 @@ const cloneNetworkEvent = async () => {
 const configureNetwork = async () => {
     ids.setNewNetworkId(networkId.value)
 
-    // retrieve devices from the API
     let devicesList = await getNetworkDevices(networkId.value)
+
     console.log('[SETUP] Devices in network: ', devicesList)
-    devices.$patch({devicesList: devicesList})
+
+    devices.setDevicesList(devicesList)
     // add network name to the devices store
-    devices.$patch({network: selectedNetwork.value.name})
+    devices.setNetwork(selectedNetwork.value.name)
 
     // get the network address from the first device in the list, if there is no device, leave the address empty
     if (devicesList.length > 0) {
-        devices.$patch({address: devicesList[0].address})
+        devices.setAddress(devicesList[0].address)
     } else {
-        devices.$patch({address: ''})
+        devices.setAddress('')
     }
 
     // update state store to move to the next step
-    states.$patch({setupDone: true})
-    states.$patch({claimDone: true})
+    states.setSetupDone(true)
+    states.setClaimDone(true)
 }
 
 // Setup function to run on page load
@@ -129,6 +137,8 @@ const setup = async () => {
         // if an orgId is already set in the root div, set it in the store
         setOrganizationOption({id: orgId.value})
     }
+    console.log('[SETUP] Organizations loaded: ', organizations.value)
+    organizationsNotLoaded.value = false
 };
 
 const deleteTestNetworksEvent = async () => {
@@ -146,8 +156,8 @@ onMounted(()  => {
 <template>
     <div id="setup-page">
         <h1>Setup</h1>
-        <p v-if="organizations.length === 0">Loading organizations...</p>
-        <template class="make-column" v-if="organizations.length > 0">
+        <p v-if="organizationsNotLoaded">Loading organizations...</p>
+        <template class="make-column" v-if="organizationsNotLoaded === false">
             <button class="margin-padding-all-normal button-top-right" @click="deleteTestNetworksEvent">Delete test networks</button>
             <div class="make-column">
                 <h3>Choose an org</h3>

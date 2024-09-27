@@ -1,15 +1,15 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
-import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan.vue'
-import { createVlansIfNotExists } from '@/endpoints/networks/CreateVlansIfNotExists.vue'
-import { enableVlans } from '@/endpoints/networks/EnableVlans.vue'
+import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan'
+import { createVlansIfNotExists } from '@/endpoints/networks/CreateVlansIfNotExists'
+import { enableVlans } from '@/endpoints/networks/EnableVlans'
 
-import { createMac } from '@/utils/Misc.vue'
+import { createMac } from '@/utils/Misc'
 
 const ids = useIdsStore()
 const devices = useDevicesStore()
@@ -20,6 +20,9 @@ const { devicesList } = storeToRefs(devices)
 
 const vlanIsAutoConfigured = ref(false)
 const vlanAutoConfigured = ref([])
+
+// UI states
+const savingChanges = ref(false)
 
 /* import config file (@/assets/test-config.json)
 {
@@ -116,21 +119,25 @@ const preEnableVlans = async() => {
 
 const confirm = async () => {
     // enable vlans
+    savingChanges.value = true
     await preEnableVlans()
 
     let createdVlans = await createVlansIfNotExists(newNetworkId.value, vlanAutoConfigured.value)
 
     // filter payload[0] part out of vlanAutoConfigured when vlan id is in createdVlans
     for (const vlan of vlanAutoConfigured.value) {
-        if (createdVlans.includes(vlan.id)) {
-            // remove the element at index 0 of vlan.payload
-            vlan.payload.shift()
+        for (const createdVlan of createdVlans) {
+            if (vlan.id === createdVlan) {
+                vlan.payload.shift()
+            }
         }
     }
 
     // Save changes
     console.log('[VLAN] Saving changes')
     await updateNetworkVlan(newNetworkId.value, vlanAutoConfigured.value)
+
+    savingChanges.value = false
 }
 
 onMounted(() => {
@@ -156,6 +163,7 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
+            <p v-if="savingChanges">Saving changes...</p>
             <button @click="confirm">Save changes</button>
         </div>
     </div>

@@ -1,5 +1,4 @@
-<script>
-import Axios from 'axios'
+import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
 /**
  * Enable VLANs in a network
@@ -7,9 +6,9 @@ import Axios from 'axios'
  * @returns {Promise} - The response
  */
 
-export async function enableVlans(networkId) {
+export async function enableVlans(networkId : string) : Promise<any> {
     console.log('[VLAN] Enabling VLANs in network: ', networkId)
-    let response = await Axios.put(`${import.meta.env.VITE_APP_API_URL}/networks/enableVlans/${networkId}`)
+    let response = await Axios.put(`/networks/enableVlans/${networkId}`)
     if (response && response.data) {
         console.log('[VLAN] VLANs enabled: ', response.data)
         return response.data
@@ -18,4 +17,3 @@ export async function enableVlans(networkId) {
         return null
     }
 }
-</script>
