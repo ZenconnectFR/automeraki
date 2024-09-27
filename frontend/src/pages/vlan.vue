@@ -5,11 +5,11 @@ import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
-import { updateNetworkVlan } from '../endpoints/networks/UpdateNetworkVlan.vue'
-import { createVlansIfNotExists } from '../endpoints/networks/CreateVlansIfNotExists.vue'
-import { enableVlans } from '../endpoints/networks/EnableVlans.vue'
+import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan.vue'
+import { createVlansIfNotExists } from '@/endpoints/networks/CreateVlansIfNotExists.vue'
+import { enableVlans } from '@/endpoints/networks/EnableVlans.vue'
 
-import { createMac } from '../utils/Misc.vue'
+import { createMac } from '@/utils/Misc.vue'
 
 const ids = useIdsStore()
 const devices = useDevicesStore()
@@ -21,7 +21,7 @@ const { devicesList } = storeToRefs(devices)
 const vlanIsAutoConfigured = ref(false)
 const vlanAutoConfigured = ref([])
 
-/* import config file (../assets/test-config.json)
+/* import config file (@/assets/test-config.json)
 {
     "vlan": [
         {
@@ -43,7 +43,7 @@ const vlanAutoConfigured = ref([])
     ]
 }
  */
-import * as configJson from '../assets/test-conf.json'
+import * as configJson from '@/assets/test-conf.json'
 const config = ref(configJson)
 
 

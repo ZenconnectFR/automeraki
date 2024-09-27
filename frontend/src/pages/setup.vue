@@ -1,17 +1,17 @@
 <script setup>
 
 import { ref, onMounted } from 'vue'
-import { getOrganizations } from '../endpoints/organizations/GetOrganizations.vue'
-import { getNetworks } from '../endpoints/networks/GetNetworks.vue'
+import { getOrganizations } from '@/endpoints/organizations/GetOrganizations.vue'
+import { getNetworks } from '@/endpoints/networks/GetNetworks.vue'
 import { getNetworkDevices } from '@/endpoints/networks/GetNetworkDevices.vue'
-import { cloneNetwork } from '../endpoints/networks/CloneNetwork.vue'
-import { deleteTestNetworks } from '../endpoints/networks/DeleteTestNetworks.vue'
+import { cloneNetwork } from '@/endpoints/networks/CloneNetwork.vue'
+import { deleteTestNetworks } from '@/endpoints/networks/DeleteTestNetworks.vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
-import Dropdown from '../components/Dropdown.vue'
+import Dropdown from '@/components/Dropdown.vue'
 
 // stores
 const ids = useIdsStore()
@@ -100,7 +100,7 @@ const cloneNetworkEvent = async () => {
  * We will need to get the devices from the API and set the devices store with them
  */
 const configureNetwork = async () => {
-    ids.$patch({newNetworkId: networkId.value})
+    ids.setNewNetworkId(networkId.value)
 
     // retrieve devices from the API
     let devicesList = await getNetworkDevices(networkId.value)

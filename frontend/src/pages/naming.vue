@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia';
-import { changeDeviceName } from '../endpoints/devices/ChangeDeviceName.vue';
-import { changeDeviceAddress } from '../endpoints/devices/ChangeDeviceAddress.vue';
-import { blinkDevice } from '../endpoints/devices/BlinkDevice.vue';
+import { changeDeviceName } from '@/endpoints/devices/ChangeDeviceName.vue';
+import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress.vue';
+import { blinkDevice } from '@/endpoints/devices/BlinkDevice.vue';
 import { useDevicesStore } from '@/stores/devices';
 import { useStatesStore } from '@/stores/states';
 

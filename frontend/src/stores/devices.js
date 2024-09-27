@@ -9,6 +9,6 @@ export const useDevicesStore = defineStore('devices', () => {
     return {
         devicesList,
         address,
-        network
+        network,
     }
 });

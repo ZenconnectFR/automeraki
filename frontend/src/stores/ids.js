@@ -6,9 +6,12 @@ export const useIdsStore = defineStore('ids', () => {
     const networkId = ref('');
     const newNetworkId = ref('');
 
+    const setNewNetworkId = (id) => newNetworkId.value = id;
+
     return {
         orgId,
         networkId,
         newNetworkId,
+        setNewNetworkId
     }
 })

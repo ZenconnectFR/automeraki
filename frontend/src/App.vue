@@ -1,10 +1,10 @@
 <script setup>
 
-import { ref, onMounted } from 'vue'
-import Setup from './pages/setup.vue'
-import Claim from './pages/claim.vue'
-import Naming from './pages/naming.vue'
-import Vlan from './pages/vlan.vue'
+import { ref } from 'vue'
+import Setup from '@/pages/setup.vue'
+import Claim from '@/pages/claim.vue'
+import Naming from '@/pages/naming.vue'
+import Vlan from '@/pages/vlan.vue'
 import { useStatesStore } from '@/stores/states'
 import { useIdsStore } from '@/stores/ids'
 import { storeToRefs } from 'pinia'
@@ -19,12 +19,12 @@ const states = useStatesStore()
 // Check if the orgId is in the root div of the app
 const orgId = document.getElementById('app').getAttribute('data-org-id')
 if (orgId && orgId !== '-1') {
-    // set the orgId in the store
-    ids.$patch({orgId: orgId})
-    // in both cases, set ready to true
-    ready.value = true
+  // set the orgId in the store
+  ids.$patch({ orgId: orgId })
+  // in both cases, set ready to true
+  ready.value = true
 } else {
-    ready.value = true
+  ready.value = true
 }
 
 // destructure states
