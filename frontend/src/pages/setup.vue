@@ -30,6 +30,7 @@ const networks = ref([])
 
 // Network selection dropdown options and selected network
 const networkOptions = ref([])
+
 interface Network {
   id: string;
   name: string;
@@ -49,8 +50,12 @@ const networksLoaded = ref(false)
 const cloningNetwork = ref(false)
 const deletingTestNetworks = ref(false)
 
+const newNameEntered = ref(true)
+const newAddressEntered = ref(true)
+const newNetworkSelected = ref(true)
+
 // Actions to take once an organization is selected
-const setOrganizationOption = async (option) => {
+const setOrganizationOption = async (option: { id: any }) => {
     // 1 - Set the orgId in this and the ids store
     orgId.value = option.id
     ids.setOrgId(option.id)
@@ -79,15 +84,32 @@ const populateNetworkOptions = () => {
 }
 
 // Set the selected network
-const setNetworkOption = (option) => {
+const setNetworkOption = (option: Network | { id: string; name: string }) => {
     selectedNetwork.value = option
     networkId.value = option.id
+    newNetworkSelected.value = true
 }
 
 // Handle network cloning (when the clone network button is clicked)
 const cloneNetworkEvent = async () => {
     // Clone the network with the API
+    if (newNetworkNameInput.value === '') {
+        newNameEntered.value = false
+    }
+    if (newNetworkAddress.value === '') {
+        newAddressEntered.value = false
+    }
+    if (selectedNetwork.value === null) {
+        newNetworkSelected.value = false
+    }
+    if (newNameEntered.value === false || newAddressEntered.value === false || newNetworkSelected.value === false) {
+        return
+    }
+
+    newNameEntered.value = true
+    newAddressEntered.value = true
     cloningNetwork.value = true
+
     const response = await cloneNetwork(selectedNetwork.value, newNetworkNameInput.value, orgId.value)
     if (response) {
         console.log('[SETUP] Cloned network id:', response.newNetworkId)
@@ -165,18 +187,27 @@ onMounted(()  => {
                 <button class="margin-padding-all-normal" @click="deleteTestNetworksEvent">Delete test networks</button>
                 <p v-if="deletingTestNetworks">Deleting test networks...</p>
             </div>
+
             <div class="make-column">
                 <h3>Choose an org</h3>
                 <Dropdown :options="organizations" @select-option="setOrganizationOption"/>
                 <p v-if="loadingNetworks">Loading networks...</p>
+
                 <template v-if="networksLoaded">
                     <h3>Choose a network</h3>
                     <Dropdown :options="networks" @select-option="setNetworkOption"/>
+                    <p class="red" v-if="!newNetworkSelected">Please select a newtork to clone</p>
+
                     <button class="margin-padding-all-normal" @click="configureNetwork">Configure this network</button>
+
                     <h3>Choose a new network name</h3>
-                    <input v-model="newNetworkNameInput" type="text" placeholder="New network name"/>
+                    <input v-model="newNetworkNameInput" type="text" placeholder="New network name" @input="newNameEntered=true"/>
+                    <p class="red" v-if="!newNameEntered">Please enter a new network name</p>
+
                     <h3>Choose a new network address</h3>
-                    <input v-model="newNetworkAddress" type="text" placeholder="New network address"/>
+                    <input v-model="newNetworkAddress" type="text" placeholder="New network address" @input="newAddressEntered=true"/>
+                    <p class="red" v-if="!newAddressEntered">Please enter a new network address</p>
+
                     <button class="margin-padding-all-normal" @click="cloneNetworkEvent">Clone network</button>
                     <p v-if="cloningNetwork">Cloning network...</p>
                 </template>
@@ -201,6 +232,10 @@ onMounted(()  => {
         position: absolute;
         top: 0;
         right: 0;
+    }
+
+    .red {
+        color: red  ;
     }
 
     #setup-page {

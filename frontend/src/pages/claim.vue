@@ -24,6 +24,7 @@ const showMoveNetwork = ref(false)
 
 const inventoryDevices = ref([]) // devices in the organization inventory
 const inventoryFetched = ref(false)
+const inventoryUpdated = ref(false)
 const parsedDevices = ref([]) // devices parsed from the input field
 
 const alreadyInNetwork = ref([]) // devices already in a network (full objects)
@@ -31,6 +32,7 @@ const alreadyInNetworkWithInfo = ref([]) // devices already in a network (with n
 const toClaim = ref([]) // devices to claim (string serials)
 
 const devicesAdded = ref(false)
+const noDevicesToAdd = ref(false)
 
 const fullFinalDevices = ref([]) // full devices info after adding them to the network
 
@@ -40,7 +42,7 @@ const claiming = ref(false)
 
 // --------------------------- CLAIM REFACTORED ---------------------------
 
-const retrieveInventory = async (parsedDevices) => {
+const retrieveInventory = async (parsedDevices: string[]) => {
     // get the inventory devices
     inventoryDevices.value = await getInventoryDevices(orgId.value, parsedDevices)
     inventoryFetched.value = true
@@ -62,20 +64,25 @@ const checkDevicePossessions = () => {
     }
 }
 
-
+/**
+ * Main logic for adding devices to a network.
+ */
 const addDevices = async () => {
+    // parse the devices from the input field
     parsedDevices.value = parseDevices(newNetworkDevices.value)
 
-    // get the inventory devices
-    if (!inventoryFetched.value) { // We call this function twice when there are devices already in a network, so we need to check if we already fetched the inventory
+    // get the devices in inventory that match the parsed devices' serials
+    if (!inventoryFetched.value || inventoryUpdated.value) {
         await retrieveInventory(parsedDevices.value)
+        inventoryUpdated.value = false
     }
 
     // check if the devices are already in a network
     checkDevicePossessions()
 
-    // handle devices already in network
-    if (!confirmMoveNetwork.value && alreadyInNetwork.value.length > 0) {
+    // If one or more devices are already in a network, show a warning and ask the user to confirm the move
+    // Gets skipped if the user already confirmed the move
+    if (alreadyInNetwork.value.length > 0 && !confirmMoveNetwork.value) {
         for (const device of alreadyInNetwork.value) {
             const network = await getNetwork(device.networkId)
             alreadyInNetworkWithInfo.value.push({ serial: device.serial, network: network.name, network_id: network.id })
@@ -88,8 +95,15 @@ const addDevices = async () => {
 
     console.log('[CLAIM] Devices to claim: ', toClaim.value)
 
+    // If toClaim is empty, we can skip the claimDevices call and show a message
+    if (toClaim.value.length === 0) {
+        noDevicesToAdd.value = true
+        return
+    }
+
+    // show the claiming message
     claiming.value = true
-    // else, call the claimDevices endpoint
+    // Call the claimDevices endpoint
     const response = await claimDevices(newNetworkId.value, toClaim.value)
     if (response && response.serials) {
         console.log('[CLAIM] Devices added to network: ', response.serials)
@@ -112,6 +126,9 @@ const addDevices = async () => {
     claiming.value = false
 }
 
+/**
+ * Handle the move network warning: remove the devices from their networks and add them to the new network
+ */
 const moveDevices = async () => {
     // remove the devices already in network from their networks
     for (const device of alreadyInNetwork.value) {
@@ -127,6 +144,8 @@ const moveDevices = async () => {
     // set the confirmMoveNetwork to true
     confirmMoveNetwork.value = true
 
+    inventoryUpdated.value = true
+
     // add the devices to the new network
     await addDevices()
 
@@ -138,6 +157,28 @@ const moveDevices = async () => {
 
     // close the move network warning
     showMoveNetwork.value = false
+}
+
+/**
+ * Remove the devices that are already in a network from the toClaim array and the input field
+ */
+
+const removeAlreadyInNetwork = () => {
+    for (const device of alreadyInNetwork.value) {
+        const index = toClaim.value.indexOf(device.serial)
+        if (index > -1) {
+            toClaim.value.splice(index, 1)
+        }
+    }
+
+    // remove the devices from the input field by regex matching
+    for (const device of alreadyInNetwork.value) {
+        const regex = new RegExp(device.serial, 'g')
+        newNetworkDevices.value = newNetworkDevices.value.replace(regex, '');
+    }
+
+    // remove empty lines
+    newNetworkDevices.value = newNetworkDevices.value.replace(/^\s*[\r\n]/gm, '');
 }
 
 const { address } = storeToRefs(devices)
@@ -175,12 +216,13 @@ onMounted(() => {
                 </li>
             </ul>
             <button class="margin-padding-all-normal" @click="moveDevices">I understand, move them to the new network</button>
-            <button class="margin-padding-all-normal" @click="showMoveNetwork = false; confirmMoveNetwork = true">Continue without those devices</button>
+            <button class="margin-padding-all-normal" @click="showMoveNetwork = false; confirmMoveNetwork = true; removeAlreadyInNetwork() ;addDevices()">Continue without those devices</button>
         </template>
         <template v-if="usedByAnotherOrg">
             <p>Impossible to claim some devices, they most likely belong to another organization inventory</p>
         </template>
         <p v-if="devicesAdded">Devices added to network</p>
+        <p v-if="noDevicesToAdd">No new devices to add to the new network</p>
         <button class="margin-padding-all-normal" @click="validate">Next</button>
     </div>
 </template>

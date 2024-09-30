@@ -3,7 +3,7 @@ import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 /**
  * Get the information of a network with its id
  * @param {string} networkId - The id of the network
- * @returns {Object} - The information of the network
+ * @returns {Promise<any>} - The network information
  */
 export async function getNetwork(networkId : string) : Promise<any> {
     try {
