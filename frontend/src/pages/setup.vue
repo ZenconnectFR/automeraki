@@ -8,15 +8,18 @@ import { cloneNetwork } from '@/endpoints/networks/CloneNetwork'
 import { deleteTestNetworks } from '@/endpoints/networks/DeleteTestNetworks'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
-import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
 import Dropdown from '@/components/Dropdown.vue'
 
+import { useRoute, useRouter } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+
 // stores
 const ids = useIdsStore()
 const devices = useDevicesStore()
-const states = useStatesStore()
 
 // values from store
 const orgId = storeToRefs(ids.orgId)
@@ -118,7 +121,7 @@ const cloneNetworkEvent = async () => {
         devices.setAddress(newNetworkAddress.value)
         devices.setNetwork(newNetworkNameInput.value)
         // update state store to move to the next step
-        states.setSetupDone(true)
+        router.push('/claim')
     } else {
         console.log('[SETUP] Error cloning network')
     }
@@ -148,8 +151,7 @@ const configureNetwork = async () => {
     }
 
     // update state store to move to the next step
-    states.setSetupDone(true)
-    states.setClaimDone(true)
+    router.push({ path: '/naming', replace: true })
 }
 
 // Setup function to run on page load

@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
-import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 
 import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan'
@@ -11,9 +10,13 @@ import { enableVlans } from '@/endpoints/networks/EnableVlans'
 
 import { createMac } from '@/utils/Misc'
 
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+
 const ids = useIdsStore()
 const devices = useDevicesStore()
-const states = useStatesStore()
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
@@ -146,8 +149,7 @@ const validate = () => {
 }
 
 const goBack = () => {
-    states.setNamingDone(false)
-    states.setVlanDone(false)
+    router.push('/naming')
 }
 
 onMounted(() => {

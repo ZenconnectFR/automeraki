@@ -5,10 +5,13 @@ import { changeDeviceName } from '@/endpoints/devices/ChangeDeviceName';
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress';
 import { blinkDevice } from '@/endpoints/devices/BlinkDevice';
 import { useDevicesStore } from '@/stores/devices';
-import { useStatesStore } from '@/stores/states';
+
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
 
 const devices = useDevicesStore()
-const states = useStatesStore()
 const { address, network, devicesList} = storeToRefs(devices)
 
 // UI states
@@ -88,8 +91,7 @@ const blink = (serial) => {
 }
 
 const goBack = () => {
-    states.setNamingDone(false);
-    states.setClaimDone(false);
+    router.push('/claim');
 }
 
 const setup = async() => {
@@ -99,7 +101,7 @@ const setup = async() => {
 
 const validate = () => {
     // set the namingDone state to true
-    states.setNamingDone(true)
+    router.push('/vlan');
 }
 
 onMounted(() => {

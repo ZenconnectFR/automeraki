@@ -7,14 +7,17 @@ import { getInventoryDevices } from '@/endpoints/organizations/GetInventoryDevic
 import { parseDevices } from '@/utils/Misc'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
-import { useStatesStore } from '@/stores/states'
 import { storeToRefs } from 'pinia'
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress'
+
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
 
 // stores
 const ids = useIdsStore()
 const devices = useDevicesStore()
-const states = useStatesStore()
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 
@@ -61,6 +64,14 @@ const checkDevicePossessions = () => {
         } else {
             toClaim.value.push(device.serial)
         }
+    }
+}
+
+const { address } = storeToRefs(devices)
+
+const changeAddresses = async() => {
+    for (const device of fullFinalDevices.value) {
+        await changeDeviceAddress(device.serial, address.value);
     }
 }
 
@@ -118,6 +129,7 @@ const addDevices = async () => {
         console.log('[CLAIM] Updating devices store with new devices: ', fullFinalDevices.value)
         devices.setDevicesList(fullFinalDevices.value)
 
+        await changeAddresses()
         devicesAdded.value = true
     } else {
         usedByAnotherOrg.value = true
@@ -181,18 +193,9 @@ const removeAlreadyInNetwork = () => {
     newNetworkDevices.value = newNetworkDevices.value.replace(/^\s*[\r\n]/gm, '');
 }
 
-const { address } = storeToRefs(devices)
-
-const changeAddresses = async() => {
-    for (const device of fullFinalDevices.value) {
-        await changeDeviceAddress(device.serial, address.value);
-    }
-}
-
 const validate = async() => {
     // set the claimDone state to true
-    await changeAddresses()
-    states.setClaimDone(true)
+    router.push('/naming')
 }
 
 onMounted(() => {

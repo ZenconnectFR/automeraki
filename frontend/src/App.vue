@@ -1,13 +1,9 @@
 <script setup>
 
 import { ref } from 'vue'
-import Setup from '@/pages/setup.vue'
-import Claim from '@/pages/claim.vue'
-import Naming from '@/pages/naming.vue'
-import Vlan from '@/pages/vlan.vue'
 import { useStatesStore } from '@/stores/states'
 import { useIdsStore } from '@/stores/ids'
-import { storeToRefs } from 'pinia'
+import { RouterView } from 'vue-router'
 
 // state control to wait for orgId to be set
 const ready = ref(false)
@@ -27,26 +23,13 @@ if (orgId && orgId !== '-1') {
   ready.value = true
 }
 
-// destructure states
-const { setupDone, claimDone, namingDone, vlanDone } = storeToRefs(states)
 
 </script>
 
 <template>
   <div id="welcome">
     <h1>AutoMeraki</h1>
-    <template v-if="!setupDone && ready">
-      <Setup />
-    </template>
-    <template v-if="setupDone && !claimDone">
-      <Claim />
-    </template>
-    <template v-if="claimDone && !namingDone">
-      <Naming />
-    </template>
-    <template v-if="namingDone && !vlanDone">
-      <Vlan />
-    </template>
+    <RouterView />
   </div>
 </template>
 
