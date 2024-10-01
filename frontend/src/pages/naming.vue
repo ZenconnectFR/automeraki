@@ -53,10 +53,12 @@ const renameDevices = () => {
                 deviceType = 'O';
         }
 
-        let newName = network.value + ' ' + deviceType +
-            (deviceType === 'R' ? routerCount++ : deviceType === 'S' ? switchCount++ : deviceType === 'AP' ? apCount++ : otherCount++);
+        let suffix = deviceType + (deviceType === 'R' ? routerCount++ : deviceType === 'S' ? switchCount++ : deviceType === 'AP' ? apCount++ : otherCount++)    ;
+        let newName = `${network.value} ${suffix}`;
 
         device.name = newName;
+        device['type'] = deviceType;
+        device['shortName'] = suffix;
     }
 
     // patch the devices store

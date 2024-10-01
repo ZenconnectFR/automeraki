@@ -1,4 +1,5 @@
 {
+    "name": "Template 1",
     "vlan": [
         {
             "id": 1,
@@ -31,6 +32,38 @@
                     "ip": "10.101.2.2"
                 }
             ]
+        }
+    ],
+    "ports": [
+        {
+            "switchName": "S1",
+            "config": {
+                "default": {
+                    "vlan": "1",
+                    "name": "Reboot",
+                    "type": "access"
+                },
+                "ports": [
+                    {
+                        "id": "1",
+                        "vlan": "1",
+                        "name": "Uplink",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "2",
+                        "vlan": "2",
+                        "name": "Téléphonie",
+                        "type": "access"
+                    },
+                    {
+                        "id": "14",
+                        "vlan": "1",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    }
+                ]
+            }
         }
     ]
 }

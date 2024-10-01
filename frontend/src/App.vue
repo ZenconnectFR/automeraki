@@ -1,7 +1,6 @@
 <script setup>
 
 import { ref } from 'vue'
-import { useStatesStore } from '@/stores/states'
 import { useIdsStore } from '@/stores/ids'
 import { RouterView } from 'vue-router'
 
@@ -10,7 +9,6 @@ const ready = ref(false)
 
 // stores
 const ids = useIdsStore()
-const states = useStatesStore()
 
 // Check if the orgId is in the root div of the app
 const orgId = document.getElementById('app').getAttribute('data-org-id')

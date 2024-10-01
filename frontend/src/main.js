@@ -12,12 +12,14 @@ import Setup from '@/pages/setup.vue'
 import Claim from '@/pages/claim.vue'
 import Naming from '@/pages/naming.vue'
 import Vlan from '@/pages/vlan.vue'
+import Ports from '@/pages/ports.vue'
 
 const routes = [
     { path: '/', component: Setup },
     { path: '/claim', component: Claim },
     { path: '/naming', component: Naming },
-    { path: '/vlan', component: Vlan }
+    { path: '/vlan', component: Vlan },
+    { path: '/ports', component: Ports }
 ]
 
 const Router = createRouter({

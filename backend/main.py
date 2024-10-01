@@ -73,7 +73,7 @@ def get_networks(org_id: str):
     # process the data to send back only the network names and ids
     processed_networks = []
     for network in networks:
-        processed_networks.append({"id": network["id"], "name": network["name"]})
+        processed_networks.append({"value": network["id"], "name": network["name"]})
 
     return processed_networks
 
@@ -158,6 +158,26 @@ def blink_device(serial: str):
         return {"error": str(e)}
 
     return blink
+
+
+# ---------
+
+# Get the ports of a device with serial
+@app.get("/devices/{serial}/ports")
+def get_ports(serial: str):
+    ports = dashboard.switch.getDeviceSwitchPorts(serial)
+
+    return ports
+
+
+# ---------
+
+# Get an action batch
+@app.get("/organizations/{org_id}/actionBatches/{actionBatchId}")
+def get_action_batch(org_id: str, actionBatchId: str):
+    action_batch = dashboard.organizations.getOrganizationActionBatch(org_id, actionBatchId)
+
+    return action_batch
 
 # ------------------ POST ------------------
 
@@ -297,6 +317,25 @@ def create_vlan(create_vlan: CreateVlan):
 
     return new_vlan
 
+
+# ----------
+
+class CreateActionBatch(BaseModel):
+    orgId : str
+    actions: list[Any]
+
+@app.post("/startActionBatch")
+def start_action_batch(create_action_batch: CreateActionBatch):
+    orgId = create_action_batch.orgId
+    actions = create_action_batch.actions
+
+    print('\nActions:\n' + str(actions) + '\n')
+    print('\nOrg ID:\n' + str(orgId) + '\n')
+
+    # create the action batch
+    action_batch = dashboard.organizations.createOrganizationActionBatch(orgId, actions, confirmed=True, synchronous=False)
+
+    return action_batch
 
 # ------------------ PUT ------------------
 

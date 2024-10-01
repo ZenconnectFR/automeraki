@@ -1,118 +1,186 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { onClickOutside } from '@vueuse/core'
+import { defineProps, PropType, ref, defineEmits, watch, onMounted} from 'vue';
+import { OnClickOutside } from '@vueuse/components';
 
 const search = ref('')
 const showDropdown = ref(false)
-const filteredOptions = ref([])
-const selectedOption = ref({})
+// selected option is Option type or null
+const selectedOption = ref(null as Option | string | null)
+
+const arrowId = ref('')
+
+const generateArrowId = () => {
+    arrowId.value = `arrow-${Math.random().toString(36).substring(7)}`
+}
+
+interface Option {
+    name: string;
+    value: any;
+}
 
 const props = defineProps({
     options: {
-        type: Array,
+        // type: Array of Option
+        type: Array as PropType<(Option | string)[]>,
         required: true
+    },
+    modelValue: {
+        type: [Object, String] as PropType<(Option | string | null)>,
+        default: null
+    },
+    onSelect: {
+        type: Function as PropType<(option: Option | string | null) => void>,
+        default: () => {},
+        required: false
     }
 })
 
-const openDropdown = () => {
-    showDropdown.value = true
-}
+const emit = defineEmits(['update:modelValue'])
 
-const closeDropdown = () => {
-    showDropdown.value = false
-}
-
-onClickOutside(document.body, closeDropdown)
-
-const filterOptions = () => {
-    const searchValue = search.value.toLowerCase()
-    let filteredValues = []
-    for (const option of Object.values(props.options)) {
-        if (option.name.toLowerCase().includes(searchValue)) {
-            filteredValues.push(option)
-        }
-    }
-    filteredOptions.value = filteredValues
-}
-
-const emit = defineEmits(['select-option'])
-
-const selectOption = (option) => {
+const selectOption = (option: Option | string) => {
     selectedOption.value = option
-    search.value = option.name
+    console.log('selected option:', option)
+    emit('update:modelValue', option)
+    if (props.onSelect) {
+        props.onSelect(option)
+    }
+    search.value = typeof option === 'string' ? option : option?.name || ''
     showDropdown.value = false
-    emit('select-option', option)
 }
 
+/*
 watch(
-    () => props.options,
-    (newOptions) => {
-        filteredOptions.value = newOptions
+    () => props.modelValue,
+    (newOption) => {
+        console.log('modelValue changed:', newOption)
+        selectedOption.value = newOption
+        // if the modelValue is a string, set the search value to it, else set it to the name of the option
+        search.value = typeof newOption === 'string' ? newOption : newOption?.name || ''
+        if (props.onSelect) {
+            props.onSelect(newOption)
+        }
     },
     {
         immediate: true
     }
-);
+)
+*/
+
+
+onMounted(() => {
+    generateArrowId()
+    if (props.modelValue) {
+        console.log('modelValue:', props.modelValue)
+        selectedOption.value = props.modelValue
+        search.value = typeof props.modelValue === 'string' ? props.modelValue : props.modelValue?.name || ''
+        if (props.onSelect) {
+            props.onSelect(props.modelValue)
+        }
+    }
+})
+
+const optionsFiltered = ref(props.options)
+
+const filterOptions = () => {
+    const searchValue = search.value.toLowerCase()
+    let filteredValues: (Option | string)[] = []
+    for (const option of Object.values(props.options)) {
+        // handle both Option and string types
+        const name = typeof option === 'string' ? option : option.name
+        if (name.toLowerCase().includes(searchValue)) {
+            filteredValues.push(option)
+        }
+    }
+    optionsFiltered.value = filteredValues
+}
+
+const turnArrowUpsideDown = () => {
+    const arrow = document.getElementById(arrowId.value)
+    if (arrow) {
+        // if the dropdown is open, rotate the arrow 180 degrees to point upwards, else reset it
+        arrow.style.transform = showDropdown.value ? 'rotate(180deg)' : 'rotate(0deg)'
+    }
+}
+
+const openDropdown = () => {
+    showDropdown.value = true
+    turnArrowUpsideDown()
+}
+
+const closeDropdown = () => {
+    showDropdown.value = false
+    turnArrowUpsideDown()
+}
+
+const toggleDropdown = () => {
+    showDropdown.value = !showDropdown.value
+    turnArrowUpsideDown()
+}
 
 </script>
 
 <template>
-    <div id="dropdown-container">
-        <input v-model="search" type="text" placeholder="Select or search" @click="openDropdown" @input="filterOptions" id="dropdown-input">
-
-        <ul v-if="showDropdown" id="dropdown-list">
-            <li v-for="option in filteredOptions" :key="option.id" @click="selectOption(option)" class="dropdown-item">
-                {{ option.name }}
-            </li>
-        </ul>
-    </div>
+    <OnClickOutside @trigger="closeDropdown">
+        <div class="dropdown-container">
+            <div class="input-container">
+                <input v-model="search" type="text" :placeholder="'Select or search'" @click="openDropdown" @input="filterOptions" id="dropdown-input">
+                <img src="@/assets/dropdown-arrow.png" alt="arrow-down" @click="toggleDropdown" class="dropdown-arrow" :id="arrowId">
+            </div>
+            <div v-if="showDropdown" class="options-container">
+                <div class="option" v-for="(option, index) in optionsFiltered" :key="index" @click="selectOption(option)">
+                    {{ typeof option === 'string' ? option : option.name }}
+                </div>
+            </div>
+        </div>
+    </OnClickOutside>
 </template>
 
 <style scoped>
-    #dropdown-container {
+    .dropdown-container {
         position: relative;
-        width: 200px;
-    }
-
-    #dropdown-list {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        position: absolute;
         width: 100%;
-        background-color: white;
-        top: 100%;
-        left: 0;
-        max-height: 250px;
-        overflow-y: auto;
-        z-index: 3;
-    }
-
-    .dropdown-item {
-        padding: 10px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-    .dropdown-item:hover {
-        background-color: #f9f9f9;
-    }
-
-    .dropdown-list ul {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
     }
 
     #dropdown-input {
         width: 100%;
-        padding: 10px;
-        font-size: 16px;
+        padding: 0.5rem;
         border: 1px solid #ccc;
-        border-radius: 8px;
-        box-sizing: border-box;
+        border-radius: 0.25rem;
+    }
+
+    .options-container {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 0.25rem;
+        background-color: white;
+        z-index: 1;
+    }
+
+    .option {
+        padding: 0.5rem;
+        border-bottom: 1px solid #ccc;
+        cursor: pointer;
+    }
+
+    .option:last-child {
+        border-bottom: none;
+    }
+
+    .input-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-arrow {
+        position: absolute;
+        right: 0px; /* Adjust based on arrow size */
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        width: 16px; /* Arrow width */
+        height: 16px; /* Arrow height */
     }
 </style>

@@ -126,6 +126,12 @@ const confirm = async () => {
     savingChanges.value = true
     await preEnableVlans()
 
+    // add all vlans to the device store
+    for (const vlan of vlanAutoConfigured.value) {
+        console.log('[VLAN] Adding vlan: ', vlan.id, " to devices store")
+        devices.addVlan(`${vlan.id}`)
+    }
+
     let createdVlans = await createVlansIfNotExists(newNetworkId.value, vlanAutoConfigured.value)
 
     // filter payload[0] part out of vlanAutoConfigured when vlan id is in createdVlans
@@ -145,7 +151,7 @@ const confirm = async () => {
 }
 
 const validate = () => {
-    alert('VLANs have been configured')
+    router.push('/ports')
 }
 
 const goBack = () => {

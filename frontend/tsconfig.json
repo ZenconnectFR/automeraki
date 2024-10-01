@@ -12,6 +12,7 @@
             "@/*": ["src/*"]
         },
         "lib": ["es2015", "dom"],
+
         "resolveJsonModule": true,
 
         "esModuleInterop": true

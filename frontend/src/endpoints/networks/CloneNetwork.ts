@@ -4,9 +4,9 @@
 
 import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 
-export async function cloneNetwork(selectedNetwork: { id?: string }, newNetworkNameInput: string, orgId: string)
+export async function cloneNetwork(selectedNetwork : string, newNetworkNameInput: string, orgId: string)
                                   : Promise<{ newNetworkId: string, newNetworkName: string}> {
-  if (!selectedNetwork.id) {
+  if (!selectedNetwork) {
     console.log('No network selected')
     return null
   }
@@ -15,10 +15,10 @@ export async function cloneNetwork(selectedNetwork: { id?: string }, newNetworkN
     return null
   }
 
-  console.log('[CLONE EP] Cloning network with body: id: ', selectedNetwork.id, ' name: ', newNetworkNameInput)
+  console.log('[CLONE EP] Cloning network with body: id: ', selectedNetwork, ' name: ', newNetworkNameInput)
   try {
     const response = await Axios.post(`/networks/clone`, {
-      network_id: selectedNetwork.id,
+      network_id: selectedNetwork,
       name: newNetworkNameInput,
       org_id: orgId
     })

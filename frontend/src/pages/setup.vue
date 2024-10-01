@@ -23,6 +23,8 @@ const devices = useDevicesStore()
 
 // values from store
 const orgId = storeToRefs(ids.orgId)
+
+orgId.value = '738027388935340172'
 const networkId = storeToRefs(ids.networkId)
 
 const organizationsNotLoaded = ref(true)
@@ -35,8 +37,8 @@ const networks = ref([])
 const networkOptions = ref([])
 
 interface Network {
-  id: string;
-  name: string;
+    name: string;
+    value: any;
 }
 
 const selectedNetwork = ref<Network | null>(null)
@@ -57,6 +59,7 @@ const newNameEntered = ref(true)
 const newAddressEntered = ref(true)
 const newNetworkSelected = ref(true)
 
+/*
 // Actions to take once an organization is selected
 const setOrganizationOption = async (option: { id: any }) => {
     // 1 - Set the orgId in this and the ids store
@@ -74,22 +77,49 @@ const setOrganizationOption = async (option: { id: any }) => {
     networksLoaded.value = true
     loadingNetworks.value = false
 }
+*/
+
+interface SelectedOrgOption {
+    name: string;
+    value: any;
+}
+
+const selectedOrgOption = ref(<SelectedOrgOption> { name: '', value: '-1' });
+
+// if selectedOrgOption is modified, set the orgId in the store
+const setOrganizationOption = async () => {
+    console.log('[SETUP] Selected org option in set org:', selectedOrgOption.value)
+    orgId.value = selectedOrgOption.value.value
+    ids.setOrgId(selectedOrgOption.value.value)
+    // get the networks for the selected org
+    loadingNetworks.value = true
+    networksLoaded.value = false
+    networks.value = await getNetworks(orgId.value)
+    if (networks.value === undefined) {
+        networks.value = []
+        console.error('[SETUP] No networks found for org:', orgId.value)
+    }
+    networksLoaded.value = true
+    loadingNetworks.value = false
+    populateNetworkOptions()
+}
 
 // Populate network options array
 const populateNetworkOptions = () => {
     // map networks to options
     networkOptions.value = networks.value.map(network => {
         return {
-            id: network.id,
+            value: network.value,
             name: network.name
         }
     })
 }
 
 // Set the selected network
-const setNetworkOption = (option: Network | { id: string; name: string }) => {
+const setNetworkOption = (option: Network | { value: string; name: string }) => {
     selectedNetwork.value = option
-    networkId.value = option.id
+    networkId.value = option.value
+    console.log('[SETUP] Selected network:', selectedNetwork.value)
     newNetworkSelected.value = true
 }
 
@@ -113,7 +143,9 @@ const cloneNetworkEvent = async () => {
     newAddressEntered.value = true
     cloningNetwork.value = true
 
-    const response = await cloneNetwork(selectedNetwork.value, newNetworkNameInput.value, orgId.value)
+    console.log('[SETUP] Cloning network:', selectedNetwork.value.value, newNetworkNameInput.value, orgId.value)
+
+    const response = await cloneNetwork(selectedNetwork.value.value, newNetworkNameInput.value, orgId.value)
     if (response) {
         console.log('[SETUP] Cloned network id:', response.newNetworkId)
         // update stores values
@@ -157,10 +189,22 @@ const configureNetwork = async () => {
 // Setup function to run on page load
 const setup = async () => {
     // Get organizations from the API
-    organizations.value = await getOrganizations()
+    let fetchedOrgs = await getOrganizations()
+    // turn the fetchedOrgs.id into .value
+    organizations.value = fetchedOrgs.map((org: { id: string; name: string }) => {
+        return {
+            value: org.id,
+            name: org.name
+        }
+    })
     if (orgId.value && orgId.value !== '-1') {
         // if an orgId is already set in the root div, set it in the store
-        setOrganizationOption({id: orgId.value})
+        ids.setOrgId(orgId.value)
+        // Make this org the default selected org
+        let selectedOrg = organizations.value.find(org => org.value === orgId.value)
+        console.log('[SETUP] Selected org at load:', selectedOrg)
+        selectedOrgOption.value = { name: selectedOrg.name, value: selectedOrg.value }
+        console.log('[SETUP] Selected orgOption at load:', selectedOrgOption.value)
     }
     console.log('[SETUP] Organizations loaded: ', organizations.value)
     organizationsNotLoaded.value = false
@@ -192,12 +236,12 @@ onMounted(()  => {
 
             <div class="make-column">
                 <h3>Choose an org</h3>
-                <Dropdown :options="organizations" @select-option="setOrganizationOption"/>
+                <Dropdown :options="organizations" v-model="selectedOrgOption" :onSelect="setOrganizationOption"/>
                 <p v-if="loadingNetworks">Loading networks...</p>
 
                 <template v-if="networksLoaded">
                     <h3>Choose a network</h3>
-                    <Dropdown :options="networks" @select-option="setNetworkOption"/>
+                    <Dropdown :options="networks" v-model="selectedNetwork" :onSelect="setNetworkOption"/>
                     <p class="red" v-if="!newNetworkSelected">Please select a newtork to clone</p>
 
                     <button class="margin-padding-all-normal" @click="configureNetwork">Configure this network</button>
