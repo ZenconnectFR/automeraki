@@ -229,11 +229,6 @@ onMounted(()  => {
         <h1>Setup</h1>
         <p v-if="organizationsNotLoaded">Loading organizations...</p>
         <template class="make-column" v-if="organizationsNotLoaded === false">
-            <div class="margin-padding-all-normal button-top-right">
-                <button class="margin-padding-all-normal" @click="deleteTestNetworksEvent">Delete test networks</button>
-                <p v-if="deletingTestNetworks">Deleting test networks...</p>
-            </div>
-
             <div class="make-column">
                 <h3>Choose an org</h3>
                 <Dropdown :options="organizations" v-model="selectedOrgOption" :onSelect="setOrganizationOption"/>
