@@ -103,7 +103,7 @@ const setup = async() => {
 
 const validate = () => {
     // set the namingDone state to true
-    router.push('/vlan');
+    router.push('/fixed-ip');
 }
 
 onMounted(() => {

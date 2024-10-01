@@ -13,13 +13,15 @@ import Claim from '@/pages/claim.vue'
 import Naming from '@/pages/naming.vue'
 import Vlan from '@/pages/vlan.vue'
 import Ports from '@/pages/ports.vue'
+import FixedIp from './pages/fixedIp.vue';
 
 const routes = [
     { path: '/', component: Setup },
     { path: '/claim', component: Claim },
     { path: '/naming', component: Naming },
     { path: '/vlan', component: Vlan },
-    { path: '/ports', component: Ports }
+    { path: '/ports', component: Ports },
+    { path: '/fixed-ip', component: FixedIp}
 ]
 
 const Router = createRouter({

@@ -26,6 +26,9 @@ const typeOptions = ['access', 'trunk']
 const portsAutoConfigured = ref([] as any[])
 const portsAutoConfigDone = ref(false)
 
+const savingChanges = ref(false)
+const changesSaved = ref(false)
+
 // define any[] type for switches
 const switches = ref([])
 
@@ -145,6 +148,7 @@ const configurePorts = async () => {
 
 const confirm = async () => {
     console.log('Confirming ports configuration : ', portsAutoConfigured.value)
+    savingChanges.value = true
     // send the portsAutoConfigured to the Endpoint that creates action batches
     let response = await configurePortsBatch(portsAutoConfigured.value, orgId.value)
     // wait until the action batches is done (check if reponse.status.completed is true), if not, wait 500ms and get the status again through the getActionBatchStatus endpoint
@@ -163,6 +167,8 @@ const confirm = async () => {
             }
         }
     }
+    changesSaved.value = true
+    savingChanges.value = false
 }
 
 const back = () => {
@@ -186,6 +192,8 @@ onMounted(() => {
          type is also a dropdown and the options are either access or trunk
          The whole thing is in a table so that everything is separated right-->
         <button @click="confirm">Confirm</button>
+        <p v-if="savingChanges">Saving changes...</p>
+        <p v-if="changesSaved">Ports auto-configured</p>
         <button @click="back">Back</button>
         <template v-for="switchPorts in portsAutoConfigured">
             <h3>{{ switchPorts.name }}</h3>

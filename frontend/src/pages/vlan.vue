@@ -155,7 +155,7 @@ const validate = () => {
 }
 
 const goBack = () => {
-    router.push('/naming')
+    router.push('/fixed-ip')
 }
 
 onMounted(() => {
