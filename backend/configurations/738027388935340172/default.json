@@ -154,5 +154,11 @@
             }
         }
     ],
-    "mtuSize": 9000
+    "mtuSize": 9000,
+    "stp": [
+        {
+            "stpPriority": 0,
+            "switches" : ["S1", "S2"]
+        }
+    ]
 }

@@ -422,6 +422,40 @@ def enable_vlans(network_id: str):
     return enabled_vlans
 
 
+# ----------
+
+# disableVlans
+@app.put("/networks/disableVlans/{network_id}")
+def disable_vlans(network_id: str):
+    try:
+        disabled_vlans = dashboard.appliance.updateNetworkApplianceVlansSettings(network_id, vlansEnabled=False)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return disabled_vlans
+
+
+# ----------
+
+# update stp settings
+
+class UpdateSTPSettings(BaseModel):
+    network_id: str
+    rstpEnabled: bool
+    stpBridgePriority: list[Any]
+
+@app.put("/networks/updateSTPSettings")
+def update_stp_settings(update_stp_settings: UpdateSTPSettings):
+    network_id = update_stp_settings.network_id
+    rstpEnabled = update_stp_settings.rstpEnabled
+    stpBridgePriority = update_stp_settings.stpBridgePriority
+
+    try:
+        updated_stp_settings = dashboard.switch.updateNetworkSwitchStp(network_id, rstpEnabled=rstpEnabled, stpBridgePriority=stpBridgePriority)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_stp_settings
 
 
 

@@ -9,6 +9,7 @@ import { getPorts } from '@/endpoints/devices/GetPorts'
 import { configurePortsBatch } from '@/endpoints/actionBatches/ConfigurePorts'
 import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 import { updateMTUSize } from '@/endpoints/devices/switch/UpdateMTUSize'
+import { updateSTPSettings } from '@/endpoints/devices/switch/UpdateSTPSettings'
 
 import Dropdown from '@/components/Dropdown.vue'
 
@@ -171,6 +172,29 @@ const confirm = async () => {
     // also change switch mtu size
     const mtnRes = await updateMTUSize(newNetworkId.value, configuration.value.mtuSize)
     console.log('MTU size updated : ', mtnRes)
+
+    // set switch stp
+    // map the configuration.value.stp to the switch serials : configuration.value.stp[n].expectedEquipment === devicesList[n].shortName
+    const stpPayload = ref([] as any[])
+    for (const stpConfig of configuration.value.stp) {
+        let switches = []
+        // special case: expected equipment names are in an array in stpConfig.switches (ex: ['S1', 'S2'])
+        for (const expectedEquipment of stpConfig.switches) {
+            for (const device of devicesList.value) {
+                if (device.shortName === expectedEquipment) {
+                    switches.push(device.serial)
+                }
+            }
+        }
+        stpPayload.value.push({
+            stpPriority: stpConfig.stpPriority,
+            switches: switches
+        })
+    }
+
+    console.log('Setting STP : ', stpPayload.value)
+    const stpRes = await updateSTPSettings(newNetworkId.value, stpPayload.value)
+    console.log('STP settings updated : ', stpRes)
 
     changesSaved.value = true
     savingChanges.value = false
