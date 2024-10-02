@@ -8,6 +8,8 @@ import { storeToRefs } from 'pinia'
 import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan'
 import { createVlansIfNotExists } from '@/endpoints/networks/CreateVlansIfNotExists'
 import { enableVlans } from '@/endpoints/networks/EnableVlans'
+import { configurePerPortVlan } from '@/endpoints/actionBatches/ConfigurePerPortVlan'
+import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 
 import { createMac } from '@/utils/Misc'
 
@@ -27,6 +29,8 @@ const { devicesList } = storeToRefs(devices)
 
 const vlanIsAutoConfigured = ref(false)
 const vlanAutoConfigured = ref([])
+
+const perPortVlan = ref([])
 
 // UI states
 const savingChanges = ref(false)
@@ -148,6 +152,36 @@ const confirm = async () => {
     console.log('[VLAN] Saving changes')
     await updateNetworkVlan(newNetworkId.value, vlanAutoConfigured.value)
 
+    // update perPortVlan settings
+    // for each perPortVlan in configuration.value, match the expectedEquipment with a device shortName
+    // and add {serial: device.serial, config: perPortVlan[n]} to perPortVlan
+    for (const perPortVlanConfig of configuration.value.perPortVlan) {
+        console.log('[VLAN] perPortVlanConfig: ', perPortVlanConfig)
+        console.log('Template configuration: ', configuration.value)
+        for (const device of devicesList.value) {
+            if (device.shortName === perPortVlanConfig.expectedEquipment) {
+                perPortVlan.value.push({
+                    ports: perPortVlanConfig.ports
+                })
+            }
+        }
+    }
+
+    // save perPortVlan settings with endpoint
+    console.log('[VLAN] Saving perPortVlan settings : ', perPortVlan.value)
+    const firstResponse =  await configurePerPortVlan(perPortVlan.value, orgId.value, newNetworkId.value)
+    // is an action batch, loop until completed
+    if (!firstResponse.status.completed) {
+        while (true) {
+            await new Promise(resolve => setTimeout(resolve, 500))
+            const response = await getActionBatchStatus(firstResponse.id, orgId.value)
+            if (response.status.completed) {
+                console.log('[VLAN] Action batch completed: ', response)
+                break
+            }
+        }
+    }
+
     savingChanges.value = false
 }
 
@@ -161,6 +195,7 @@ const goBack = () => {
 
 onMounted(() => {
     configureVlans()
+    console.log('[VLAN] perPortVlan: ', perPortVlan)
 })
 
 </script>

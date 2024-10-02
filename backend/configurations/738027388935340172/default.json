@@ -68,6 +68,28 @@
             }
         }
     ],
+    "perPortVlan": [
+        {
+            "expectedEquipment": "R1",
+            "ports": [
+                {
+                    "id": "1",
+                    "vlan": "1",
+                    "type": "trunk"
+                },
+                {
+                    "id": "2",
+                    "vlan": "1",
+                    "type": "trunk"
+                },
+                {
+                    "id": "3",
+                    "vlan": "1",
+                    "type": "trunk"
+                }
+            ]
+        }
+    ],
     "fixedIp": [
         {
             "expectedEquipment": "S1",
