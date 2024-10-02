@@ -11,6 +11,7 @@ import { storeToRefs } from 'pinia'
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress'
 
 import { useRouter, useRoute } from 'vue-router'
+import { getDevice } from '@/endpoints/devices/GetDevice'
 
 const router = useRouter()
 const route = useRoute()
@@ -47,6 +48,7 @@ const claiming = ref(false)
 
 const retrieveInventory = async (parsedDevices: string[]) => {
     // get the inventory devices
+    console.log('[CLAIM] Getting inventory devices')
     inventoryDevices.value = await getInventoryDevices(orgId.value, parsedDevices)
     inventoryFetched.value = true
 }
@@ -63,6 +65,12 @@ const checkDevicePossessions = () => {
             alreadyInNetwork.value.push(device)
         } else {
             toClaim.value.push(device.serial)
+        }
+    }
+    // add the devices in parsedDevices that are not in the inventory to the toClaim array
+    for (const serial of parsedDevices.value) {
+        if (!inventoryDevices.value.find(device => device.serial === serial)) {
+            toClaim.value.push(serial)
         }
     }
 }
@@ -82,10 +90,12 @@ const addDevices = async () => {
     // parse the devices from the input field
     parsedDevices.value = parseDevices(newNetworkDevices.value)
 
+    console.log('[CLAIM] Parsed devices: ', parsedDevices.value)
+
     // get the devices in inventory that match the parsed devices' serials
     if (!inventoryFetched.value || inventoryUpdated.value) {
         await retrieveInventory(parsedDevices.value)
-        inventoryUpdated.value = false
+        inventoryFetched.value = inventoryDevices.value.length > 0
     }
 
     // check if the devices are already in a network
@@ -120,14 +130,20 @@ const addDevices = async () => {
         console.log('[CLAIM] Devices added to network: ', response.serials)
         // add devices to the devices store
         for (const serial of response.serials) {
-            // get info for the device from the inventory
+            // get info for the device from the inventory, if it's not there, it's a new device and we fetch it from the API
             const device = inventoryDevices.value.find(device => device.serial === serial)
-            fullFinalDevices.value.push(device)
+            if (device) {
+                fullFinalDevices.value.push(device)
+            } else {
+                const newDevice = await getDevice(serial)
+                console.log('[CLAIM] New device: ', newDevice)
+                fullFinalDevices.value.push(newDevice)
+            }
         }
 
         // update the devices store with the new devices, we get full device info from the API
         console.log('[CLAIM] Updating devices store with new devices: ', fullFinalDevices.value)
-        devices.setDevicesList(fullFinalDevices.value)
+        devices.addDevices(fullFinalDevices.value)
 
         await changeAddresses()
         devicesAdded.value = true

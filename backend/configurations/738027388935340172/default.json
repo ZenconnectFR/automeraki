@@ -66,6 +66,36 @@
                     }
                 ]
             }
+        },
+        {
+            "switchName": "S2",
+            "config": {
+                "default": {
+                    "vlan": "1",
+                    "name": "Reboot",
+                    "type": "access"
+                },
+                "ports": [
+                    {
+                        "id": "1",
+                        "vlan": "1",
+                        "name": "Uplink",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "2",
+                        "vlan": "2",
+                        "name": "Imprimante",
+                        "type": "access"
+                    },
+                    {
+                        "id": "14",
+                        "vlan": "1",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    }
+                ]
+            }
         }
     ],
     "perPortVlan": [
@@ -95,6 +125,17 @@
             "expectedEquipment": "S1",
             "config": {
                 "ip": "10.101.1.3",
+                "vlan": "1",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.1.1",
+                "primaryDns": "10.101.1.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "S2",
+            "config": {
+                "ip": "10.101.1.4",
                 "vlan": "1",
                 "mask": "255.255.255.0",
                 "gateway": "10.101.1.1",

@@ -14,6 +14,8 @@ export const useDevicesStore = defineStore('devices', () => {
     const vlans = ref([]);
 
     const setDevicesList = (list) => devicesList.value = list;
+    const addDevice = (device) => devicesList.value.push(device);
+    const addDevices = (devices) => devicesList.value.push(...devices);
     const setAddress = (addr) => address.value = addr;
     const setNetwork = (net) => network.value = net;
     const setVlans = (v) => vlans.value = v;
@@ -25,6 +27,8 @@ export const useDevicesStore = defineStore('devices', () => {
         network,
         vlans,
         setDevicesList,
+        addDevice,
+        addDevices,
         setAddress,
         setNetwork,
         setVlans,

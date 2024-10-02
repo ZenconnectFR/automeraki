@@ -6,8 +6,9 @@ import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
  * @param {Array<string>} serials - The serials of the devices
  */
 
-export async function getInventoryDevices(orgId : string, serials: Array<string>=[]) : Promise<any> {
+export async function getInventoryDevices(orgId : string, serials: string[]) : Promise<any> {
     try {
+        console.log('[GET INVENTORY DEVICES] Request: ', orgId, serials)
         const response = await Axios.post(`/organizations/inventory`,{
             org_id: orgId,
             serials: serials

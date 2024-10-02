@@ -18,6 +18,11 @@ const configStore = useConfigurationStore()
 
 const { configuration } = storeToRefs(configStore)
 
+const routers = ref([])
+const switches = ref([])
+const aps = ref([])
+const others = ref([])
+
 // UI states
 const renaming = ref(false)
 const changingAddresses = ref(false)
@@ -33,43 +38,31 @@ const devicesLoaded = ref(false)
  *
  */
 const renameDevices = () => {
-    let routerCount = 1;
-    let switchCount = 1;
-    let apCount = 1;
-    let otherCount = 1;
-
     console.log('[NAMING] devicesList: ', devicesList.value)
 
     for (const device of devicesList.value) {
         console.log('[NAMING] device: ', device)
-        let deviceType = 'O';
-        switch(device.serial[1]) {
-            case '2':
-                deviceType = 'R';
+        device["type"] = 'O';
+        // model types : MX.+ for router, MS.+ for switch, MR.+ for access point
+        // Turn MXs into Rs, MSs into Ss, MRs into APs
+        switch(device.model.substring(0, 2)) {
+            case 'MX':
+                device["type"] = "R";
+                routers.value.push(device);
                 break;
-            case '3':
-                deviceType = 'AP';
+            case 'MS':
+                device["type"] = "S";
+                switches.value.push(device);
                 break;
-            case '4':
-                deviceType = 'S';
+            case 'MR':
+                device["type"] = "AP";
+                aps.value.push(device);
                 break;
             default:
-                deviceType = 'O';
+                others.value.push(device);
+                break;
         }
-
-        let suffix = deviceType + (deviceType === 'R' ? routerCount++ : deviceType === 'S' ? switchCount++ : deviceType === 'AP' ? apCount++ : otherCount++);
-
-        let newName = `${network.value}${configuration.value.nameSeparator}${suffix}`;
-
-        device.name = newName;
-        device['type'] = deviceType;
-        device['shortName'] = suffix;
     }
-
-    // patch the devices store
-    devices.setDevicesList(devicesList.value);
-
-    // rename the devices
 }
 
 /**
@@ -84,16 +77,43 @@ const changeAddresses = async() => {
     changingAddresses.value = false;
 }
 
+const updateNames = (src: any[]) => {
+    let index = 1;
+    for (const device of src) {
+        let newName = `${network.value}${configuration.value.nameSeparator}${device.type}${index}`;
+        let shortName = `${device.type}${index}`;
+        devicesList.value.find((d: { serial: string; }) => d.serial === device.serial).name = newName;
+        devicesList.value.find((d: { serial: string; }) => d.serial === device.serial).shortName = shortName;
+        index++;
+    }
+}
+
 const changeNames = async() => {
     renaming.value = true;
+
+    updateNames(routers.value);
+    updateNames(switches.value);
+    updateNames(aps.value);
+
     for (const device of devicesList.value) {
         await changeDeviceName(device.serial, device.name);
     }
+
+    console.log('[NAMING] devicesList after renaming: ', devicesList.value);
+
     renaming.value = false;
     namesSaved.value = true;
 }
 
-const blink = (serial) => {
+const moveUp = (index: number, devices: any[]) => {
+    devices.splice(index - 1, 0, devices.splice(index, 1)[0]);
+}
+
+const moveDown = (index: number, devices: any[]) => {
+    devices.splice(index + 1, 0, devices.splice(index, 1)[0]);
+}
+
+const blink = (serial: string) => {
     blinkDevice(serial);
 }
 
@@ -122,10 +142,38 @@ onMounted(() => {
         <h1>Names</h1>
         <div v-if="devicesLoaded" id="naming-form">
             <p v-if="namesSaved === false">Warning: names have not been saved yet</p>
-            <div v-for="device in devicesList" :key="device.serial">
-                <label class="margin-padding-all-normal">{{device.serial}}</label>
-                <input class="margin-padding-all-normal" v-model="device.name" type="text" />
-                <button class="margin-padding-all-normal" @click="blink(device.serial)">Blink</button>
+            <hr />
+            <div v-for="(router, index) in routers" :key="index">
+                <div class="make-row">
+                    <p>{{ router.serial }}</p>
+                    <input v-model="router.name" type="text" placeholder="Name"/>
+                    <p>{{ `${router.type}${index+1}` }}</p>
+                    <button :disabled="index===0" @click="moveUp(index, routers)">Up</button>
+                    <button :disabled="index===(routers.length-1)" @click="moveDown(index, routers)">Down</button>
+                    <button @click="blink(router.serial)">Blink</button>
+                </div>
+            </div>
+            <hr />
+            <div v-for="(switchDevice, index) in switches" :key="index">
+                <div class="make-row">
+                    <p>{{ switchDevice.serial }}</p>
+                    <input v-model="switchDevice.name" type="text" placeholder="Name"/>
+                    <p>{{ `${switchDevice.type}${index+1}` }}</p>
+                    <button :disabled="index===0" @click="moveUp(index, switches)">Up</button>
+                    <button :disabled="index===(switches.length-1)" @click="moveDown(index, switches)">Down</button>
+                    <button @click="blink(switchDevice.serial)">Blink</button>
+                </div>
+            </div>
+            <hr />
+            <div v-for="(ap, index) in aps" :key="index">
+                <div class="make-row">
+                    <p>{{ ap.serial }}</p>
+                    <input v-model="ap.name" type="text" placeholder="Name"/>
+                    <p>{{ `${ap.type}${index+1}` }}</p>
+                    <button :disabled="index===0" @click="moveUp(index, aps)">Up</button>
+                    <button :disabled="index===(aps.length-1)" @click="moveDown(index, aps)">Down</button>
+                    <button @click="blink(ap.serial)">Blink</button>
+                </div>
             </div>
             <div class="make-column">
                 <button class="margin-padding-all-normal fit-width" @click="changeNames">Rename Devices</button>
