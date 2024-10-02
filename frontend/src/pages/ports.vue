@@ -8,6 +8,7 @@ import { storeToRefs } from 'pinia'
 import { getPorts } from '@/endpoints/devices/GetPorts'
 import { configurePortsBatch } from '@/endpoints/actionBatches/ConfigurePorts'
 import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
+import { updateMTUSize } from '@/endpoints/devices/switch/UpdateMTUSize'
 
 import Dropdown from '@/components/Dropdown.vue'
 
@@ -147,6 +148,7 @@ const configurePorts = async () => {
 const confirm = async () => {
     console.log('Confirming ports configuration : ', portsAutoConfigured.value)
     savingChanges.value = true
+    changesSaved.value = false
     // send the portsAutoConfigured to the Endpoint that creates action batches
     let response = await configurePortsBatch(portsAutoConfigured.value, orgId.value)
     // wait until the action batches is done (check if reponse.status.completed is true), if not, wait 500ms and get the status again through the getActionBatchStatus endpoint
@@ -165,6 +167,11 @@ const confirm = async () => {
             }
         }
     }
+
+    // also change switch mtu size
+    const mtnRes = await updateMTUSize(newNetworkId.value, configuration.value.mtuSize)
+    console.log('MTU size updated : ', mtnRes)
+
     changesSaved.value = true
     savingChanges.value = false
 }

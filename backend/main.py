@@ -338,6 +338,29 @@ def start_action_batch(create_action_batch: CreateActionBatch):
 
     return action_batch
 
+class UpdateMTUSize(BaseModel):
+    networkId: str
+    mtu: int
+
+@app.post("/networks/updateMTUSize")
+def update_mtu_size(update_mtu_size: UpdateMTUSize):
+    networkId = update_mtu_size.networkId
+    mtu = update_mtu_size.mtu
+
+    # update the MTU size
+    updated_network = dashboard.switch.updateNetworkSwitchMtu(networkId, defaultMtuSize=mtu)
+
+    return updated_network
+
+
+
+
+
+
+
+
+
+
 # ------------------ PUT ------------------
 
 class UpdateNetworkVlan(BaseModel):
