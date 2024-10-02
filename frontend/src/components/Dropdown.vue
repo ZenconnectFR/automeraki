@@ -70,7 +70,7 @@ watch(
 onMounted(() => {
     generateArrowId()
     if (props.modelValue) {
-        console.log('modelValue:', props.modelValue)
+        // console.log('modelValue:', props.modelValue)
         selectedOption.value = props.modelValue
         search.value = typeof props.modelValue === 'string' ? props.modelValue : props.modelValue?.name || ''
         if (props.onSelect) {

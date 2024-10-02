@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
+import { useConfigurationStore } from '@/stores/configuration'
 import { storeToRefs } from 'pinia'
 
 import { fixIpAssignments } from '../endpoints/actionBatches/FixIpAssignments'
@@ -13,11 +14,12 @@ import { useRouter, useRoute } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 
-import * as configJson from '@/assets/test-conf.json'
-const config = ref(configJson)
 
 const ids = useIdsStore()
 const devices = useDevicesStore()
+const configStore = useConfigurationStore()
+
+const { configuration } = storeToRefs(configStore)
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
@@ -35,7 +37,8 @@ const fixedIpDone = ref(false)
 
 const fixIp = async () => {
     // load fixed ip assignments from config file
-    const configFixedIp = config.value.fixedIp
+    console.log('[FIXED IP] config: ', configuration)
+    const configFixedIp = configuration.value.fixedIp
 
     console.log('[FIXED IP] configFixedIp: ', configFixedIp)
 

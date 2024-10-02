@@ -1,5 +1,7 @@
 {
     "name": "Template 1",
+    "networkToClone": "L_738027388935340791",
+    "nameSeparator": "-",
     "vlan": [
         {
             "id": 1,

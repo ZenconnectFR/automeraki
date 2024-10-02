@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
+import { useConfigurationStore } from '@/stores/configuration'
 import { storeToRefs } from 'pinia'
 
 import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan'
@@ -17,6 +18,9 @@ const route = useRoute()
 
 const ids = useIdsStore()
 const devices = useDevicesStore()
+const configStore = useConfigurationStore()
+
+const { configuration } = storeToRefs(configStore)
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
@@ -50,9 +54,6 @@ const savingChanges = ref(false)
 }
  */
 
-import * as configJson from '@/assets/test-conf.json'
-const config = ref(configJson)
-
 
 /**
  * Auto configure vlan:
@@ -62,7 +63,7 @@ const config = ref(configJson)
 
 const configureVlans = () => {
     let devices = devicesList.value
-    let vlans = config.value.vlan
+    let vlans = configuration.value.vlan
 
     console.log('[VLAN] devices: ', devices)
     console.log('[VLAN] vlans: ', vlans)

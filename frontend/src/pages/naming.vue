@@ -5,6 +5,7 @@ import { changeDeviceName } from '@/endpoints/devices/ChangeDeviceName';
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress';
 import { blinkDevice } from '@/endpoints/devices/BlinkDevice';
 import { useDevicesStore } from '@/stores/devices';
+import { useConfigurationStore } from '@/stores/configuration';
 
 import { useRouter, useRoute } from 'vue-router'
 
@@ -13,6 +14,9 @@ const route = useRoute()
 
 const devices = useDevicesStore()
 const { address, network, devicesList} = storeToRefs(devices)
+const configStore = useConfigurationStore()
+
+const { configuration } = storeToRefs(configStore)
 
 // UI states
 const renaming = ref(false)
@@ -53,8 +57,9 @@ const renameDevices = () => {
                 deviceType = 'O';
         }
 
-        let suffix = deviceType + (deviceType === 'R' ? routerCount++ : deviceType === 'S' ? switchCount++ : deviceType === 'AP' ? apCount++ : otherCount++)    ;
-        let newName = `${network.value} ${suffix}`;
+        let suffix = deviceType + (deviceType === 'R' ? routerCount++ : deviceType === 'S' ? switchCount++ : deviceType === 'AP' ? apCount++ : otherCount++);
+
+        let newName = `${network.value}${configuration.value.nameSeparator}${suffix}`;
 
         device.name = newName;
         device['type'] = deviceType;

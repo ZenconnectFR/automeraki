@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Optional, Any
 import meraki
 import os
+import json
 from dotenv import load_dotenv
 
 # Load the environment variables
@@ -396,3 +397,54 @@ def enable_vlans(network_id: str):
         return {"error": str(e)}
 
     return enabled_vlans
+
+
+
+
+
+
+
+
+
+'''
+------------------------------ TEMPLATES ------------------------------
+
+Templates are a way to save configurations and apply them to a new network.
+They are stored in ./configurations/{org_id}/{template_id}.json
+'''
+
+# ------------------ GET ------------------
+
+
+# Get the list of templates in an organization, we return the template name and id
+@app.get("/organizations/{org_id}/templates")
+def get_templates(org_id: str):
+    templates = []
+
+    # get the list of templates from the folder ./configurations/{org_id}
+    # add them to the templates list as {name: "template["name"], value: "{file name}"}
+    folder_path = f"./configurations/{org_id}"
+    for file in os.listdir(folder_path):
+        if file.endswith(".json"):
+            with open(f"{folder_path}/{file}", "r") as f:
+                template = json.load(f)
+                templates.append({"name": template["name"], "value": f"{file}"})
+
+    return templates
+
+
+# ---------
+
+# Get a template from its path, returns the entire payload
+@app.get("/organizations/{org_id}/templates/{template_id}")
+def get_template(org_id: str, template_id: str):
+    with open(f"./configurations/{org_id}/{template_id}", "r") as f:
+        template = json.load(f)
+
+    return template
+
+
+# ------------------ POST ------------------
+
+# Create a new template
+# TODO: create a new template (we'll see when we get to it)

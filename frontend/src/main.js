@@ -8,6 +8,7 @@ import { createPinia } from 'pinia'
 // Try to move this part to a separate file in the future if possible
 import { createRouter, createWebHistory } from 'vue-router';
 
+import Home from '@/pages/home.vue'
 import Setup from '@/pages/setup.vue'
 import Claim from '@/pages/claim.vue'
 import Naming from '@/pages/naming.vue'
@@ -16,7 +17,8 @@ import Ports from '@/pages/ports.vue'
 import FixedIp from './pages/fixedIp.vue';
 
 const routes = [
-    { path: '/', component: Setup },
+    { path: '/', component: Home},
+    { path: '/setup', component: Setup },
     { path: '/claim', component: Claim },
     { path: '/naming', component: Naming },
     { path: '/vlan', component: Vlan },

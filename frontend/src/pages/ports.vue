@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
+import { useConfigurationStore } from '@/stores/configuration'
 import { storeToRefs } from 'pinia'
 
 import { getPorts } from '@/endpoints/devices/GetPorts'
@@ -17,6 +18,9 @@ const route = useRoute()
 
 const ids = useIdsStore()
 const devices = useDevicesStore()
+const configStore = useConfigurationStore()
+
+const { configuration } = storeToRefs(configStore)
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList, vlans } = storeToRefs(devices)
@@ -31,12 +35,6 @@ const changesSaved = ref(false)
 
 // define any[] type for switches
 const switches = ref([])
-
-// load JSON config file
-import * as configJson from '@/assets/test-conf.json'
-import { get } from '@vueuse/core'
-const config = ref(configJson)
-
 
 const configurePorts = async () => {
     // load switches
@@ -71,7 +69,7 @@ const configurePorts = async () => {
     for (const switchDevice of switches.value) {
         // get the port config for the switch
         let switchConfig = null
-        for (const configSwitch of config.value.ports) {
+        for (const configSwitch of configuration.value.ports) {
             console.log("configSwitch : ", configSwitch)
             console.log("switchDevice : ", switchDevice)
             if (configSwitch.switchName === switchDevice.shortName) {
