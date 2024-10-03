@@ -72,16 +72,49 @@ const renameDevices = () => {
     }
 }
 
+const sortAps = () => {
+    // sort APs by the number after AP in their shortName (Warning, there can be APs with a multi-digit number, take it into account)
+    aps.value.sort((a, b) => {
+        // get the number after AP in the shortName (substring from character at index 2 to the end)
+        let aNumber = parseInt(a.shortName.substring(2));
+        let bNumber = parseInt(b.shortName.substring(2));
+        return aNumber - bNumber;
+    });
+
+}
+
 const autoUpdateTags = () => {
     // remove any existing tags
     for (const device of devicesList.value) {
         device.tags = [];
     }
 
-    for (const tag of configuration.value.tags) {
+    /**
+     * Add tags according to config:
+     * contained in configuration.value.tags
+     * if field "usePublic" is true, add the public tag to the first APs in order of APn (AP1, AP2, AP3...)
+     * The number of public tags to add is defined in configuration.value.tags.licenses
+     *
+     * Other tags are given in the form of {name: "tag name", devices: ["shortName1", "shortName2"...]} inside configuration.value.tags.names
+     */
+
+    for (const tag of configuration.value.tags.names) {
         for (const device of devicesList.value) {
             if (tag.devices.includes(device.shortName)) {
                 device.tags.push(tag.name);
+            }
+        }
+    }
+
+    sortAps();
+
+    if (configuration.value.tags.usePublic) {
+        let publicTags = configuration.value.tags.licenses;
+        let index = 0;
+        for (const device of aps.value) {
+            if (index < publicTags) {
+                device.tags.push('public');
+                index++;
             }
         }
     }

@@ -161,10 +161,14 @@
             "switches" : ["S1", "S2"]
         }
     ],
-    "tags": [
-        {
-            "name": "public",
-            "devices" : ["AP1"]
-        }
-    ]
+    "tags": {
+        "usePublic" : true,
+        "licenses" : 2,
+        "names" : [
+            {
+                "name" : "prod",
+                "devices" : ["AP1"]
+            }
+        ]
+    }
 }
