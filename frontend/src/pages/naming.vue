@@ -4,6 +4,8 @@ import { storeToRefs } from 'pinia';
 import { changeDeviceName } from '@/endpoints/devices/ChangeDeviceName';
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress';
 import { blinkDevice } from '@/endpoints/devices/BlinkDevice';
+import { updateTags } from '@/endpoints/devices/UpdateTags';
+
 import { useDevicesStore } from '@/stores/devices';
 import { useConfigurationStore } from '@/stores/configuration';
 
@@ -70,6 +72,21 @@ const renameDevices = () => {
     }
 }
 
+const autoUpdateTags = () => {
+    // remove any existing tags
+    for (const device of devicesList.value) {
+        device.tags = [];
+    }
+
+    for (const tag of configuration.value.tags) {
+        for (const device of devicesList.value) {
+            if (tag.devices.includes(device.shortName)) {
+                device.tags.push(tag.name);
+            }
+        }
+    }
+}
+
 const changeAddresses = useBoolStates([changingAddresses],[], async() => {
     for (const device of devicesList.value) {
         await changeDeviceAddress(device.serial, address.value);
@@ -117,11 +134,25 @@ const goBack = () => {
 
 const setup = async() => {
     renameDevices();
+
     devicesLoaded.value = true;
 }
 
-const validate = () => {
-    // set the namingDone state to true
+const validate = async () => {
+
+    updateNames(routers.value);
+    updateNames(switches.value);
+    updateNames(aps.value);
+
+    autoUpdateTags();
+
+    console.log('[NAMING] devicesList after renaming: ', devicesList.value);
+
+    for (const device of devicesList.value) {
+        let response = await updateTags(device.serial, device.tags);
+        console.log('[NAMING] Updated tags for device: ', device.serial, ' response: ', response);
+    }
+
     router.push('/fixed-ip');
 }
 

@@ -1,6 +1,5 @@
 import { Ref } from 'vue';
 
-
 /**
  *
  * @param refsTrue Array of Refs to set to true before calling the function and false after

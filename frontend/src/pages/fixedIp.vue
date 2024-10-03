@@ -41,6 +41,9 @@ const fixIp = useBoolStates([],[],async () => {
     // load fixed ip assignments from config file
     const configFixedIp = configuration.value.fixedIp
 
+    console.log('[FIXED IP] Config fixed ip: ', configFixedIp)
+    console.log('[FIXED IP] Devices list: ', devicesList.value)
+
     // for each element in configFixedIp, find the corresponding device in devicesList (by configFixedIp[n].expectedEquipment === devicesList[n].shortName)
     for (let i = 0; i < configFixedIp.length; i++) {
         const device = devicesList.value.find((device: { shortName: string }) => device.shortName === configFixedIp[i].expectedEquipment)

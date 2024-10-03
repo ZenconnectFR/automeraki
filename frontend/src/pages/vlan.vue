@@ -44,7 +44,7 @@ const savingChanges = ref(false)
  */
 
 const configureVlans = () => {
-    let devices = devicesList.value
+    let devicesListV = devicesList.value
     let vlans = configuration.value.vlan
 
     console.log('[VLAN] devices: ', devices)
@@ -74,7 +74,7 @@ const configureVlans = () => {
         for (const assignment of vlan.fixedAssignments) {
             console.log('[VLAN] assignment: ', assignment)
             let found = false
-            for (const device of devices) {
+            for (const device of devicesListV) {
                 if (device.name.includes(assignment.expectedEquipment)) {
                     // add the device to the vlanAutoConfigured payload with mac as key
                     vlanAutoConfigured.value[vlanAutoConfigured.value.length - 1].payload[1].fixedIpAssignments[device.mac] = {

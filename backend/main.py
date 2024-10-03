@@ -458,6 +458,25 @@ def update_stp_settings(update_stp_settings: UpdateSTPSettings):
     return updated_stp_settings
 
 
+# ----------
+
+# update device info
+class UpdateDeviceTags(BaseModel):
+    serial: str
+    tags: list[str]
+
+@app.put("/devices/updateTags")
+def update_device_tags(update_device_tags: UpdateDeviceTags):
+    serial = update_device_tags.serial
+    tags = update_device_tags.tags
+
+    try:
+        updated_device = dashboard.devices.updateDevice(serial, tags=tags)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_device
+
 
 
 

@@ -160,5 +160,11 @@
             "stpPriority": 0,
             "switches" : ["S1", "S2"]
         }
+    ],
+    "tags": [
+        {
+            "name": "public",
+            "devices" : ["AP1"]
+        }
     ]
 }
