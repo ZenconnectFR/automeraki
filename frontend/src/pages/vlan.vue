@@ -11,6 +11,8 @@ import { enableVlans } from '@/endpoints/networks/EnableVlans'
 import { configurePerPortVlan } from '@/endpoints/actionBatches/ConfigurePerPortVlan'
 import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 
+import { useBoolStates } from '@/utils/Decorators'
+
 import { createMac } from '@/utils/Misc'
 
 import { useRouter, useRoute } from 'vue-router'
@@ -126,9 +128,8 @@ const preEnableVlans = async() => {
     await enableVlans(newNetworkId.value)
 }
 
-const confirm = async () => {
+const confirm = useBoolStates([savingChanges],[],async () => {
     // enable vlans
-    savingChanges.value = true
     await preEnableVlans()
 
     // add all vlans to the device store
@@ -181,9 +182,7 @@ const confirm = async () => {
             }
         }
     }
-
-    savingChanges.value = false
-}
+});
 
 const validate = () => {
     router.push('/ports')

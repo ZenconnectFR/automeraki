@@ -7,14 +7,24 @@ import { getNetworkDevices } from '@/endpoints/networks/GetNetworkDevices'
 import { cloneNetwork } from '@/endpoints/networks/CloneNetwork'
 import { getTemplates } from '@/endpoints/templates/GetTemplates'
 import { getTemplateData } from '@/endpoints/templates/GetTemplateData'
+
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { storeToRefs } from 'pinia'
 
+import { useBoolStates } from '@/utils/Decorators'
+
 import Dropdown from '@/components/Dropdown.vue'
 
 import { useRoute, useRouter } from 'vue-router'
+
+// interfaces
+
+interface Option {
+    name: string;
+    value: any;
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -26,9 +36,10 @@ const configuration = useConfigurationStore()
 
 // values from store
 const orgId = storeToRefs(ids.orgId)
-
-orgId.value = '738027388935340172'
 const networkId = storeToRefs(ids.networkId)
+
+// for tests
+orgId.value = '738027388935340172'
 
 const organizationsNotLoaded = ref(true)
 
@@ -39,12 +50,7 @@ const networks = ref([])
 // Network selection dropdown options and selected network
 const networkOptions = ref([])
 
-interface Network {
-    name: string;
-    value: any;
-}
-
-const selectedNetwork = ref<Network | null>(null)
+const selectedNetwork = ref<Option | null>(null)
 
 // New network name and address fields inputs
 const newNetworkNameInput = ref('')
@@ -53,7 +59,6 @@ const newNetworkAddress = ref('')
 // Templates
 let templates = ref([])
 const selectedTemplate = ref({ value: '-1', name: '' })
-const newTemplateSelected = ref(false)
 
 // Loading states
 const loadingNetworks = ref(false)
@@ -63,40 +68,21 @@ const templatesLoaded = ref(false)
 // UI states
 const cloningNetwork = ref(false)
 
+// Validation states
 const newNameEntered = ref(true)
 const newAddressEntered = ref(true)
 const newNetworkSelected = ref(true)
+const newTemplateSelected = ref(true)
 
-/*
-// Actions to take once an organization is selected
-const setOrganizationOption = async (option: { id: any }) => {
-    // 1 - Set the orgId in this and the ids store
-    orgId.value = option.id
-    ids.setOrgId(option.id)
-
-    // 2 - Load networks for the selected org
-    loadingNetworks.value = true
-    networks.value = await getNetworks(orgId.value)
-
-    // 3 - Populate network options array and dropdown
-    populateNetworkOptions()
-
-    // 4 - update loading states
-    networksLoaded.value = true
-    loadingNetworks.value = false
-}
-*/
-
-interface SelectedOrgOption {
-    name: string;
-    value: any;
-}
-
-const selectedOrgOption = ref(<SelectedOrgOption> { name: '', value: '-1' });
+const selectedOrgOption = ref(<Option> { name: '', value: '-1' });
 
 // if selectedOrgOption is modified, set the orgId in the store
 const setOrganizationOption = async () => {
     console.log('[SETUP] Selected org option in set org:', selectedOrgOption.value)
+    if (orgId.value === selectedOrgOption.value.value && templatesLoaded.value && networksLoaded.value) {
+        return
+    }
+
     orgId.value = selectedOrgOption.value.value
     ids.setOrgId(selectedOrgOption.value.value)
 
@@ -104,15 +90,29 @@ const setOrganizationOption = async () => {
     getOrgTemplates()
 
     // get the networks for the selected org
+    /*
     loadingNetworks.value = true
     networksLoaded.value = false
+
     networks.value = await getNetworks(orgId.value)
     if (networks.value === undefined) {
         networks.value = []
         console.error('[SETUP] No networks found for org:', orgId.value)
     }
+
     networksLoaded.value = true
     loadingNetworks.value = false
+    */
+
+    // refactor the previous part with decorators
+    useBoolStates([loadingNetworks], [networksLoaded], async () => {
+        networks.value = await getNetworks(orgId.value)
+        if (networks.value === undefined) {
+            networks.value = []
+            console.error('[SETUP] No networks found for org:', orgId.value)
+        }
+    })();
+
     populateNetworkOptions()
 }
 
@@ -128,7 +128,7 @@ const populateNetworkOptions = () => {
 }
 
 // Set the selected network
-const setNetworkOption = (option: Network | { value: string; name: string }) => {
+const setNetworkOption = (option: Option | { value: string; name: string }) => {
     selectedNetwork.value = option
     networkId.value = option.value
     console.log('[SETUP] Selected network:', selectedNetwork.value)
@@ -142,6 +142,7 @@ const setTemplateOption = (option: { value: string; name: string }) => {
     newTemplateSelected.value = true
 }
 
+// Check if all fields are filled
 const fieldsCheck = () => {
     if (newNetworkNameInput.value === '') {
         newNameEntered.value = false
@@ -158,6 +159,7 @@ const fieldsCheck = () => {
     return true
 }
 
+// The function that calls the clone network endpoint
 const cloneNetworkAction = async (toCloneId : string) => {
     const response = await cloneNetwork(toCloneId, newNetworkNameInput.value, orgId.value)
     if (response) {
@@ -166,7 +168,7 @@ const cloneNetworkAction = async (toCloneId : string) => {
         ids.setNewNetworkId(response.newNetworkId)
         devices.setAddress(newNetworkAddress.value)
         devices.setNetwork(newNetworkNameInput.value)
-        // update state store to move to the next step
+        // automatically move to the next step
         router.push('/claim')
     } else {
         console.log('[SETUP] Error cloning network')
@@ -175,12 +177,13 @@ const cloneNetworkAction = async (toCloneId : string) => {
 
 // Handle network cloning (when the clone network button is clicked)
 const cloneNetworkEvent = async () => {
-    // Clone the network with the API
-    if (!fieldsCheck()) {return}
     if (selectedNetwork.value === null) {
         newNetworkSelected.value = false
         return
     }
+
+    if (!fieldsCheck()) {return}
+
     cloningNetwork.value = true
 
     console.log('[SETUP] Cloning network:', selectedNetwork.value.value, newNetworkNameInput.value, orgId.value)
@@ -189,6 +192,11 @@ const cloneNetworkEvent = async () => {
 
 // Continue with the selected template
 const continueWithTemplate = async () => {
+    if (selectedTemplate.value.name == '') {
+        newTemplateSelected.value = false
+        return
+    }
+
     if (!fieldsCheck()) {return}
 
     // get the template payload
@@ -239,15 +247,12 @@ const configureNetwork = async () => {
 }
 
 // get templates for an organization
-const getOrgTemplates = async () => {
-    // get the templates for the selected org
-    templatesLoaded.value = false
+const getOrgTemplates = useBoolStates([],[templatesLoaded], async () => {
     // get the templates for the selected org
     templates = await getTemplates(orgId.value)
     console.log('[SETUP] Templates loaded: ', templates)
-    templatesLoaded.value = true
-    newTemplateSelected.value = true
-}
+
+}, newTemplateSelected);
 
 // Setup function to run on page load
 const setup = async () => {
@@ -260,16 +265,19 @@ const setup = async () => {
             name: org.name
         }
     })
+
+    // orgId is set by App.vue if the app is contained in meraki, else it defaults to -1
     if (orgId.value && orgId.value !== '-1') {
-        // if an orgId is already set in the root div, set it in the store
         ids.setOrgId(orgId.value)
-        // Make this org the default selected org
+
         let selectedOrg = organizations.value.find(org => org.value === orgId.value)
         console.log('[SETUP] Selected org at load:', selectedOrg)
+
         selectedOrgOption.value = { name: selectedOrg.name, value: selectedOrg.value}
         console.log('[SETUP] Selected orgOption at load:', selectedOrgOption.value)
+
         // get the templates for the selected org
-        getOrgTemplates()
+        setOrganizationOption()
     }
     console.log('[SETUP] Organizations loaded: ', organizations.value)
     organizationsNotLoaded.value = false
@@ -295,7 +303,7 @@ onMounted(()  => {
                 <template v-if="templatesLoaded">
                     <h3>Choose a template</h3>
                     <Dropdown :options="templates" v-model="selectedTemplate" :onSelect="setTemplateOption"/>
-                    <p v-if="!newTemplateSelected">Please select a template</p>
+                    <p class="red" v-if="!newTemplateSelected">Please select a template</p>
 
                     <h3>Choose a new network name</h3>
                     <input v-model="newNetworkNameInput" type="text" placeholder="New network name" @input="newNameEntered=true"/>
@@ -306,7 +314,8 @@ onMounted(()  => {
                     <p class="red" v-if="!newAddressEntered">Please enter a new network address</p>
 
                     <button class="margin-padding-all-normal" @click="continueWithTemplate">Continue with this template</button>
-
+                    <hr />
+                    <h3>Or</h3>
                     <template v-if="networksLoaded">
                         <h3>Choose a network</h3>
                         <Dropdown :options="networks" v-model="selectedNetwork" :onSelect="setNetworkOption"/>

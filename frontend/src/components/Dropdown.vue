@@ -46,6 +46,7 @@ const selectOption = (option: Option | string) => {
     }
     search.value = typeof option === 'string' ? option : option?.name || ''
     showDropdown.value = false
+    turnArrowUpsideDown()
 }
 
 /*
@@ -123,7 +124,7 @@ const toggleDropdown = () => {
     <OnClickOutside @trigger="closeDropdown">
         <div class="dropdown-container">
             <div class="input-container">
-                <input v-model="search" type="text" :placeholder="'Select or search'" @click="openDropdown" @input="filterOptions" id="dropdown-input">
+                <input autocomplete="off" v-model="search" type="text" :placeholder="'Select or search'" @click="openDropdown" @input="filterOptions" id="dropdown-input">
                 <img src="@/assets/dropdown-arrow.png" alt="arrow-down" @click="toggleDropdown" class="dropdown-arrow" :id="arrowId">
             </div>
             <div v-if="showDropdown" class="options-container">

@@ -9,6 +9,8 @@ import { storeToRefs } from 'pinia'
 import { fixIpAssignments } from '../endpoints/actionBatches/FixIpAssignments'
 import { getActionBatchStatus } from '../endpoints/actionBatches/GetActionBatch'
 
+import { useBoolStates } from '@/utils/Decorators'
+
 import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
@@ -35,7 +37,7 @@ const changesSaved = ref(false)
 const fixedIpAssignments = ref([] as any[])
 const fixedIpDone = ref(false)
 
-const fixIp = async () => {
+const fixIp = useBoolStates([],[],async () => {
     // load fixed ip assignments from config file
     console.log('[FIXED IP] config: ', configuration)
     const configFixedIp = configuration.value.fixedIp
@@ -58,17 +60,13 @@ const fixIp = async () => {
             })
         }
     }
+}, fixedIpDone);
 
-    // set fixedIpDone to true
-    fixedIpDone.value = true
-}
-
-const validate = async () => {
+const validate = useBoolStates([savingChanges],[],async () => {
     // validate the fixed ip assignments
     console.log('[FIXED IP] Validating fixed ip assignments: ', fixedIpAssignments.value)
 
     // launch action batch to fix ip addresses
-    savingChanges.value = true
     const actionBatchId = await fixIpAssignments(fixedIpAssignments.value, orgId.value)
 
     while (true) {
@@ -81,11 +79,7 @@ const validate = async () => {
             console.log('[FIXED IP] Action batch not completed yet: ', response)
         }
     }
-
-    // move to the next page
-    changesSaved.value = true
-    savingChanges.value = false
-}
+}, changesSaved);
 
 const goBack = () => {
     router.push('/naming')

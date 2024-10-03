@@ -20,19 +20,21 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 
+// info from the stores
 const { newNetworkId, orgId } = storeToRefs(ids)
 
+
 const newNetworkDevices = ref('') // Input field for new network devices serials
-const confirmMoveNetwork = ref(false)
-const showMoveNetwork = ref(false)
+const confirmMoveNetwork = ref(false) // Confirm the move network warning
+const showMoveNetwork = ref(false) // Show the move network warning
 
 const inventoryDevices = ref([]) // devices in the organization inventory
-const inventoryFetched = ref(false)
-const inventoryUpdated = ref(false)
+const inventoryFetched = ref(false) // flag to know if the inventory has been fetched
+const inventoryUpdated = ref(false) // flag to know if the inventory has been updated
 const parsedDevices = ref([]) // devices parsed from the input field
 
-const alreadyInNetwork = ref([]) // devices already in a network (full objects)
-const alreadyInNetworkWithInfo = ref([]) // devices already in a network (with network info)
+const alreadyInNetwork = ref([]) // devices already in a network (full devices info)
+const alreadyInNetworkWithInfo = ref([]) // devices already in a network (with network info and abridged device info)
 const toClaim = ref([]) // devices to claim (string serials)
 
 const devicesAdded = ref(false)
@@ -92,7 +94,7 @@ const addDevices = async () => {
 
     console.log('[CLAIM] Parsed devices: ', parsedDevices.value)
 
-    // get the devices in inventory that match the parsed devices' serials
+    // get the devices in inventory if they haven't been fetched yet
     if (!inventoryFetched.value || inventoryUpdated.value) {
         await retrieveInventory(parsedDevices.value)
         inventoryFetched.value = inventoryDevices.value.length > 0
@@ -110,7 +112,6 @@ const addDevices = async () => {
         }
 
         showMoveNetwork.value = true
-
         return // we will call addDevices again after the user confirms (or not) the move
     }
 
@@ -124,6 +125,7 @@ const addDevices = async () => {
 
     // show the claiming message
     claiming.value = true
+
     // Call the claimDevices endpoint
     const response = await claimDevices(newNetworkId.value, toClaim.value)
     if (response && response.serials) {
@@ -145,7 +147,7 @@ const addDevices = async () => {
         console.log('[CLAIM] Updating devices store with new devices: ', fullFinalDevices.value)
         devices.addDevices(fullFinalDevices.value)
 
-        await changeAddresses()
+        await changeAddresses() // immediately change the addresses of the devices
         devicesAdded.value = true
     } else {
         usedByAnotherOrg.value = true
@@ -189,15 +191,11 @@ const moveDevices = async () => {
 
 /**
  * Remove the devices that are already in a network from the toClaim array and the input field
+ * Used when the user continues without the devices in the move network warning
  */
-
 const removeAlreadyInNetwork = () => {
-    for (const device of alreadyInNetwork.value) {
-        const index = toClaim.value.indexOf(device.serial)
-        if (index > -1) {
-            toClaim.value.splice(index, 1)
-        }
-    }
+    // Empty the toClaim array
+    toClaim.value = []
 
     // remove the devices from the input field by regex matching
     for (const device of alreadyInNetwork.value) {
@@ -213,9 +211,6 @@ const validate = async() => {
     // set the claimDone state to true
     router.push('/naming')
 }
-
-onMounted(() => {
-})
 
 </script>
 
