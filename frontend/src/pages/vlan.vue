@@ -37,30 +37,6 @@ const perPortVlan = ref([])
 // UI states
 const savingChanges = ref(false)
 
-/* import config file (@/assets/test-config.json)
-{
-    "vlan": [
-        {
-            "id": 1,
-            "name": "VLAN 1",
-            "applianceIp": "127.0.0.1",
-            "subnet": "127.0.0.0/24",
-            "fixedAssignments": [
-                {
-                    "expectedEquipment": "S1",
-                    "ip": "127.0.0.2"
-                },
-                {
-                    "expectedEquipment": "S2",
-                    "ip": "127.0.0.3"
-                }
-            ]
-        }
-    ]
-}
- */
-
-
 /**
  * Auto configure vlan:
  * Retrieve the list of devices from the devices store and compare the expected equipment with the actual equipment last group of letters in the name
@@ -120,6 +96,12 @@ const configureVlans = () => {
             }
         }
     }
+
+    for (const vlan of vlanAutoConfigured.value) {
+        console.log('[VLAN] Adding vlan: ', vlan.id, " to devices store")
+        devices.addVlan(`${vlan.id}`)
+    }
+
     vlanIsAutoConfigured.value = true
 }
 
@@ -131,12 +113,6 @@ const preEnableVlans = async() => {
 const confirm = useBoolStates([savingChanges],[],async () => {
     // enable vlans
     await preEnableVlans()
-
-    // add all vlans to the device store
-    for (const vlan of vlanAutoConfigured.value) {
-        console.log('[VLAN] Adding vlan: ', vlan.id, " to devices store")
-        devices.addVlan(`${vlan.id}`)
-    }
 
     let createdVlans = await createVlansIfNotExists(newNetworkId.value, vlanAutoConfigured.value)
 
@@ -174,7 +150,7 @@ const confirm = useBoolStates([savingChanges],[],async () => {
     // is an action batch, loop until completed
     if (!firstResponse.status.completed) {
         while (true) {
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise(resolve => setTimeout(resolve, 1000))
             const response = await getActionBatchStatus(firstResponse.id, orgId.value)
             if (response.status.completed) {
                 console.log('[VLAN] Action batch completed: ', response)

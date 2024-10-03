@@ -39,17 +39,12 @@ const fixedIpDone = ref(false)
 
 const fixIp = useBoolStates([],[],async () => {
     // load fixed ip assignments from config file
-    console.log('[FIXED IP] config: ', configuration)
     const configFixedIp = configuration.value.fixedIp
-
-    console.log('[FIXED IP] configFixedIp: ', configFixedIp)
 
     // for each element in configFixedIp, find the corresponding device in devicesList (by configFixedIp[n].expectedEquipment === devicesList[n].shortName)
     for (let i = 0; i < configFixedIp.length; i++) {
         const device = devicesList.value.find((device: { shortName: string }) => device.shortName === configFixedIp[i].expectedEquipment)
         if (device) {
-            console.log('[FIXED IP] device found: ', device)
-            console.log('[FIXED IP] configFixedIp[i]: ', configFixedIp[i])
             /**
              * If found, push all the fields except expectedEquipment to fixedIpAssignment
              */
@@ -70,7 +65,7 @@ const validate = useBoolStates([savingChanges],[],async () => {
     const actionBatchId = await fixIpAssignments(fixedIpAssignments.value, orgId.value)
 
     while (true) {
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 1000))
         const response = await getActionBatchStatus(actionBatchId.id, orgId.value)
         if (response.status.completed) {
             console.log('[FIXED IP] Action batch completed: ', response)

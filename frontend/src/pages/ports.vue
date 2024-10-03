@@ -11,6 +11,8 @@ import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 import { updateMTUSize } from '@/endpoints/devices/switch/UpdateMTUSize'
 import { updateSTPSettings } from '@/endpoints/devices/switch/UpdateSTPSettings'
 
+import { useBoolStates } from '@/utils/Decorators'
+
 import Dropdown from '@/components/Dropdown.vue'
 
 import { useRouter, useRoute } from 'vue-router'
@@ -43,24 +45,6 @@ const configurePorts = async () => {
     switches.value = devicesList.value.filter((device: { type?: string }) => device.type === 'S')
 
     /**
-     * for each switch, configure the ports according to the config file
-     * final structure must be of the form:
-     * [
-     *   {
-     *     serial: string,
-     *     name: string,
-     *     ports: [
-     *       {
-     *          id: int,
-     *          name: string,
-     *          vlan: int,
-     *          type: string
-     *       }
-     *     ]
-     *   }
-     * ]
-     *
-     * Logic:
      * - for each switch, get the ports (api call)
      * - for each port, check if its id is in the config file at config.value.ports[n].config.ports[n].id
      * - if it is, add the port from the config file to the portsAutoConfigured array
@@ -72,8 +56,6 @@ const configurePorts = async () => {
         // get the port config for the switch
         let switchConfig = null
         for (const configSwitch of configuration.value.ports) {
-            console.log("configSwitch : ", configSwitch)
-            console.log("switchDevice : ", switchDevice)
             if (configSwitch.switchName === switchDevice.shortName) {
                 switchConfig = configSwitch.config
                 break
@@ -146,12 +128,12 @@ const configurePorts = async () => {
     portsAutoConfigDone.value = true
 }
 
-const confirm = async () => {
+const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
     console.log('Confirming ports configuration : ', portsAutoConfigured.value)
-    savingChanges.value = true
-    changesSaved.value = false
+
     // send the portsAutoConfigured to the Endpoint that creates action batches
     let response = await configurePortsBatch(portsAutoConfigured.value, orgId.value)
+
     // wait until the action batches is done (check if reponse.status.completed is true), if not, wait 500ms and get the status again through the getActionBatchStatus endpoint
     console.log('Action batch response : ', response)
     if (response.status.completed) {
@@ -159,7 +141,7 @@ const confirm = async () => {
     } else {
         console.log('Action batch not completed')
         while (true) {
-            await new Promise(r => setTimeout(r, 500))
+            await new Promise(r => setTimeout(r, 1000))
             let newResponse = await getActionBatchStatus(response.id, orgId.value)
             console.log('Action batch status : ', newResponse)
             if (newResponse.status.completed) {
@@ -176,8 +158,10 @@ const confirm = async () => {
     // set switch stp
     // map the configuration.value.stp to the switch serials : configuration.value.stp[n].expectedEquipment === devicesList[n].shortName
     const stpPayload = ref([] as any[])
+
     for (const stpConfig of configuration.value.stp) {
         let switches = []
+
         // special case: expected equipment names are in an array in stpConfig.switches (ex: ['S1', 'S2'])
         for (const expectedEquipment of stpConfig.switches) {
             for (const device of devicesList.value) {
@@ -186,6 +170,7 @@ const confirm = async () => {
                 }
             }
         }
+
         stpPayload.value.push({
             stpPriority: stpConfig.stpPriority,
             switches: switches
@@ -195,13 +180,14 @@ const confirm = async () => {
     console.log('Setting STP : ', stpPayload.value)
     const stpRes = await updateSTPSettings(newNetworkId.value, stpPayload.value)
     console.log('STP settings updated : ', stpRes)
-
-    changesSaved.value = true
-    savingChanges.value = false
-}
+});
 
 const back = () => {
     router.push('/vlan')
+}
+
+const nextPage = () => {
+    // tba
 }
 
 onMounted(() => {
