@@ -353,7 +353,25 @@ def update_mtu_size(update_mtu_size: UpdateMTUSize):
     return updated_network
 
 
+# ----------
 
+class UpdateWans(BaseModel):
+    serial: str
+    wan1: Optional[dict] = None
+    wan2: Optional[dict] = None
+
+@app.post("/devices/updateWans")
+def update_wans(update_wans: UpdateWans):
+    serial = update_wans.serial
+    wan1 = update_wans.wan1
+    wan2 = update_wans.wan2
+
+    try:
+        updated_device = dashboard.devices.updateDeviceManagementInterface(serial, wan1=wan1, wan2=wan2)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_device
 
 
 

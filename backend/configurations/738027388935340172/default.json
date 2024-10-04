@@ -170,5 +170,45 @@
                 "devices" : ["AP1"]
             }
         ]
-    }
+    },
+    "wan1" : [
+        {
+            "name": "Orange",
+            "auto": false,
+            "wanIp": "",
+            "mask": "255.255.255.252",
+            "gateway": "",
+            "primaryDns": "194.2.0.20",
+            "secondaryDns": "8.8.8.8"
+        },
+        {
+            "name": "Starlink",
+            "auto": true,
+            "wanIp": "",
+            "mask": "255.255.255.248",
+            "gateway": "",
+            "primaryDns": "168.192.0.1",
+            "secondaryDns": "8.8.8.8"
+        }
+    ],
+    "wan2" : [
+        {
+            "name": "Bouygues",
+            "auto": false,
+            "wanIp": "",
+            "mask": "255.255.255.248",
+            "gateway": "",
+            "primaryDns": "194.158.122.10",
+            "secondaryDns": "8.8.8.8"
+        },
+        {
+            "name": "Cradlepoint",
+            "auto": true,
+            "wanIp": "",
+            "mask": "",
+            "gateway": "",
+            "primaryDns": "",
+            "secondaryDns": ""
+        }
+    ]
 }

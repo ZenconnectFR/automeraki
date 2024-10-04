@@ -187,7 +187,7 @@ const back = () => {
 }
 
 const nextPage = () => {
-    // tba
+    router.push('/wans')
 }
 
 onMounted(() => {
@@ -210,6 +210,7 @@ onMounted(() => {
         <p v-if="savingChanges">Saving changes...</p>
         <p v-if="changesSaved">Ports auto-configured</p>
         <button @click="back">Back</button>
+        <button @click="nextPage">Next</button>
         <template v-for="switchPorts in portsAutoConfigured">
             <h3>{{ switchPorts.name }}</h3>
             <table class="space-row-col">

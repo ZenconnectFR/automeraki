@@ -146,7 +146,8 @@ const changeNames = useBoolStates([renaming],[], async() => {
         await changeDeviceName(device.serial, device.name);
     }
 
-    console.log('[NAMING] devicesList after renaming: ', devicesList.value);
+
+
 }, namesSaved);
 
 const moveUp = (index: number, devices: any[]) => {
@@ -167,6 +168,11 @@ const goBack = () => {
 
 const setup = async() => {
     renameDevices();
+    autoUpdateTags();
+
+    for (const device of devicesList.value) {
+        updateTags(device.serial, device.tags);
+    }
 
     devicesLoaded.value = true;
 }
@@ -177,14 +183,7 @@ const validate = async () => {
     updateNames(switches.value);
     updateNames(aps.value);
 
-    autoUpdateTags();
-
     console.log('[NAMING] devicesList after renaming: ', devicesList.value);
-
-    for (const device of devicesList.value) {
-        let response = await updateTags(device.serial, device.tags);
-        console.log('[NAMING] Updated tags for device: ', device.serial, ' response: ', response);
-    }
 
     router.push('/fixed-ip');
 }
