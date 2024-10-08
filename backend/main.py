@@ -14,7 +14,7 @@ load_dotenv()
 api_key = os.getenv("API_KEY")
 
 # Initialize the Dashboard API
-dashboard = meraki.DashboardAPI(api_key, output_log=False)
+dashboard = meraki.DashboardAPI(api_key, output_log=False, wait_on_rate_limit=True)
 
 app = FastAPI()
 
@@ -374,6 +374,59 @@ def update_wans(update_wans: UpdateWans):
     return updated_device
 
 
+# ----------
+
+#get site to site vpn
+@app.get("/networks/{network_id}/siteToSiteVpn")
+def get_site_to_site_vpn(network_id: str):
+    site_to_site_vpn = dashboard.appliance.getNetworkApplianceVpnSiteToSiteVpn(network_id)
+
+    return site_to_site_vpn
+
+
+# ----------
+
+#get vlans for a network
+@app.get("/networks/{network_id}/vlans")
+def get_vlans(network_id: str):
+    vlans = dashboard.appliance.getNetworkApplianceVlans(network_id)
+
+    return vlans
+
+
+# ----------
+
+#get vlans settings for a network
+@app.get("/networks/{networkId}/vlanSettings")
+def get_vlan_settings(networkId: str):
+    vlan_settings = dashboard.appliance.getNetworkApplianceVlansSettings(networkId)
+
+    return vlan_settings
+
+
+# ----------
+
+# get vpn statuses for an organization
+@app.get("/organizations/{org_id}/vpnStatuses")
+def get_vpn_statuses(org_id: str):
+    vpn_statuses = dashboard.appliance.getOrganizationApplianceVpnStatuses(org_id, total_pages='all')
+
+    return vpn_statuses
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -518,11 +571,20 @@ def get_templates(org_id: str):
     # get the list of templates from the folder ./configurations/{org_id}
     # add them to the templates list as {name: "template["name"], value: "{file name}"}
     folder_path = f"./configurations/{org_id}"
+
+    # if the folder doesn't exist, return an empty list
+    if not os.path.exists(folder_path):
+        return []
+
     for file in os.listdir(folder_path):
         if file.endswith(".json"):
             with open(f"{folder_path}/{file}", "r") as f:
                 template = json.load(f)
                 templates.append({"name": template["name"], "value": f"{file}"})
+
+    # if there isn't a list of templates, return an empty list
+    if not templates:
+        return []
 
     return templates
 

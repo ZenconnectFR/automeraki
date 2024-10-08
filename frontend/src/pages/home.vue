@@ -20,6 +20,10 @@ const goToConfig = () => {
     router.push('/setup')
 }
 
+const goToVoiceAndSpoke = () => {
+    router.push('/voice-and-spoke')
+}
+
 </script>
 
 <template>
@@ -27,5 +31,6 @@ const goToConfig = () => {
         <h1>Home</h1>
         <button @click="goToManage">Manage templates</button>
         <button @click="goToConfig">Configure a network</button>
+        <button @click="goToVoiceAndSpoke">Voice and Spoke</button>
     </div>
 </template>

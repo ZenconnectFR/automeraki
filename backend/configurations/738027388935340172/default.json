@@ -210,5 +210,19 @@
             "primaryDns": "",
             "secondaryDns": ""
         }
+    ],
+    "vpnSubnets": [
+        {
+            "name" : "Staff",
+            "keywords" : ["staff"],
+            "ranges" : ["10.113.1.0/24-10.113.255.0/24"],
+            "excepts" : ["'10.113.(10|11|12|13|14|15|16|115).0/24'"]
+        },
+        {
+            "name" : "Voice",
+            "keywords" : ["voice", "voix", "voic", "3cx", "téléphonie"],
+            "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
+            "excepts" : ["'10.101.(10|11|12|13|14|15|16|115).0/24'"]
+        }
     ]
 }
