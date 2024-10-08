@@ -39,7 +39,7 @@ const orgId = storeToRefs(ids.orgId)
 const networkId = storeToRefs(ids.networkId)
 
 // for tests
-orgId.value = '738027388935340172'
+// orgId.value = '738027388935340172'
 
 const organizationsNotLoaded = ref(true)
 
@@ -254,6 +254,15 @@ const getOrgTemplates = useBoolStates([],[templatesLoaded], async () => {
 
 }, newTemplateSelected);
 
+// go to the voice and spoke page
+const goToVpn = async () => {
+    // set configuration store
+    let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+    configuration.setConfiguration(templateData)
+
+    router.push('/voice-and-spoke')
+}
+
 // Setup function to run on page load
 const setup = async () => {
     // Get organizations from the API
@@ -280,6 +289,12 @@ const setup = async () => {
         setOrganizationOption()
     }
     console.log('[SETUP] Organizations loaded: ', organizations.value)
+
+    // set the first organization as selected
+    if (organizations.value.length > 0) {
+        selectedOrgOption.value = organizations.value[0]
+    }
+
     organizationsNotLoaded.value = false
 };
 
@@ -314,6 +329,7 @@ onMounted(()  => {
                     <p class="red" v-if="!newAddressEntered">Please enter a new network address</p>
 
                     <button class="margin-padding-all-normal" @click="continueWithTemplate">Continue with this template</button>
+                    <button class="margin-padding-all-normal" @click="goToVpn">Voice and Spoke (debug)</button>
                     <hr />
                     <h3>Or</h3>
                     <template v-if="networksLoaded">

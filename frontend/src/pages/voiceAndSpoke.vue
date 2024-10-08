@@ -23,6 +23,8 @@ const configStore = useConfigurationStore()
 
 const { configuration } = storeToRefs(configStore)
 
+console.log('Configuration: ', configuration.value)
+
 const voiceVlanId = '115'
 
 const { newNetworkId, orgId } = storeToRefs(ids)
@@ -33,21 +35,7 @@ const freeSubnets = ref({} as { [key: string]: string })
 let staffExcepts = new RegExp('10.113.([0-9]|1[0-9]|115).0/24')
 let voiceExcepts = new RegExp('10.101.([0-9]|1[0-9]|2[0-9]|115).0/24')
 
-// we normally get the json from the backend but for now we will hardcode it
-const vpnSubnetsConfig =  [
-    {
-        name : "Staff",
-        keywords : ["staff"],
-        ranges : ["10.113.1.0/24-10.113.255.0/24"],
-        excepts : [ staffExcepts ]
-    },
-    {
-        name : "Voice",
-        keywords : ["voice", "voix", "voic", "3cx", "téléphonie"],
-        ranges : ["10.101.1.0/24-10.101.255.0/24"],
-        excepts : [ voiceExcepts ]
-    }
-]
+const vpnSubnetsConfig = configuration.value.vpnSubnets
 
 const vpnSubnets = ref({} as { [key: string]: any })
 
@@ -55,12 +43,10 @@ const vpnSubnets = ref({} as { [key: string]: any })
 for (const vpnSubnet of vpnSubnetsConfig) {
     vpnSubnets.value[vpnSubnet.name] = {
         ranges: vpnSubnet.ranges,
-        excepts: vpnSubnet.excepts,
+        excepts: vpnSubnet.excepts.map((except: string) => new RegExp(except)),
         subnets: []
     }
 }
-
-
 
 // immediately determine the available voice vlan and site-to-site vpn subnets
 const setup = async () => {
