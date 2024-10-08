@@ -32,9 +32,6 @@ orgId.value = '282061'
 
 const freeSubnets = ref({} as { [key: string]: string })
 
-let staffExcepts = new RegExp('10.113.([0-9]|1[0-9]|115).0/24')
-let voiceExcepts = new RegExp('10.101.([0-9]|1[0-9]|2[0-9]|115).0/24')
-
 const vpnSubnetsConfig = configuration.value.vpnSubnets
 
 const vpnSubnets = ref({} as { [key: string]: any })
@@ -59,15 +56,10 @@ const setup = async () => {
         if (vpnStatus.networkName.includes('29052')) {
             console.log('VPN Status: ', vpnStatus)
         }
-
-        if (!vpnStatus.exportedSubnets) {
+        if (!vpnStatus.exportedSubnets || vpnStatus.exportedSubnets.length === 0  || vpnStatus.vpnMode === 'hub') {
             continue
         }
-        if (vpnStatus.vpnMode === 'hub') {
-            continue
-        }
-
-
+        
         for (const subnet of vpnStatus.exportedSubnets) {
             // group by name, if the subnet.name.LowerCase() contains a keyword from the vpnSubnetsConfig, add it to the corresponding array vpnSubnets[vpnSubnetsConfig.name]
             for (const vpnSubnet of vpnSubnetsConfig) {

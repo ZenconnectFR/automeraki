@@ -594,6 +594,10 @@ def get_templates(org_id: str):
 # Get a template from its path, returns the entire payload
 @app.get("/organizations/{org_id}/templates/{template_id}")
 def get_template(org_id: str, template_id: str):
+
+    if not os.path.exists(f"./configurations/{org_id}/{template_id}"):
+        return {"error": "Template not found"}
+
     with open(f"./configurations/{org_id}/{template_id}", "r") as f:
         template = json.load(f)
 

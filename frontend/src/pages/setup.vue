@@ -58,7 +58,7 @@ const newNetworkAddress = ref('')
 
 // Templates
 let templates = ref([])
-const selectedTemplate = ref({ value: '-1', name: '' })
+const selectedTemplate = ref({ value: 'default.json', name: '' })
 
 // Loading states
 const loadingNetworks = ref(false)
@@ -258,6 +258,12 @@ const getOrgTemplates = useBoolStates([],[templatesLoaded], async () => {
 const goToVpn = async () => {
     // set configuration store
     let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+
+    if (templateData.error) {
+        alert('Error getting template data: ' + templateData.error)
+        return
+    }
+
     configuration.setConfiguration(templateData)
 
     router.push('/voice-and-spoke')
