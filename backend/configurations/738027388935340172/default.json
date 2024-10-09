@@ -39,6 +39,7 @@
     "ports": [
         {
             "switchName": "S1",
+            "nbPorts": 24,
             "config": {
                 "default": {
                     "vlan": "1",
@@ -69,9 +70,41 @@
         },
         {
             "switchName": "S2",
+            "nbPorts": 48,
             "config": {
                 "default": {
                     "vlan": "1",
+                    "name": "Reboot",
+                    "type": "access"
+                },
+                "ports": [
+                    {
+                        "id": "1",
+                        "vlan": "1",
+                        "name": "Uplink",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "2",
+                        "vlan": "2",
+                        "name": "Imprimante",
+                        "type": "access"
+                    },
+                    {
+                        "id": "14",
+                        "vlan": "1",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    }
+                ]
+            }
+        },
+        {
+            "switchName": "S2",
+            "nbPorts": 24,
+            "config": {
+                "default": {
+                    "vlan": "2",
                     "name": "Reboot",
                     "type": "access"
                 },

@@ -1,67 +1,250 @@
 {
     "name": "Template 1",
     "networkToClone": "L_738027388935340791",
-    "nameSeparator": "-",
+    "nameSeparator": " ",
     "vlan": [
         {
-            "id": 1,
-            "name": "VLAN 1",
-            "applianceIp": "10.101.1.1",
-            "subnet": "10.101.1.0/24",
+            "id": 11,
+            "name": "Staff",
+            "applianceIp": "10.101.11.1",
+            "subnet": "10.101.11.0/24",
             "fixedAssignments": [
                 {
+                    "expectedEquipment": "Radioshop",
+                    "ip": "10.101.11.2"
+                },
+                {
+                    "expectedEquipment": "Eyeclick a modifier",
+                    "ip": "10.101.11.3"
+                },
+                {
+                    "expectedEquipment": "Badgeuse",
+                    "ip": "10.101.11.10"
+                },
+                {
+                    "expectedEquipment": "Imprimante SATO a modifier",
+                    "ip": "10.101.11.20"
+                },
+                {
+                    "expectedEquipment": "Coffre",
+                    "ip": "10.101.11.50"
+                },
+                {
+                    "expectedEquipment": "Onduleur",
+                    "ip" : "10.101.11.80"
+                },
+                {
+                    "expectedEquipment": "AND-POSTAB02",
+                    "ip": "10.101.11.82"
+                },
+                {
+                    "expectedEquipment": "CCTV",
+                    "ip": "10.101.11.100"
+                },
+                {
+                    "expectedEquipment": "PC1",
+                    "ip": "10.101.11.194"
+                },
+                {
+                    "expectedEquipment": "PC2",
+                    "ip": "10.101.11.195"
+                },
+                {
+                    "expectedEquipment": "Alarme",
+                    "ip": "10.101.11.200"
+                },
+                {
+                    "expectedEquipment": "Imprimante",
+                    "ip": "10.101.11.245"
+                },
+                {
+                    "expectedEquipment": "Imprimante 2",
+                    "ip": "10.101.11.246"
+                },
+                {
                     "expectedEquipment": "S1",
-                    "ip": "10.101.1.3"
+                    "ip": "10.101.11.251"
                 },
                 {
                     "expectedEquipment": "S2",
-                    "ip": "10.101.1.4"
+                    "ip": "10.101.11.252"
                 },
                 {
-                    "expectedEquipment": "Printer",
-                    "ip": "10.101.1.2"
+                    "expectedEquipment": "S3",
+                    "ip": "10.101.11.253"
                 }
             ]
         },
         {
-            "id": 2,
-            "name": "VLAN 2",
-            "applianceIp": "10.101.2.1",
-            "subnet": "10.101.2.0/24",
+            "id": 12,
+            "name": "Reboot",
+            "applianceIp": "10.101.12.1",
+            "subnet": "10.101.12.0/24",
+            "fixedAssignments": []
+        },
+        {
+            "id": 14,
+            "name": "Public",
+            "applianceIp": "10.101.14.1",
+            "subnet": "10.101.14.0/24",
             "fixedAssignments": [
                 {
                     "expectedEquipment": "AP1",
-                    "ip": "10.101.2.2"
+                    "ip": "10.101.14.246"
+                },
+                {
+                    "expectedEquipment": "AP2",
+                    "ip": "10.101.14.247"
+                },
+                {
+                    "expectedEquipment": "AP3",
+                    "ip": "10.101.14.248"
+                },
+                {
+                    "expectedEquipment": "AP4",
+                    "ip": "10.101.14.249"
+                },
+                {
+                    "expectedEquipment": "AP5",
+                    "ip": "10.101.14.250"
+                },
+                {
+                    "expectedEquipment": "AP6",
+                    "ip": "10.101.14.251"
+                },
+                {
+                    "expectedEquipment": "AP7",
+                    "ip": "10.101.14.252"
+                },
+                {
+                    "expectedEquipment": "AP8",
+                    "ip": "10.101.14.253"
                 }
             ]
+        },
+        {
+            "id": 15,
+            "name": "Teaming",
+            "applianceIp": "10.101.15.1",
+            "subnet": "10.101.15.0/24",
+            "fixedAssignments": []
+        },
+        {
+            "id": 16,
+            "name": "IoT",
+            "applianceIp": "10.101.16.1",
+            "subnet": "10.101.16.0/24",
+            "fixedAssignments": []
+        },
+        {
+            "id": 19,
+            "name": "Ludique",
+            "applianceIp": "10.101.19.1",
+            "subnet": "10.101.19.0/24",
+            "fixedAssignments": []
+        },
+        {
+            "id": 115,
+            "name": "Voice",
+            "applianceIp": "10.101.39.1",
+            "subnet": "10.101.39.0/24",
+            "fixedAssignments": []
         }
     ],
     "ports": [
         {
             "switchName": "S1",
+            "default" : true,
+            "nbPorts" : 48,
             "config": {
                 "default": {
-                    "vlan": "1",
-                    "name": "Reboot",
+                    "vlan": "12",
+                    "name": "Compt, Kiosk, ORB, DMB, KDS, XMB",
                     "type": "access"
                 },
                 "ports": [
                     {
                         "id": "1",
-                        "vlan": "1",
-                        "name": "Uplink",
-                        "type": "trunk"
-                    },
-                    {
-                        "id": "2",
-                        "vlan": "2",
+                        "vlan": "12",
                         "name": "Téléphonie",
                         "type": "access"
                     },
                     {
-                        "id": "14",
-                        "vlan": "1",
+                        "id": "2",
+                        "vlan": "12",
+                        "name": "Téléphonie",
+                        "type": "access"
+                    },
+                    {
+                        "id": "19",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "21",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "23",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "46",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "35",
+                        "vlan": "11",
                         "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "37",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "39",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "41",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "43",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "45",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "47",
+                        "vlan": "12",
+                        "name": "Serveur Merim",
+                        "type": "access"
+                    },
+                    {
+                        "id": "48",
+                        "vlan": "11",
+                        "name": "Uplink",
                         "type": "trunk"
                     }
                 ]
@@ -69,29 +252,227 @@
         },
         {
             "switchName": "S2",
+            "default" : true,
+            "nbPorts" : 48,
             "config": {
                 "default": {
-                    "vlan": "1",
-                    "name": "Reboot",
+                    "vlan": "12",
+                    "name": "Compt, Kiosk, ORB, DMB, KDS, XMB",
                     "type": "access"
                 },
                 "ports": [
                     {
-                        "id": "1",
-                        "vlan": "1",
-                        "name": "Uplink",
-                        "type": "trunk"
+                        "id": "20",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
                     },
                     {
+                        "id": "22",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "24",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "45",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "47",
+                        "vlan": "11",
+                        "name": "Onduleur",
+                        "type": "access"
+                    },
+                    {
+                        "id": "48",
+                        "vlan": "11",
+                        "name": "Uplink",
+                        "type": "trunk"
+                    }
+                ]
+            }
+        },
+        {
+            "switchName": "S3",
+            "default" : true,
+            "nbPorts" : 48,
+            "config": {
+                "default": {
+                    "vlan": "12",
+                    "name": "Compt, Kiosk, ORB, DMB, KDS, XMB",
+                    "type": "access"
+                },
+                "ports": [
+                    {
                         "id": "2",
-                        "vlan": "2",
-                        "name": "Imprimante",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "4",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "6",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "23",
+                        "vlan": "11",
+                        "name": "Bureautique",
                         "type": "access"
                     },
                     {
                         "id": "14",
-                        "vlan": "1",
+                        "vlan": "11",
                         "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "16",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "18",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "20",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "22",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "40",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "42",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "44",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "23",
+                        "vlan": "11",
+                        "name": "Imprimante Sato",
+                        "type": "access"
+                    },
+                    {
+                        "id": "48",
+                        "vlan": "11",
+                        "name": "Uplink",
+                        "type": "trunk"
+                    }
+                ]
+            }
+        },
+        {
+            "switchName": "S3",
+            "default" : false,
+            "nbPorts" : 24,
+            "config": {
+                "default": {
+                    "vlan": "12",
+                    "name": "Compt, Kiosk, ORB, DMB, KDS, XMB",
+                    "type": "access"
+                },
+                "ports": [
+                    {
+                        "id": "2",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "4",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "6",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "23",
+                        "vlan": "11",
+                        "name": "Bureautique",
+                        "type": "access"
+                    },
+                    {
+                        "id": "14",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "16",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "18",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "20",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "22",
+                        "vlan": "11",
+                        "name": "Bornes Wifi",
+                        "type": "trunk"
+                    },
+                    {
+                        "id": "23",
+                        "vlan": "11",
+                        "name": "Imprimante Sato",
+                        "type": "access"
+                    },
+                    {
+                        "id": "24",
+                        "vlan": "11",
+                        "name": "Uplink",
                         "type": "trunk"
                     }
                 ]
@@ -103,18 +484,18 @@
             "expectedEquipment": "R1",
             "ports": [
                 {
-                    "id": "1",
-                    "vlan": "1",
-                    "type": "trunk"
-                },
-                {
-                    "id": "2",
-                    "vlan": "1",
-                    "type": "trunk"
-                },
-                {
                     "id": "3",
-                    "vlan": "1",
+                    "vlan": "11",
+                    "type": "trunk"
+                },
+                {
+                    "id": "4",
+                    "vlan": "11",
+                    "type": "trunk"
+                },
+                {
+                    "id": "5",
+                    "vlan": "11",
                     "type": "trunk"
                 }
             ]
@@ -124,32 +505,113 @@
         {
             "expectedEquipment": "S1",
             "config": {
-                "ip": "10.101.1.3",
+                "ip": "10.101.11.251",
                 "vlan": "1",
                 "mask": "255.255.255.0",
-                "gateway": "10.101.1.1",
-                "primaryDns": "10.101.1.1",
+                "gateway": "10.101.11.1",
+                "primaryDns": "10.101.11.1",
                 "secondaryDns": "8.8.8.8"
             }
         },
         {
             "expectedEquipment": "S2",
             "config": {
-                "ip": "10.101.1.4",
+                "ip": "10.101.11.252",
                 "vlan": "1",
                 "mask": "255.255.255.0",
-                "gateway": "10.101.1.1",
-                "primaryDns": "10.101.1.1",
+                "gateway": "10.101.11.1",
+                "primaryDns": "10.101.11.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "S3",
+            "config": {
+                "ip": "10.101.11.253",
+                "vlan": "1",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.11.1",
+                "primaryDns": "10.101.11.1",
                 "secondaryDns": "8.8.8.8"
             }
         },
         {
             "expectedEquipment": "AP1",
             "config": {
-                "ip": "10.101.2.2",
+                "ip": "10.101.14.246",
                 "mask": "255.255.255.0",
-                "gateway": "10.101.2.1",
-                "primaryDns": "10.101.2.1",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "AP2",
+            "config": {
+                "ip": "10.101.14.247",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "AP3",
+            "config": {
+                "ip": "10.101.14.248",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "AP4",
+            "config": {
+                "ip": "10.101.14.249",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "AP5",
+            "config": {
+                "ip": "10.101.14.250",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "AP6",
+            "config": {
+                "ip": "10.101.14.251",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "AP7",
+            "config": {
+                "ip": "10.101.14.252",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
+                "secondaryDns": "8.8.8.8"
+            }
+        },
+        {
+            "expectedEquipment": "AP8",
+            "config": {
+                "ip": "10.101.14.253",
+                "mask": "255.255.255.0",
+                "gateway": "10.101.14.1",
+                "primaryDns": "10.101.14.1",
                 "secondaryDns": "8.8.8.8"
             }
         }
@@ -158,7 +620,7 @@
     "stp": [
         {
             "stpPriority": 0,
-            "switches" : ["S1", "S2"]
+            "switches" : ["S1", "S2", "S3"]
         }
     ],
     "tags": {
@@ -167,7 +629,7 @@
         "names" : [
             {
                 "name" : "prod",
-                "devices" : ["AP1"]
+                "devices" : ["AP1", "AP2"]
             }
         ]
     },
@@ -216,13 +678,13 @@
             "name" : "Staff",
             "keywords" : ["staff"],
             "ranges" : ["10.113.1.0/24-10.113.255.0/24"],
-            "excepts" : ["10.113.([0-9]|1[0-9]|2[0-9]|115).0/24"]
+            "excepts" : ["10.113.([12]?[0-9]|115).0/24"]
         },
         {
             "name" : "Voice",
             "keywords" : ["voice", "voix", "voic", "3cx", "téléphonie"],
             "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
-            "excepts" : ["10.101.([0-9]|1[0-9]|2[0-9]|115).0/24"]
+            "excepts" : ["10.101.([12]?[0-9]|115).0/24"]
         }
     ]
 }

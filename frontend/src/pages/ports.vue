@@ -40,6 +40,20 @@ const changesSaved = ref(false)
 // define any[] type for switches
 const switches = ref([])
 
+// filter out the extra ports on some switches
+// Ex: MS120 models return the extra 2 or 4 ports on the side of the switch when calling the getPorts endpoint, we don't want those
+const filterPorts = (model: string, ports: any[]) => {
+    if (model.includes('MS120-8')) {
+        return ports.filter((port: { portId: string }) => parseInt(port.portId) <= 8)
+    } else if (model.includes('MS120-24')) {
+        return ports.filter((port: { portId: string }) => parseInt(port.portId) <= 24)
+    } else if (model.includes('MS120-48')) {
+        return ports.filter((port: { portId: string }) => parseInt(port.portId) <= 48)
+    } else {
+        return ports
+    }
+}
+
 const configurePorts = async () => {
     // load switches
     switches.value = devicesList.value.filter((device: { type?: string }) => device.type === 'S')
@@ -53,12 +67,23 @@ const configurePorts = async () => {
      */
 
     for (const switchDevice of switches.value) {
+        // get the ports for the switch
+        let ports = await getPorts(switchDevice.serial)
+
+        // filter out the extra ports on some switches
+        ports = filterPorts(switchDevice.model, ports)
+
+
         // get the port config for the switch
         let switchConfig = null
         for (const configSwitch of configuration.value.ports) {
             if (configSwitch.switchName === switchDevice.shortName) {
-                switchConfig = configSwitch.config
-                break
+                // check if same number of ports
+                console.log("ports.length : ", ports.length, " configSwitch.nbPorts : ", configSwitch.nbPorts)
+                if (ports.length === configSwitch.nbPorts) {
+                    switchConfig = configSwitch.config
+                    break
+                }
             }
         }
 
@@ -66,9 +91,6 @@ const configurePorts = async () => {
             console.error(`No config found for switch ${switchDevice.shortName}`)
             continue
         }
-
-        // get the ports
-        let ports = await getPorts(switchDevice.serial)
 
         console.log(ports)
 
