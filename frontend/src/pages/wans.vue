@@ -131,7 +131,7 @@ const goBack = () => {
     router.push('/ports')
 }
 
-const validate = async () => {
+const validate = useBoolStates([savingChanges],[changesSaved],async () => {
     // update the wans :
     /**
      * if wan1config[selectedWan1Index].auto is true, don't add anything to the final payload
@@ -236,7 +236,7 @@ const validate = async () => {
     savingChanges.value = true
     let response = await updateWans(routerSerial, payload)
     console.log('[WANS] Changes saved: ', response)
-}
+});
 
 const nextPage = () => {
     // next page not made yet
@@ -316,6 +316,8 @@ onMounted(() => {
             <p v-if="sameWan2IpGateway">IP and Gateway can't be the same</p>
         </div>
         <button @click="validate">Validate</button>
+        <p v-if="savingChanges">Saving changes...</p>
+        <p v-if="changesSaved">Changes saved</p>
         <div class="make-row">
             <button @click="goBack">Back</button>
             <button @click="nextPage">Next</button>

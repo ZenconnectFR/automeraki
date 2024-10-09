@@ -158,6 +158,8 @@ const toggleDropdown = () => {
         border-radius: 0.25rem;
         background-color: white;
         z-index: 1;
+        overflow-y: auto;
+        max-height: 200px;
     }
 
     .option {
