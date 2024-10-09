@@ -334,32 +334,101 @@ onMounted(()  => {
 </template>
 
 <style scoped>
-    .make-column {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .margin-padding-all-normal {
-        margin: 10px;
-        padding: 10px;
-    }
-
-    .button-top-right {
-        position: absolute;
-        top: 0;
-        right: 0;
-    }
-
-    .red {
-        color: red  ;
-    }
-
+    /* Page Setup */
     #setup-page {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 400%;
+        justify-content: center;
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         position: relative;
+    }
+
+    h1 {
+        font-size: 2rem;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    /* Loading and Error Text */
+    .loading-text {
+        font-size: 1rem;
+        color: #999;
+        margin-bottom: 20px;
+    }
+
+    .error-text {
+        color: #ff4d4d;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    /* Form Layout */
+    .make-column {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+        color: #333;
+    }
+
+    /* Buttons */
+    .margin-padding-all-normal {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 10px 0;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .margin-padding-all-normal:hover {
+        background-color: #45a049;
+    }
+
+    .button-top-right {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #f44336;
+        color: white;
+        padding: 10px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    /* Separators */
+    hr {
+        width: 100%;
+        border: 1px solid #ddd;
+        margin: 20px 0;
     }
 </style>

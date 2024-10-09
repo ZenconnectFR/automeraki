@@ -39,5 +39,6 @@ if (orgId && orgId !== '-1') {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  font-family: 'Inter', -apple-system, 'BlinkMacSystemFont', Segoe UI, 'Roboto', sans-serif;
 }
 </style>
