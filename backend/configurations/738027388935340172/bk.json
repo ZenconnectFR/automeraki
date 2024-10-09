@@ -1,6 +1,7 @@
 {
-    "name": "Template 1",
+    "name": "Burger King",
     "networkToClone": "L_738027388935340791",
+    "networkToClone2": "L_645703596574254736",
     "nameSeparator": " ",
     "preFilledName": "BKXXXXX-",
     "vlan": [
@@ -74,6 +75,18 @@
                     "expectedEquipment": "S3",
                     "ip": "10.101.11.253"
                 }
+            ],
+            "reservedIpRanges": [
+                {
+                    "start": "10.101.11.60",
+                    "end": "10.101.11.69",
+                    "comment": "V1 SAT"
+                },
+                {
+                    "start": "10.101.11.101",
+                    "end": "10.101.11.103",
+                    "comment": "CCTV serveur"
+                }
             ]
         },
         {
@@ -81,7 +94,19 @@
             "name": "Reboot",
             "applianceIp": "10.101.12.1",
             "subnet": "10.101.12.0/24",
-            "fixedAssignments": []
+            "fixedAssignments": [],
+            "reservedIpRanges": [
+                {
+                    "start": "192.168.1.1",
+                    "end": "192.168.1.253",
+                    "comment": "NO DHCP"
+                },
+                {
+                    "start": "192.168.1.87",
+                    "end": "192.168.1.89",
+                    "comment": "Kitchen Management System"
+                }
+            ]
         },
         {
             "id": 14,
@@ -121,35 +146,40 @@
                     "expectedEquipment": "AP8",
                     "ip": "10.101.14.253"
                 }
-            ]
+            ],
+            "reservedIpRanges": []
         },
         {
             "id": 15,
             "name": "Teaming",
             "applianceIp": "10.101.15.1",
             "subnet": "10.101.15.0/24",
-            "fixedAssignments": []
+            "fixedAssignments": [],
+            "reservedIpRanges": []
         },
         {
             "id": 16,
             "name": "IoT",
             "applianceIp": "10.101.16.1",
             "subnet": "10.101.16.0/24",
-            "fixedAssignments": []
+            "fixedAssignments": [],
+            "reservedIpRanges": []
         },
         {
             "id": 19,
             "name": "Ludique",
             "applianceIp": "10.101.19.1",
             "subnet": "10.101.19.0/24",
-            "fixedAssignments": []
+            "fixedAssignments": [],
+            "reservedIpRanges": []
         },
         {
             "id": 115,
             "name": "Voice",
             "applianceIp": "10.101.39.1",
             "subnet": "10.101.39.0/24",
-            "fixedAssignments": []
+            "fixedAssignments": [],
+            "reservedIpRanges": []
         }
     ],
     "ports": [
@@ -485,17 +515,17 @@
             "expectedEquipment": "R1",
             "ports": [
                 {
+                    "id": "1",
+                    "vlan": "11",
+                    "type": "trunk"
+                },
+                {
+                    "id": "2",
+                    "vlan": "11",
+                    "type": "trunk"
+                },
+                {
                     "id": "3",
-                    "vlan": "11",
-                    "type": "trunk"
-                },
-                {
-                    "id": "4",
-                    "vlan": "11",
-                    "type": "trunk"
-                },
-                {
-                    "id": "5",
                     "vlan": "11",
                     "type": "trunk"
                 }
@@ -638,6 +668,7 @@
         {
             "name": "Orange",
             "auto": false,
+            "assiociatedTags": [],
             "wanIp": "",
             "mask": "255.255.255.252",
             "gateway": "",
@@ -647,6 +678,7 @@
         {
             "name": "Starlink",
             "auto": true,
+            "assiociatedTags": ["WAN1-STARLINK"],
             "wanIp": "",
             "mask": "255.255.255.248",
             "gateway": "",
@@ -657,6 +689,7 @@
     "wan2" : [
         {
             "name": "Bouygues",
+            "assiociatedTags": [],
             "auto": false,
             "wanIp": "",
             "mask": "255.255.255.248",
@@ -665,7 +698,8 @@
             "secondaryDns": "8.8.8.8"
         },
         {
-            "name": "Cradlepoint",
+            "name": "Cradlepoint 5G",
+            "assiociatedTags": ["cradle", "WAN2-5G"],
             "auto": true,
             "wanIp": "",
             "mask": "",

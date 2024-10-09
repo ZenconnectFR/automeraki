@@ -409,7 +409,10 @@ def get_vlan_settings(networkId: str):
 # get vpn statuses for an organization
 @app.get("/organizations/{org_id}/vpnStatuses")
 def get_vpn_statuses(org_id: str):
-    vpn_statuses = dashboard.appliance.getOrganizationApplianceVpnStatuses(org_id, total_pages='all')
+    try:
+        vpn_statuses = dashboard.appliance.getOrganizationApplianceVpnStatuses(org_id)
+    except Exception as e:
+        return {"error": str(e)}
 
     return vpn_statuses
 

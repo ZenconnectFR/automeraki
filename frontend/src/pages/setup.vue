@@ -18,6 +18,7 @@ import { useBoolStates } from '@/utils/Decorators'
 import Dropdown from '@/components/Dropdown.vue'
 
 import { useRoute, useRouter } from 'vue-router'
+import { getNetwork } from '@/endpoints/networks/GetNetwork'
 
 // interfaces
 
@@ -59,6 +60,7 @@ const newNetworkAddress = ref('')
 // Templates
 let templates = ref([])
 const selectedTemplate = ref({ value: 'default.json', name: '' })
+const templateNetwork = ref('')
 
 // Loading states
 const loadingNetworks = ref(false)
@@ -88,6 +90,12 @@ const setOrganizationOption = async () => {
 
     // get the templates for the selected org
     getOrgTemplates()
+
+    // get the name of the network to clone from the template
+    let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+    templateNetwork.value = await getNetwork(templateData.networkToClone).then((network) => network.name)
+
+    console.log('[SETUP] Template data:', templateData)
 
     // get the networks for the selected org
     /*
@@ -136,9 +144,15 @@ const setNetworkOption = (option: Option | { value: string; name: string }) => {
 }
 
 // Set the selected template
-const setTemplateOption = (option: { value: string; name: string }) => {
+const setTemplateOption = async (option: { value: string; name: string }) => {
     selectedTemplate.value = option
     console.log('[SETUP] Selected template:', selectedTemplate.value)
+    let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+    templateNetwork.value = await getNetwork(templateData.networkToClone).then((network) => network.name)
+
+    newNetworkNameInput.value = templateData.preFilledName
+
+    // console.log('[SETUP] Template data:', templateData)
     newTemplateSelected.value = true
 }
 
@@ -324,6 +338,7 @@ onMounted(()  => {
                 <template v-if="templatesLoaded">
                     <h3>Choose a template</h3>
                     <Dropdown :options="templates" v-model="selectedTemplate" :onSelect="setTemplateOption"/>
+                    <p v-if="templateNetwork">Network to clone: {{ templateNetwork }}</p>
                     <p class="red" v-if="!newTemplateSelected">Please select a template</p>
 
                     <h3>Choose a new network name</h3>

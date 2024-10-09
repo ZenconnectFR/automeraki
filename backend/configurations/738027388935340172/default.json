@@ -21,7 +21,8 @@
                     "expectedEquipment": "Printer",
                     "ip": "10.101.1.2"
                 }
-            ]
+            ],
+            "reservedIpRanges": []
         },
         {
             "id": 2,
@@ -32,6 +33,18 @@
                 {
                     "expectedEquipment": "AP1",
                     "ip": "10.101.2.2"
+                }
+            ],
+            "reservedIpRanges": [
+                {
+                    "start": "10.101.2.10",
+                    "end": "10.101.2.253",
+                    "comment": "NO DHCP"
+                },
+                {
+                    "start": "10.101.2.87",
+                    "end": "10.101.2.89",
+                    "comment": "Kitchen Management System"
                 }
             ]
         }

@@ -28,13 +28,15 @@ console.log('Configuration: ', configuration.value)
 const voiceVlanId = '115'
 
 const { newNetworkId, orgId } = storeToRefs(ids)
-orgId.value = '282061'
+// orgId.value = '282061'
 
 const freeSubnets = ref({} as { [key: string]: string })
 
 const vpnSubnetsConfig = configuration.value.vpnSubnets
 
 const vpnSubnets = ref({} as { [key: string]: any })
+
+const vpnStatusesError = ref('')
 
 // fill the vpnSubnets object with { name: { ranges: [], excepts: [], subnets: [] } }
 for (const vpnSubnet of vpnSubnetsConfig) {
@@ -48,14 +50,20 @@ for (const vpnSubnet of vpnSubnetsConfig) {
 // immediately determine the available voice vlan and site-to-site vpn subnets
 const setup = async () => {
     const vpnStatuses = await getVpnStatuses(orgId.value)
+
+    // check for errors
+    if (vpnStatuses.error) {
+        console.log('VPN Statuses: ', vpnStatuses)
+        console.error('Error fetching VPN statuses: ', vpnStatuses.error)
+        vpnStatusesError.value = vpnStatuses.error
+        return
+    }
+
     // map subnets in different arrays depending on the names
     // structure of vpnStatuses: [ { "exportedSubnet": [ {"name": string, "subnet": string} ] } ]
 
     console.log('VPN Statuses: ', vpnStatuses)
     for (const vpnStatus of vpnStatuses) {
-        if (vpnStatus.networkName.includes('29052')) {
-            console.log('VPN Status: ', vpnStatus)
-        }
         if (!vpnStatus.exportedSubnets || vpnStatus.exportedSubnets.length === 0  || vpnStatus.vpnMode === 'hub') {
             continue
         }
@@ -92,5 +100,12 @@ onMounted(setup)
         <div v-for="([name, subnet], index) in Object.entries(freeSubnets)" :key="index">
             <p>Next free subnet for : {{ name }} -> {{ subnet }}</p>
         </div>
+        <p class="red" v-if="vpnStatusesError">{{ vpnStatusesError }}</p>
     </div>
 </template>
+
+<style scoped>
+.red {
+    color: red;
+}
+</style>
