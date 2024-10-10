@@ -1,4 +1,7 @@
 {
+
+    "commentary": "fields called 'commentary' are for documentation only, they will be ignored by the app won't be put in built templates",
+    
     "name": "",
     "networkToClone": "",
     "preFilledName": "",
@@ -6,11 +9,30 @@
         {
             "type": "naming",
             "data": {
-                "formatString": "",
-                "startNumber": 0,
-                "routerBaseName": "",
-                "switchBaseName": "",
-                "accessPointBaseName": ""
+                "name": "",
+                "associationTable": [
+                    {
+                        "name": "",
+                        "id" : "",
+                        "type": "",
+                        "switchPorts" : [ 0 ]
+                    }
+                ],
+                "tags" : [
+                    {
+                        "useLimit": false,
+                        "limit": {
+                            "commentary": "the limit field is only provided when useLimit is true",
+                            "targetType": "",
+                            "number": 0,
+                            "order": "asc"
+                        },
+                        "name": "",
+                        "equipments": [
+                            "associationId"
+                        ]
+                    }
+                ]
             }
         },
         {
@@ -18,17 +40,21 @@
             "data": {
                 "fixedAssignments": [
                     {
-                        "expectedEquipment": "formatString",
-                        "useDhcp": false,
+                        "expectedEquipment": "associationId",
+                        "useDhcp": {
+                            "commentary": "if useDhcp.use is true, the config field will be ignored and could be null or not present",
+                            "use": false,
+                            "vlan": 0
+                        },
                         "config": {
+                            "commentary": "some non essential fields can be left empty or not present",
                             "ip": "",
                             "vlan": "",
                             "mask": "",
                             "gateway": "",
                             "primaryDns": "",
                             "secondaryDns": ""
-                        },
-                        "dhcpVlan": ""
+                        }
                     }
                 ]
             }
@@ -39,12 +65,13 @@
                 "vlans": [
                     {
                         "id": 1,
-                        "name": "Bornes Wifi",
+                        "name": "",
                         "applianceIp": "",
                         "subnet": "",
                         "fixedAssignments": [
                             {
-                                "expectedEquipment": "formatString",
+                                "commentary": "If the expectedEquipment field contains an associationId, the assiociated device will be assigned to the fixed IP, else a random mac address will be assigned to the fixed IP",
+                                "expectedEquipment": "",
                                 "ip": ""
                             }
                         ],
@@ -56,6 +83,7 @@
                             }
                         ],
                         "vpnMode" : {
+                            "commentary": "vpnIp ignored if mode is disabled",
                             "mode": "disabled",
                             "vpnIp": ""
                         }
@@ -63,7 +91,7 @@
                 ],
                 "perPortVlan" : [
                     {
-                        "switchName": "",
+                        "applianceName": "associationId",
                         "ports": [
                             {
                                 "id": "",
@@ -80,7 +108,7 @@
             "data": {
                 "ports": [
                     {
-                        "switchName": "formatString",
+                        "switchName": "associationId",
                         "nbPorts": 0,
                         "config": {
                             "default": {
@@ -104,7 +132,7 @@
                     {
                         "stpPriority": 0,
                         "switches": [
-                            "formatString"
+                            "associationId"
                         ]
                     }
                 ]
@@ -142,7 +170,7 @@
         {
             "type": "vpn",
             "data": {
-                "vpn": [
+                "vpnSubnets": [
                     {
                         "name": "",
                         "keywords": [ "" ],
@@ -155,6 +183,12 @@
                         "excepts" : [
                             "regexString"
                         ]
+                    }
+                ],
+                "vpnHubs" : [
+                    {
+                        "networkId" : "",
+                        "defaultRoute" : false
                     }
                 ]
             }
