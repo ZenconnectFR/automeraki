@@ -14,7 +14,10 @@ npm install
 Run local server
 ```sh
 cd backend
-uvicorn main:app --port 8000 --reload
+# on windows
+bash run.sh
+# on unix
+./run.sh
 ```
 
 ### Compile and Hot-Reload for Development (App only)
