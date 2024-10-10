@@ -22,7 +22,8 @@
                     "ip": "10.101.1.2"
                 }
             ],
-            "reservedIpRanges": []
+            "reservedIpRanges": [],
+            "vpnMode" : "enabled"
         },
         {
             "id": 2,
@@ -46,7 +47,8 @@
                     "end": "10.101.2.89",
                     "comment": "Kitchen Management System"
                 }
-            ]
+            ],
+            "vpnMode" : "disabled"
         }
     ],
     "ports": [
@@ -269,6 +271,12 @@
             "keywords" : ["voice", "voix", "voic", "3cx", "téléphonie"],
             "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
             "excepts" : ["10.101.(10|11|12|13|14|15|16|115).0/24"]
+        }
+    ],
+    "vpnHubs" : [
+        {
+            "NetworkId" : "L_738027388935340791",
+            "defaultRoute" : false
         }
     ]
 }

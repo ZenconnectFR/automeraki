@@ -1,0 +1,163 @@
+{
+    "name": "",
+    "networkToClone": "",
+    "preFilledName": "",
+    "actions": [
+        {
+            "type": "naming",
+            "data": {
+                "formatString": "",
+                "startNumber": 0,
+                "routerBaseName": "",
+                "switchBaseName": "",
+                "accessPointBaseName": ""
+            }
+        },
+        {
+            "type": "fixedIp",
+            "data": {
+                "fixedAssignments": [
+                    {
+                        "expectedEquipment": "formatString",
+                        "useDhcp": false,
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        },
+                        "dhcpVlan": ""
+                    }
+                ]
+            }
+        },
+        {
+            "type": "vlan",
+            "data": {
+                "vlans": [
+                    {
+                        "id": 1,
+                        "name": "Bornes Wifi",
+                        "applianceIp": "",
+                        "subnet": "",
+                        "fixedAssignments": [
+                            {
+                                "expectedEquipment": "formatString",
+                                "ip": ""
+                            }
+                        ],
+                        "reservedIpRanges" : [
+                            {
+                                "start": "",
+                                "end": "",
+                                "comment": ""
+                            }
+                        ],
+                        "vpnMode" : {
+                            "mode": "disabled",
+                            "vpnIp": ""
+                        }
+                    }
+                ],
+                "perPortVlan" : [
+                    {
+                        "switchName": "",
+                        "ports": [
+                            {
+                                "id": "",
+                                "vlan": "",
+                                "type": ""
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "ports",
+            "data": {
+                "ports": [
+                    {
+                        "switchName": "formatString",
+                        "nbPorts": 0,
+                        "config": {
+                            "default": {
+                                "vlan": "",
+                                "name": "",
+                                "type": ""
+                            },
+                            "ports": [
+                                {
+                                    "id": "",
+                                    "vlan": "",
+                                    "name": "",
+                                    "type": ""
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "mtuSize": 9000,
+                "stp": [
+                    {
+                        "stpPriority": 0,
+                        "switches": [
+                            "formatString"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "wans",
+            "data": {
+                "wan1": [
+                    {
+                        "name": "",
+                        "auto": false,
+                        "assiociatedTags" : [ "" ],
+                        "wanIP" : "",
+                        "mask" : "",
+                        "gateway" : "",
+                        "primaryDns" : "",
+                        "secondaryDns" : ""
+                    }
+                ],
+                "wan2": [
+                    {
+                        "name": "",
+                        "auto": false,
+                        "assiociatedTags" : [ "" ],
+                        "wanIP" : "",
+                        "mask" : "",
+                        "gateway" : "",
+                        "primaryDns" : "",
+                        "secondaryDns" : ""
+                    }
+                ]
+            }
+        },
+        {
+            "type": "vpn",
+            "data": {
+                "vpn": [
+                    {
+                        "name": "",
+                        "keywords": [ "" ],
+                        "ranges" : [
+                            {
+                                "start": "",
+                                "end": ""
+                            }
+                        ],
+                        "excepts" : [
+                            "regexString"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
