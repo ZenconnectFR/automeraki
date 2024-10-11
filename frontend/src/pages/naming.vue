@@ -6,12 +6,15 @@ import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress';
 import { blinkDevice } from '@/endpoints/devices/BlinkDevice';
 import { updateTags } from '@/endpoints/devices/UpdateTags';
 
+import { getRoutePath } from '@/utils/PageRouter'
+
 import { useDevicesStore } from '@/stores/devices';
 import { useConfigurationStore } from '@/stores/configuration';
 
 import { useBoolStates } from '@/utils/Decorators';
 
 import { useRouter, useRoute } from 'vue-router'
+import { get } from '@vueuse/core';
 
 const router = useRouter()
 const route = useRoute()
@@ -20,12 +23,8 @@ const devices = useDevicesStore()
 const { address, network, devicesList} = storeToRefs(devices)
 const configStore = useConfigurationStore()
 
-const { configuration } = storeToRefs(configStore)
-
-const routers = ref([])
-const switches = ref([])
-const aps = ref([])
-const others = ref([])
+const { currentPageConfig, configuration, currentPageIndex } = storeToRefs(configStore)
+let config = currentPageConfig.value;
 
 // UI states
 const renaming = ref(false)
@@ -34,128 +33,245 @@ const namesSaved = ref(false)
 
 const devicesLoaded = ref(false)
 
-/**
- * Rename all the devices in the devicesList with : networkName + deviceType + deviceNumber.
- * deviceType is : R for router, S for switch, AP for access point, O for other. The deviceType is determined by the second character of the serial number.
- *  - 2: R, 3: AP, 4: S, anything else: O
- * deviceNumber increments for each device of the same type (starting at 1)
- *
- */
-const renameDevices = () => {
-    console.log('[NAMING] devicesList: ', devicesList.value)
+const routers = ref([])
+const switches = ref([])
+const aps = ref([])
+const others = ref([])
 
-    for (const device of devicesList.value) {
-        console.log('[NAMING] device: ', device)
-        device["type"] = 'O';
-        // model types : MX.+ for router, MS.+ for switch, MR.+ for access point
-        // Turn MXs into Rs, MSs into Ss, MRs into APs
-        switch(device.model.substring(0, 2)) {
-            case 'MX':
-                device["type"] = "R";
-                routers.value.push(device);
-                break;
-            case 'MS':
-                device["type"] = "S";
-                switches.value.push(device);
-                break;
-            case 'MR':
-                device["type"] = "AP";
-                aps.value.push(device);
-                break;
-            default:
-                others.value.push(device);
-                break;
-        }
+const routersTable = ref([])
+const switchesTable = ref([])
+const apsTable = ref([])
 
-        let newName = `${network.value}${configuration.value.nameSeparator}`;
-        device["networkName"] = newName;
+
+const typeFinder = (model: string) => {
+    if (model.includes('MX')) {
+        return 'router'
+    } else if (model.includes('MS')) {
+        return 'switch'
+    } else if (model.includes('MR')) {
+        return 'ap'
+    } else {
+        return 'other'
     }
 }
 
-const sortAps = () => {
-    // sort APs by the number after AP in their shortName (Warning, there can be APs with a multi-digit number, take it into account)
-    aps.value.sort((a, b) => {
-        // get the number after AP in the shortName (substring from character at index 2 to the end)
-        let aNumber = parseInt(a.shortName.substring(2));
-        let bNumber = parseInt(b.shortName.substring(2));
-        return aNumber - bNumber;
-    });
+const buildTables = (associationTable: any[]) => {
+    for (const association of associationTable) {
+        if (association.type === 'router') {
+            routersTable.value.push(association)
+        } else if (association.type === 'switch') {
+            switchesTable.value.push(association)
+        } else if (association.type === 'ap') {
+            apsTable.value.push(association)
+        } else {
+            others.value.push(association)
+        }
+    }
 
+    // sort tables by the id field (string sorting)
+    routersTable.value.sort((a, b) => a.id.localeCompare(b.id))
+    switchesTable.value.sort((a, b) => a.id.localeCompare(b.id))
+    apsTable.value.sort((a, b) => a.id.localeCompare(b.id))
+
+    // add a used field to each association
+    for (const association of routersTable.value) {
+        association.used = false
+    }
+    for (const association of switchesTable.value) {
+        association.used = false
+    }
+    for (const association of apsTable.value) {
+        association.used = false
+    }
+
+    console.log('[NAMING] routersTable: ', routersTable.value)
+    console.log('[NAMING] switchesTable: ', switchesTable.value)
+    console.log('[NAMING] apsTable: ', apsTable.value)
+}
+
+/**
+ * Rename devices according to the format string contained in config.name
+ * The string will always have the following variable between curly braces: {associationName} which is required to give to a unique id to the device
+ * The string can also contain the following variables between curly braces: {networkName}
+ */
+const renameDevices = () => {
+    console.log('[NAMING] devicesList: ', devicesList.value);
+    // few checks to ensure that the config is correct
+    if (devicesList.value.length === 0 || config.associationTable.length === 0
+        || devicesList.value.length !== config.associationTable.length) {
+            console.error('Error renaming devices: devicesList or associationTable is empty or have different lengths');
+            console.log('[NAMING] devicesList: ', devicesList.value);
+            console.log('[NAMING] associationTable: ', config.associationTable);
+            return;
+    }
+
+    for (const device of devicesList.value) {
+        // assign a type to the device
+        device.type = typeFinder(device.model);
+        
+        // depending on the type, find the first unused association in the corresponding table
+        let association: { used: boolean; id: any; name: any; };
+        if (device.type === 'router') {
+            association = routersTable.value.find((a) => a.type === 'router' && !a.used);
+            routers.value.push(device);
+        } else if (device.type === 'switch') {
+            association = switchesTable.value.find((a) => a.type === 'switch' && !a.used);
+            switches.value.push(device);
+        } else if (device.type === 'ap') {
+            association = apsTable.value.find((a) => a.type === 'ap' && !a.used);
+            aps.value.push(device);
+        } else {
+            association = others.value.find((a) => !a.used);
+            others.value.push(device);
+        }
+
+        // if no association is found, log an error and return
+        if (!association) {
+            console.error('Error renaming devices: no association found for device ', device);
+            return;
+        }
+
+        // mark the association as used
+        association.used = true;
+
+        console.log('[NAMING] after marking association as used: ', routersTable.value, switchesTable.value, apsTable.value, others.value);
+
+        // assign the association id to the device
+        device.associationId = association.id;
+
+        // finally, change the name of the device according to the format string
+        device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', '');
+    }
+
+    console.log('[NAMING] devicesList after renaming: ', devicesList.value);
+}
+
+const clearDeviceTags = (devices : any[]) => {
+    for (const device of devices) {
+        device.tags = [];
+    }
 }
 
 const autoUpdateTags = () => {
-    // remove any existing tags
-    for (const device of devicesList.value) {
-        device.tags = [];
-    }
+    // TODO
+    console.log('[NAMING] autoUpdateTags');
 
     /**
-     * Add tags according to config:
-     * contained in configuration.value.tags
-     * if field "usePublic" is true, add the public tag to the first APs in order of APn (AP1, AP2, AP3...)
-     * The number of public tags to add is defined in configuration.value.tags.licenses
-     *
-     * Other tags are given in the form of {name: "tag name", devices: ["shortName1", "shortName2"...]} inside configuration.value.tags.names
+     * For each tag in config.tags, we need to find the corresponding devices in the devicesList and update their tags
+     * if tag.useLimit is true, we need to limit the number of devices that can have this tag: 
+     *   We sort the array that correspongs to the type of tag.limit.targetType in tag.limit.order ('asc' or 'desc')
+     *   We add the tag to the first tag.limit.number devices in the array
+     * else we add the tag to all devices in tag.equipement that we find in the devicesList
      */
 
-    for (const tag of configuration.value.tags.names) {
-        for (const device of devicesList.value) {
-            if (tag.devices.includes(device.shortName)) {
-                device.tags.push(tag.name);
-            }
+    // clear all tags
+    [routers, switches, aps, others].forEach((devices) => {
+        clearDeviceTags(devices.value);
+    });
+
+    function getDeviceByType(targetType: string) {
+        switch (targetType) {
+            case 'router':
+                return routers.value;
+            case 'switch':
+                return switches.value
+            case 'ap':
+                return aps.value;
+            default:
+                return others.value;
         }
     }
 
-    sortAps();
+    config.tags.forEach((tag: { useLimit: any; equipments: any; name: any; limit: any | null; }) => {
+        const { useLimit, equipments, name, limit } = tag;
 
-    if (configuration.value.tags.usePublic) {
-        let publicTags = configuration.value.tags.licenses;
-        let index = 0;
-        for (const device of aps.value) {
-            if (index < publicTags) {
-                device.tags.push('public');
-                index++;
-            }
+        function getMatchingDevices(devices: any[]): any[] {
+            return devices.filter((device) => equipments.includes(device.associationId));
         }
+
+        if (useLimit) {
+            console.log('[NAMING] tag with limit: ', tag);
+            const { targetType, order, number } = limit;
+            const devicesTyped = getDeviceByType(targetType);
+            let matchingDevices = getMatchingDevices(devicesTyped);
+
+            console.log('[NAMING] matchingDevices: ', matchingDevices);
+
+            matchingDevices.sort((a, b) => {
+                if (order === 'asc') {
+                    return a.associationId - b.associationId;
+                } else {
+                    return b.associationId - a.associationId;
+                }
+            });
+
+            matchingDevices.slice(0, number).forEach((device) => {
+                device.tags.push(name);
+            });
+        } else {
+            console.log('[NAMING] tag without limit: ', tag);
+            [routers, switches, aps, others].forEach((devices) => {
+                getMatchingDevices(devices.value).forEach((device) => {
+                    device.tags.push(name);
+                });
+            });
+        }
+    });
+
+    // finally call the endpoint to update the tags
+    for (const device of devicesList.value) {
+        updateTags(device.serial, device.tags);
     }
+    
 }
 
-const changeAddresses = useBoolStates([changingAddresses],[], async() => {
-    for (const device of devicesList.value) {
-        await changeDeviceAddress(device.serial, address.value);
-    }
-});
-
-const updateNames = (src: any[]) => {
-    let index = 1;
+const updateNames = (src: any[], table: any[]) => {
+    let index = 0;
     for (const device of src) {
-        let newName = `${device.networkName}${device.type}${index}`;
-        let shortName = `${device.type}${index}`;
-        devicesList.value.find((d: { serial: string; }) => d.serial === device.serial).name = newName;
-        devicesList.value.find((d: { serial: string; }) => d.serial === device.serial).shortName = shortName;
+        // update the name of the device: config.name with the association name taken from the table at the same index
+        device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', table[index].name);
         index++;
+        console.log('[NAMING] updated name: ', device.name, 'for device serial: ', device.serial, 'with associationId: ', device.associationId);
     }
 }
 
 const changeNames = useBoolStates([renaming],[], async() => {
-    updateNames(routers.value);
-    updateNames(switches.value);
-    updateNames(aps.value);
+    updateNames(routers.value, routersTable.value);
+    updateNames(switches.value, switchesTable.value);
+    updateNames(aps.value, apsTable.value);
 
     for (const device of devicesList.value) {
         await changeDeviceName(device.serial, device.name);
     }
 
-
-
 }, namesSaved);
 
 const moveUp = (index: number, devices: any[]) => {
+    // swap the device at index with the device at index - 1
     devices.splice(index - 1, 0, devices.splice(index, 1)[0]);
+
+    // update the association id and name of the devices
+    let temp = devices[index].associationId;
+    devices[index].associationId = devices[index - 1].associationId;
+    devices[index - 1].associationId = temp;
+
+    temp = devices[index].name;
+    devices[index].name = devices[index - 1].name;
+    devices[index - 1].name = temp;
 }
 
 const moveDown = (index: number, devices: any[]) => {
+    // swap the device at index with the device at index + 1
     devices.splice(index + 1, 0, devices.splice(index, 1)[0]);
+
+    // update the association id and name of the devices
+    let temp = devices[index].associationId;
+    devices[index].associationId = devices[index + 1].associationId;
+    devices[index + 1].associationId = temp;
+
+    temp = devices[index].name;
+    devices[index].name = devices[index + 1].name;
+    devices[index + 1].name = temp;
 }
 
 const blink = (serial: string) => {
@@ -167,25 +283,34 @@ const goBack = () => {
 }
 
 const setup = async() => {
+
+    console.log('[NAMING] config: ', config);
+    buildTables(config.associationTable);
+
     renameDevices();
     autoUpdateTags();
 
+    /*
     for (const device of devicesList.value) {
         updateTags(device.serial, device.tags);
     }
+    */
 
     devicesLoaded.value = true;
 }
 
 const validate = async () => {
+    console.log('[NAMING] devicesList after full renaming: ', devicesList.value);    
 
-    updateNames(routers.value);
-    updateNames(switches.value);
-    updateNames(aps.value);
+    // save deviceList to the store
+    devices.setDevicesList(devicesList.value);
 
-    console.log('[NAMING] devicesList after renaming: ', devicesList.value);
+    console.log('[NAMING] current page config: ', currentPageConfig.value);
 
-    router.push('/fixed-ip');
+    // go to the next page
+    configStore.setCurrentPageConfig(configuration.value.actions[currentPageIndex.value + 1]);
+    configStore.setCurrentPageIndex(currentPageIndex.value + 1);
+    router.push(getRoutePath(currentPageConfig.value.type));
 }
 
 onMounted(() => {
@@ -197,54 +322,53 @@ onMounted(() => {
 <template>
     <div id="naming page">
         <h1>Names</h1>
-        <div v-if="devicesLoaded" id="naming-form">
-            <p v-if="namesSaved === false">Warning: names have not been saved yet</p>
-            <hr />
-            <div v-for="(router, index) in routers" :key="index">
+        <div v-if="devicesLoaded" id="naming-form" class="make-column">
+            <div class="make-column">
                 <div class="make-row">
-                    <p>{{ router.serial }}</p>
-                    <input v-model="router.networkName" type="text" placeholder="Name"/>
-                    <p>{{ `${router.type}${index+1}` }}</p>
-                    <button :disabled="index===0" @click="moveUp(index, routers)">Up</button>
-                    <button :disabled="index===(routers.length-1)" @click="moveDown(index, routers)">Down</button>
-                    <button @click="blink(router.serial)">Blink</button>
+                    <h2>Routers</h2>
                 </div>
-            </div>
-            <hr />
-            <div v-for="(switchDevice, index) in switches" :key="index">
-                <div class="make-row">
-                    <p>{{ switchDevice.serial }}</p>
-                    <input v-model="switchDevice.networkName" type="text" placeholder="Name"/>
-                    <p>{{ `${switchDevice.type}${index+1}` }}</p>
-                    <button :disabled="index===0" @click="moveUp(index, switches)">Up</button>
-                    <button :disabled="index===(switches.length-1)" @click="moveDown(index, switches)">Down</button>
-                    <button @click="blink(switchDevice.serial)">Blink</button>
-                </div>
-            </div>
-            <hr />
-            <div v-for="(ap, index) in aps" :key="index">
-                <div class="make-row">
-                    <p>{{ ap.serial }}</p>
-                    <input v-model="ap.networkName" type="text" placeholder="Name"/>
-                    <p>{{ `${ap.type}${index+1}` }}</p>
-                    <button :disabled="index===0" @click="moveUp(index, aps)">Up</button>
-                    <button :disabled="index===(aps.length-1)" @click="moveDown(index, aps)">Down</button>
-                    <button @click="blink(ap.serial)">Blink</button>
+                <div v-for="(router, index) in routers" :key="index" class="make-row">
+                    <p class="margin-padding">{{ router.serial }}</p>
+                    <input class="margin-padding" v-model="router.name">
+                    <input class="margin-padding" v-model="routersTable[index].name">
+                    <p class="margin-padding">id : {{ routersTable[index].id }}</p>
+                    <button class="margin-padding" :disabled="index===0" @click="moveUp(index, routers)">Up</button>
+                    <button class="margin-padding" :disabled="index===routers.length-1" @click="moveDown(index, routers)">Down</button>
+                    <button class="margin-padding" @click="blink(router.serial)">Blink</button>
                 </div>
             </div>
             <div class="make-column">
-                <button class="margin-padding-all-normal fit-width" @click="changeNames">Rename Devices</button>
-                <p class="margin-padding-all-normal" v-if="renaming">Renaming devices...</p>
                 <div class="make-row">
-                    <label class="margin-padding-all-normal">Network Address:</label>
-                    <input class="margin-padding-all-normal" v-model="address" type="text" placeholder="Network Address"/>
+                    <h2>Switches</h2>
                 </div>
-                <button class="margin-padding-all-normal fit-width" @click="changeAddresses">Change Addresses</button>
-                <p class="margin-padding-all-normal" v-if="changingAddresses">Changing addresses...</p>
+                <div v-for="(switchDevice, index) in switches" :key="index" class="make-row">
+                    <p class="margin-padding">{{ switchDevice.serial }}</p>
+                    <input class="margin-padding" v-model="switchDevice.name">
+                    <input class="margin-padding" v-model="switchesTable[index].name">
+                    <p class="margin-padding">id: {{ switchesTable[index].id }}</p>
+                    <button class="margin-padding" :disabled="index===0" @click="moveUp(index, switches)">Up</button>
+                    <button class="margin-padding" :disabled="index===switches.length-1" @click="moveDown(index, switches)">Down</button>
+                    <button class="margin-padding" @click="blink(switchDevice.serial)">Blink</button>
+                </div>
+            </div>
+            <div class="make-column">
                 <div class="make-row">
-                    <button class="margin-padding-all-normal fit-width" @click="goBack">back</button>
-                    <button class="margin-padding-all-normal fit-width" @click="validate">Next</button>
+                    <h2>Access Points</h2>
                 </div>
+                <div v-for="(ap, index) in aps" :key="index" class="make-row">
+                    <p class="margin-padding">{{ ap.serial }}</p>
+                    <input class="margin-padding" v-model="ap.name">
+                    <input class="margin-padding" v-model="apsTable[index].name">
+                    <p class="margin-padding">id: {{ apsTable[index].id }}</p>
+                    <button class="margin-padding" :disabled="index===0" @click="moveUp(index, aps)">Up</button>
+                    <button class="margin-padding" :disabled="index===aps.length-1" @click="moveDown(index, aps)">Down</button>
+                    <button class="margin-padding" @click="blink(ap.serial)">Blink</button>
+                </div>
+            </div>
+            <button class="margin-padding" @click="changeNames">Save</button>
+            <div class="make-row margin-padding">
+                <button class="margin-padding" @click="goBack">Back</button>
+                <button class="margin-padding" @click="validate">Next</button>
             </div>
         </div>
     </div>
@@ -263,7 +387,7 @@ onMounted(() => {
         align-items: center;
     }
 
-    .margin-padding-all-normal {
+    .margin-padding {
         margin: 10px;
         padding: 10px;
     }

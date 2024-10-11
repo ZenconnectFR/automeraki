@@ -97,22 +97,6 @@ const setOrganizationOption = async () => {
 
     console.log('[SETUP] Template data:', templateData)
 
-    // get the networks for the selected org
-    /*
-    loadingNetworks.value = true
-    networksLoaded.value = false
-
-    networks.value = await getNetworks(orgId.value)
-    if (networks.value === undefined) {
-        networks.value = []
-        console.error('[SETUP] No networks found for org:', orgId.value)
-    }
-
-    networksLoaded.value = true
-    loadingNetworks.value = false
-    */
-
-    // refactor the previous part with decorators
     useBoolStates([loadingNetworks], [networksLoaded], async () => {
         networks.value = await getNetworks(orgId.value)
         if (networks.value === undefined) {
@@ -255,6 +239,8 @@ const configureNetwork = async () => {
     let templateData = await getTemplateData(orgId.value, 'default.json')
     console.log('[SETUP] Template data:', templateData)
     configuration.setConfiguration(templateData)
+    configuration.setCurrentPageConfig(templateData.actions[0].data)
+    configuration.setCurrentPageIndex(0)
 
     // update state store to move to the next step
     router.push({ path: '/naming', replace: true })

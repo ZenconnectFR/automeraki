@@ -7,11 +7,14 @@ import { getInventoryDevices } from '@/endpoints/organizations/GetInventoryDevic
 import { parseDevices } from '@/utils/Misc'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
+import { useConfigurationStore } from '@/stores/configuration'
 import { storeToRefs } from 'pinia'
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress'
 
 import { useRouter, useRoute } from 'vue-router'
 import { getDevice } from '@/endpoints/devices/GetDevice'
+
+import { getRoutePath } from '@/utils/PageRouter'
 
 const router = useRouter()
 const route = useRoute()
@@ -19,10 +22,12 @@ const route = useRoute()
 // stores
 const ids = useIdsStore()
 const devices = useDevicesStore()
+const configStore = useConfigurationStore()
+
 
 // info from the stores
 const { newNetworkId, orgId } = storeToRefs(ids)
-
+const { configuration } = storeToRefs(configStore)
 
 const newNetworkDevices = ref('') // Input field for new network devices serials
 const confirmMoveNetwork = ref(false) // Confirm the move network warning
@@ -208,8 +213,10 @@ const removeAlreadyInNetwork = () => {
 }
 
 const validate = async() => {
-    // set the claimDone state to true
-    router.push('/naming')
+    // 
+    configStore.setCurrentPageIndex(0) // init, will increment in further steps
+    configStore.setCurrentPageConfig(configuration.value.actions[0].data)
+    router.push(getRoutePath(configuration.value.actions[0].type))
 }
 
 </script>

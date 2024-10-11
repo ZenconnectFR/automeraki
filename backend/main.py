@@ -43,7 +43,7 @@ def read_root():
 def del_test_networks():
     networks = dashboard.organizations.getOrganizationNetworks("738027388935340172", total_pages='all')
     for network in networks:
-        if network["id"] != "L_738027388935340791":
+        if network["id"] != "L_738027388935340791" and network["id"] != "N_738027388935362105":
             dashboard.networks.deleteNetwork(network["id"])
 
     return {"Networks": "Deleted"}
