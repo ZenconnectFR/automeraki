@@ -552,6 +552,30 @@ def update_device_tags(update_device_tags: UpdateDeviceTags):
     return updated_device
 
 
+# ----------
+
+# update network info
+class UpdateNetwork(BaseModel):
+    networkId: str
+    payload: Optional[dict] = None
+
+@app.put("/networks/update")
+def update_network(update_network: UpdateNetwork):
+    network_id = update_network.networkId
+    payload = update_network.payload
+
+    print('\nPayload:\n' + str(payload) + '\n')
+
+    try:
+        updated_network = dashboard.networks.updateNetwork(network_id, **payload)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_network
+
+
+
+
 
 
 

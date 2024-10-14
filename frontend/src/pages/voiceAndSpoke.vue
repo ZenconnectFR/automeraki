@@ -9,6 +9,7 @@ import { storeToRefs } from 'pinia'
 
 import { getVpnStatuses } from '@/endpoints/organizations/GetVpnStatuses'
 import { findNextFreeSubnet } from '@/utils/ipType'
+import { getRoutePath } from '@/utils/PageRouter'
 
 import { useBoolStates } from '@/utils/Decorators'
 
@@ -23,8 +24,6 @@ const configStore = useConfigurationStore()
 
 const { currentPageConfig } = storeToRefs(configStore)
 let config = currentPageConfig.value
-
-const voiceVlanId = '115'
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 // orgId.value = '282061'
@@ -94,6 +93,14 @@ const setup = async () => {
     console.log('Free subnets: ', freeSubnets.value)
 }
 
+const goBack = () => {
+    router.push(getRoutePath(configStore.prevPage()))
+}
+
+const nextPage = () => {
+    router.push(getRoutePath(configStore.nextPage()))
+}
+
 onMounted(setup)
 </script>
 
@@ -106,6 +113,8 @@ onMounted(setup)
         <p class="red" v-if="vpnStatusesError">{{ vpnStatusesError }}</p>
         <p v-if="Object.entries(freeSubnets).length === 0">No free subnets available</p>
     </div>
+    <button @click="goBack">Back</button>
+    <button @click="nextPage">Next</button>
 </template>
 
 <style scoped>

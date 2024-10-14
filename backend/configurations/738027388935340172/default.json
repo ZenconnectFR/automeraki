@@ -383,6 +383,41 @@
                     }
                 ]
             }
+        },
+        {
+            "type": "tags",
+            "data": {
+                "availableTags": [
+                    "Appliware",
+                    "BT",
+                    "Cisco800",
+                    "CiscoISR",
+                    "Cradle2005",
+                    "DECT",
+                    "DECT_Teaming",
+                    "DMZ",
+                    "MG21",
+                    "MPLS",
+                    "Mikrotik",
+                    "NO_ROBOT",
+                    "NO_SUP",
+                    "Netgear",
+                    "SAT",
+                    "SD-WAN",
+                    "SDWAN",
+                    "Teaming",
+                    "WAN1-4G",
+                    "WAN1-5G",
+                    "WAN1-ADSL",
+                    "WAN1-Bouygues",
+                    "WAN1-EFM",
+                    "WAN1-FFTH",
+                    "WAN1-FTTO",
+                    "WAN1-STARLINK",
+                    "cradle",
+                    "template"
+                ]
+            }
         }
     ]
 }

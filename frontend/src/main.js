@@ -17,6 +17,7 @@ import Ports from '@/pages/ports.vue'
 import FixedIp from './pages/fixedIp.vue';
 import Wans from './pages/wans.vue';
 import voiceAndSpoke from './pages/voiceAndSpoke.vue';
+import TagNetwork from './pages/tagNetwork.vue';
 
 const routes = [
     { path: '/', component: Home},
@@ -27,7 +28,8 @@ const routes = [
     { path: '/ports', component: Ports },
     { path: '/fixed-ip', component: FixedIp},
     { path: '/wans', component: Wans},
-    { path: '/voice-and-spoke', component: voiceAndSpoke }
+    { path: '/voice-and-spoke', component: voiceAndSpoke },
+    { path: '/tag-network', component: TagNetwork }
 ]
 
 const Router = createRouter({

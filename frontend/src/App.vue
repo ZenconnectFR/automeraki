@@ -39,5 +39,6 @@ if (orgId && orgId !== '-1') {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 </style>
