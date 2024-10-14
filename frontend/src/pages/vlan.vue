@@ -11,6 +11,8 @@ import { enableVlans } from '@/endpoints/networks/EnableVlans'
 import { configurePerPortVlan } from '@/endpoints/actionBatches/ConfigurePerPortVlan'
 import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 
+import { getRoutePath } from '@/utils/PageRouter'
+
 import { useBoolStates } from '@/utils/Decorators'
 
 import { createMac } from '@/utils/Misc'
@@ -24,7 +26,10 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 
-const { configuration } = storeToRefs(configStore)
+const { currentPageConfig } = storeToRefs(configStore)
+let config = currentPageConfig.value
+
+console.log('Configuration: ', config.value)
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
@@ -99,7 +104,7 @@ const savingChanges = ref(false)
 
 const configureVlans = () => {
     let devicesListV = devicesList.value
-    let vlans = configuration.value.vlan
+    let vlans = config.vlans
 
     console.log('[VLAN] devices: ', devices)
     console.log('[VLAN] vlans: ', vlans)
@@ -238,9 +243,9 @@ const confirm = useBoolStates([savingChanges],[],async () => {
     // update perPortVlan settings
     // for each perPortVlan in configuration.value, match the expectedEquipment with a device shortName
     // and add {serial: device.serial, config: perPortVlan[n]} to perPortVlan
-    for (const perPortVlanConfig of configuration.value.perPortVlan) {
+    for (const perPortVlanConfig of config.perPortVlan) {
         console.log('[VLAN] perPortVlanConfig: ', perPortVlanConfig)
-        console.log('Template configuration: ', configuration.value)
+        console.log('Template configuration: ', config.value)
         for (const device of devicesList.value) {
             if (device.shortName === perPortVlanConfig.expectedEquipment) {
                 perPortVlan.value.push({
@@ -324,11 +329,11 @@ const deleteFixedIp = (vlanId: number, mac: string) => {
 
 
 const validate = () => {
-    router.push('/ports')
+    router.push(getRoutePath(configStore.nextPage()));
 }
 
 const goBack = () => {
-    router.push('/fixed-ip')
+    router.push(getRoutePath(configStore.prevPage()));
 }
 
 onMounted(() => {

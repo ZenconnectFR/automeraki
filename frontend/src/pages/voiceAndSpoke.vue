@@ -21,9 +21,8 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 
-const { configuration } = storeToRefs(configStore)
-
-console.log('Configuration: ', configuration.value)
+const { currentPageConfig } = storeToRefs(configStore)
+let config = currentPageConfig.value
 
 const voiceVlanId = '115'
 
@@ -32,7 +31,7 @@ const { newNetworkId, orgId } = storeToRefs(ids)
 
 const freeSubnets = ref({} as { [key: string]: string })
 
-const vpnSubnetsConfig = configuration.value.vpnSubnets
+const vpnSubnetsConfig = config.vpnSubnets
 
 const vpnSubnets = ref({} as { [key: string]: any })
 
@@ -84,6 +83,10 @@ const setup = async () => {
 
     // find the next available subnet for each name
     for (const [name, vpnSubnet] of Object.entries(vpnSubnets.value)) {
+        if (vpnSubnet.subnets.length === 0) {
+            continue
+        }
+
         const freeSubnet = findNextFreeSubnet(vpnSubnet.subnets, vpnSubnet.ranges, vpnSubnet.excepts)
         freeSubnets.value[name] = freeSubnet
     }
@@ -101,6 +104,7 @@ onMounted(setup)
             <p>Next free subnet for : {{ name }} -> {{ subnet }}</p>
         </div>
         <p class="red" v-if="vpnStatusesError">{{ vpnStatusesError }}</p>
+        <p v-if="Object.entries(freeSubnets).length === 0">No free subnets available</p>
     </div>
 </template>
 

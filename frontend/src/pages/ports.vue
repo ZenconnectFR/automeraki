@@ -12,6 +12,7 @@ import { updateMTUSize } from '@/endpoints/devices/switch/UpdateMTUSize'
 import { updateSTPSettings } from '@/endpoints/devices/switch/UpdateSTPSettings'
 
 import { useBoolStates } from '@/utils/Decorators'
+import { getRoutePath } from '@/utils/PageRouter'
 
 import Dropdown from '@/components/Dropdown.vue'
 
@@ -24,7 +25,8 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 
-const { configuration } = storeToRefs(configStore)
+const { currentPageConfig } = storeToRefs(configStore)
+let config = currentPageConfig.value
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList, vlans } = storeToRefs(devices)
@@ -56,7 +58,9 @@ const filterPorts = (model: string, ports: any[]) => {
 
 const configurePorts = async () => {
     // load switches
-    switches.value = devicesList.value.filter((device: { type?: string }) => device.type === 'S')
+    switches.value = devicesList.value.filter((device: { type?: string }) => device.type === 'switch')
+
+    console.log('Switches: ', switches.value)
 
     /**
      * - for each switch, get the ports (api call)
@@ -76,8 +80,8 @@ const configurePorts = async () => {
 
         // get the port config for the switch
         let switchConfig = null
-        for (const configSwitch of configuration.value.ports) {
-            if (configSwitch.switchName === switchDevice.shortName) {
+        for (const configSwitch of config.ports) {
+            if (configSwitch.switchName === switchDevice.associationId) {
                 // check if same number of ports
                 console.log("ports.length : ", ports.length, " configSwitch.nbPorts : ", configSwitch.nbPorts)
                 if (ports.length === configSwitch.nbPorts) {
@@ -174,14 +178,14 @@ const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
     }
 
     // also change switch mtu size
-    const mtnRes = await updateMTUSize(newNetworkId.value, configuration.value.mtuSize)
+    const mtnRes = await updateMTUSize(newNetworkId.value, config.mtuSize)
     console.log('MTU size updated : ', mtnRes)
 
     // set switch stp
     // map the configuration.value.stp to the switch serials : configuration.value.stp[n].expectedEquipment === devicesList[n].shortName
     const stpPayload = ref([] as any[])
 
-    for (const stpConfig of configuration.value.stp) {
+    for (const stpConfig of config.stp) {
         let switches = []
 
         // special case: expected equipment names are in an array in stpConfig.switches (ex: ['S1', 'S2'])
@@ -205,11 +209,11 @@ const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
 });
 
 const back = () => {
-    router.push('/vlan')
+    router.push(getRoutePath(configStore.prevPage()))
 }
 
 const nextPage = () => {
-    router.push('/wans')
+    router.push(getRoutePath(configStore.nextPage()))
 }
 
 onMounted(() => {
@@ -234,7 +238,7 @@ onMounted(() => {
         <button @click="back">Back</button>
         <button @click="nextPage">Next</button>
         <template v-for="switchPorts in portsAutoConfigured">
-            <h3>{{ switchPorts.name }}</h3>
+            <h3>{{ switchPorts.associationId }}</h3>
             <table class="space-row-col">
                 <thead>
                     <tr>

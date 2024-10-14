@@ -23,7 +23,7 @@ const devices = useDevicesStore()
 const { address, network, devicesList} = storeToRefs(devices)
 const configStore = useConfigurationStore()
 
-const { currentPageConfig, configuration, currentPageIndex } = storeToRefs(configStore)
+const { currentPageConfig } = storeToRefs(configStore)
 let config = currentPageConfig.value;
 
 // UI states
@@ -110,7 +110,7 @@ const renameDevices = () => {
         device.type = typeFinder(device.model);
         
         // depending on the type, find the first unused association in the corresponding table
-        let association: { used: boolean; id: any; name: any; };
+        let association: { used: boolean; id: any; name: any; type: any; } | undefined;
         if (device.type === 'router') {
             association = routersTable.value.find((a) => a.type === 'router' && !a.used);
             routers.value.push(device);
@@ -138,6 +138,9 @@ const renameDevices = () => {
 
         // assign the association id to the device
         device.associationId = association.id;
+
+        // also assign the association type to the device
+        device.type = association.type;
 
         // finally, change the name of the device according to the format string
         device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', '');
@@ -308,9 +311,7 @@ const validate = async () => {
     console.log('[NAMING] current page config: ', currentPageConfig.value);
 
     // go to the next page
-    configStore.setCurrentPageConfig(configuration.value.actions[currentPageIndex.value + 1]);
-    configStore.setCurrentPageIndex(currentPageIndex.value + 1);
-    router.push(getRoutePath(currentPageConfig.value.type));
+    router.push(getRoutePath(configStore.nextPage()));
 }
 
 onMounted(() => {

@@ -10,6 +10,7 @@ import { enableWan } from '../endpoints/devices/EnableWan'
 
 import { useBoolStates } from '@/utils/Decorators'
 import Dropdown from '@/components/Dropdown.vue'
+import { getRoutePath } from '@/utils/PageRouter'
 
 import { useRouter, useRoute } from 'vue-router'
 import { fixIpAssignments } from '../endpoints/actionBatches/FixIpAssignments'
@@ -24,7 +25,8 @@ const configStore = useConfigurationStore()
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
-const { configuration } = storeToRefs(configStore)
+const { currentPageConfig } = storeToRefs(configStore)
+let config = currentPageConfig.value
 
 const savingChanges = ref(false)
 const changesSaved = ref(false)
@@ -58,8 +60,8 @@ const wan1options = ref([] as string[])
 const wan2options = ref([] as string[])
 
 const configureWans = () => {
-    let wan1 = configuration.value.wan1
-    let wan2 = configuration.value.wan2
+    let wan1 = config.wan1
+    let wan2 = config.wan2
 
     console.log('[WANS] devices: ', devices)
     console.log('[WANS] wan1: ', wan1)
@@ -128,7 +130,7 @@ const setWan2Index = (option: string) => {
 }
 
 const goBack = () => {
-    router.push('/ports')
+    router.push(getRoutePath(configStore.prevPage()));
 }
 
 const validate = useBoolStates([savingChanges],[changesSaved],async () => {
@@ -165,7 +167,7 @@ const validate = useBoolStates([savingChanges],[changesSaved],async () => {
     }
 
     // get router serial for endpoints
-    let routerSerial = devicesList.value.find((device: { type: string }) => device.type === 'R').serial
+    let routerSerial = devicesList.value.find((device: { type: string }) => device.type === 'router').serial
 
     if (!wan1config.value[selectedWan1Index.value].auto) {
         console.log('[WANS] Wan1 config: ', wan1config.value[selectedWan1Index.value])
@@ -240,6 +242,7 @@ const validate = useBoolStates([savingChanges],[changesSaved],async () => {
 
 const nextPage = () => {
     // next page not made yet
+    router.push(getRoutePath(configStore.nextPage()));
 }
 
 onMounted(() => {

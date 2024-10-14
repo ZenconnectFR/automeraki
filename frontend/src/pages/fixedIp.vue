@@ -9,9 +9,12 @@ import { storeToRefs } from 'pinia'
 import { fixIpAssignments } from '../endpoints/actionBatches/FixIpAssignments'
 import { getActionBatchStatus } from '../endpoints/actionBatches/GetActionBatch'
 
+import { getRoutePath } from '@/utils/PageRouter'
+
 import { useBoolStates } from '@/utils/Decorators'
 
 import { useRouter, useRoute } from 'vue-router'
+import { get } from '@vueuse/core'
 
 const router = useRouter()
 const route = useRoute()
@@ -21,7 +24,8 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 
-const { configuration } = storeToRefs(configStore)
+const { currentPageConfig } = storeToRefs(configStore)
+let config = currentPageConfig.value
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
@@ -39,18 +43,24 @@ const fixedIpDone = ref(false)
 
 const fixIp = useBoolStates([],[],async () => {
     // load fixed ip assignments from config file
-    const configFixedIp = configuration.value.fixedIp
+    const configFixedIp = config.fixedAssignments
 
     console.log('[FIXED IP] Config fixed ip: ', configFixedIp)
     console.log('[FIXED IP] Devices list: ', devicesList.value)
 
     // for each element in configFixedIp, find the corresponding device in devicesList (by configFixedIp[n].expectedEquipment === devicesList[n].shortName)
     for (let i = 0; i < configFixedIp.length; i++) {
-        const device = devicesList.value.find((device: { shortName: string }) => device.shortName === configFixedIp[i].expectedEquipment)
+        const device = devicesList.value.find((device: { associationId: string }) => device.associationId === configFixedIp[i].expectedEquipment)
         if (device) {
             /**
              * If found, push all the fields except expectedEquipment to fixedIpAssignment
              */
+
+            // if useDhcp is true, don't add the device to the fixedIpAssignments
+            if (configFixedIp[i].useDhcp && configFixedIp[i].useDhcp.use) {
+                continue
+            }
+
             fixedIpAssignments.value.push({
                 name: device.name,
                 serial: device.serial,
@@ -80,11 +90,11 @@ const validate = useBoolStates([savingChanges],[],async () => {
 }, changesSaved);
 
 const goBack = () => {
-    router.push('/naming')
+    router.push(getRoutePath(configStore.prevPage()));
 }
 
 const nextPage = () => {
-    router.push('/vlan')
+    router.push(getRoutePath(configStore.nextPage()));
 }
 
 onMounted(() => {
