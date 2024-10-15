@@ -29,7 +29,7 @@ const configStore = useConfigurationStore()
 const { currentPageConfig } = storeToRefs(configStore)
 let config = currentPageConfig.value
 
-console.log('Configuration: ', config.value)
+console.log('Configuration: ', config)
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
@@ -174,7 +174,7 @@ const configureVlans = () => {
     // sort by id
     vlanAutoConfigured.value.sort((a, b) => a.id - b.id)
 
-    console.log('[VLAN] vlanAutoConfigured after first config: ', vlanAutoConfigured)
+    console.log('[VLAN] vlanAutoConfigured after first config: ', vlanAutoConfigured.value)
 
     vlanIsAutoConfigured.value = true
 }
@@ -245,9 +245,10 @@ const confirm = useBoolStates([savingChanges],[],async () => {
     // and add {serial: device.serial, config: perPortVlan[n]} to perPortVlan
     for (const perPortVlanConfig of config.perPortVlan) {
         console.log('[VLAN] perPortVlanConfig: ', perPortVlanConfig)
-        console.log('Template configuration: ', config.value)
+        console.log('Template configuration: ', config)
+        console.log('Devices list: ', devicesList.value)
         for (const device of devicesList.value) {
-            if (device.shortName === perPortVlanConfig.expectedEquipment) {
+            if (device.associationId === perPortVlanConfig.applianceName) {
                 perPortVlan.value.push({
                     ports: perPortVlanConfig.ports
                 })
@@ -329,7 +330,9 @@ const deleteFixedIp = (vlanId: number, mac: string) => {
 
 
 const validate = () => {
-    router.push(getRoutePath(configStore.nextPage()));
+    let path =  getRoutePath(configStore.nextPage());
+    console.log('[VLAN] Next page: ', path)
+    router.push(path)
 }
 
 const goBack = () => {
@@ -338,7 +341,6 @@ const goBack = () => {
 
 onMounted(() => {
     configureVlans()
-    console.log('[VLAN] perPortVlan: ', perPortVlan)
     computeCommonIps()
     console.log('[VLAN] commonIps: ', commonIps.value)
 })

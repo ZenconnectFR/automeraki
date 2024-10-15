@@ -225,7 +225,7 @@ const validate = async() => {
     <div id="claim-page">
         <h1>Claim Devices</h1>
         <div id="claim-devices-form" class="make-column">
-            <textarea class="margin-padding-all-normal round-normal fortywide" v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials"></textarea>
+            <textarea class="margin-padding-all-normal round-normal" v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials"></textarea>
             <button class="margin-padding-all-normal" v-if="newNetworkId" @click="addDevices">Add Devices</button>
         </div>
         <p v-if="claiming">Claiming devices...</p>
@@ -263,10 +263,6 @@ const validate = async() => {
         border-radius: 4px;
     }
 
-    .fortywide {
-        width: 40%;
-    }
-
     #claim-devices-form {
         display: flex;
         flex-direction: column;
@@ -278,6 +274,13 @@ const validate = async() => {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 400%;
+        min-width: 40%;
+        width: 40%;
+    }
+
+    textarea {
+        width: 100%;
+        height: 100px;
+        overflow-y: scroll;
     }
 </style>

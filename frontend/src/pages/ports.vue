@@ -143,7 +143,7 @@ const configurePorts = async () => {
 
         portsAutoConfigured.value.push({
             serial: switchDevice.serial,
-            name: switchDevice.shortName,
+            name: switchDevice.associationId,
             ports: portsAutoConfiguredSwitch
         })
 
@@ -191,7 +191,7 @@ const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
         // special case: expected equipment names are in an array in stpConfig.switches (ex: ['S1', 'S2'])
         for (const expectedEquipment of stpConfig.switches) {
             for (const device of devicesList.value) {
-                if (device.shortName === expectedEquipment) {
+                if (device.associationId === expectedEquipment) {
                     switches.push(device.serial)
                 }
             }
@@ -238,7 +238,7 @@ onMounted(() => {
         <button @click="back">Back</button>
         <button @click="nextPage">Next</button>
         <template v-for="switchPorts in portsAutoConfigured">
-            <h3>{{ switchPorts.associationId }}</h3>
+            <h3>{{ switchPorts.name }}</h3>
             <table class="space-row-col">
                 <thead>
                     <tr>

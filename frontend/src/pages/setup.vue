@@ -223,7 +223,6 @@ const configureNetwork = async () => {
 
     console.log('[SETUP] Devices in network: ', devicesList)
 
-    devices.setDevicesList(devicesList)
     // add network name to the devices store
     devices.setNetwork(selectedNetwork.value.name)
 
@@ -239,6 +238,26 @@ const configureNetwork = async () => {
     let templateData = await getTemplateData(orgId.value, 'default.json')
     console.log('[SETUP] Template data:', templateData)
     configuration.setConfiguration(templateData)
+
+    let associationTable = templateData.actions[0].data.associationTable
+    console.log('[SETUP] Association table:', associationTable)
+    // give each device their associationId, can break on complex format strings for devices names.
+    devicesList.forEach((device: { name: string }) => {
+        // find the associationId in the device name, format string is "{networkName}-{associationName}"
+        let associationName = device.name.split('-')[device.name.split('-').length - 1]
+        console.log('[SETUP] Device with name:', device.name, 'has associationName:', associationName)
+        let association = associationTable.find((association: { name: string }) => association.name === associationName)
+        console.log('[SETUP] Device with name:', device.name, 'has association:', association)
+        if (association) {
+            device['associationId'] = association.id
+            device['associationName'] = association.name
+            device['type'] = association.type
+        }
+    })
+
+    console.log('[SETUP] Devices with associationId: ', devicesList)
+    devices.setDevicesList(devicesList)
+
     configuration.setCurrentPageConfig(templateData.actions[0].data)
     configuration.setCurrentPageIndex(0)
 

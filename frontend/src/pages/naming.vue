@@ -20,7 +20,7 @@ const router = useRouter()
 const route = useRoute()
 
 const devices = useDevicesStore()
-const { address, network, devicesList} = storeToRefs(devices)
+const { network, devicesList} = storeToRefs(devices)
 const configStore = useConfigurationStore()
 
 const { currentPageConfig } = storeToRefs(configStore)
@@ -28,7 +28,6 @@ let config = currentPageConfig.value;
 
 // UI states
 const renaming = ref(false)
-const changingAddresses = ref(false)
 const namesSaved = ref(false)
 
 const devicesLoaded = ref(false)
@@ -41,6 +40,7 @@ const others = ref([])
 const routersTable = ref([])
 const switchesTable = ref([])
 const apsTable = ref([])
+const othersTable = ref([])
 
 
 const typeFinder = (model: string) => {
@@ -64,7 +64,7 @@ const buildTables = (associationTable: any[]) => {
         } else if (association.type === 'ap') {
             apsTable.value.push(association)
         } else {
-            others.value.push(association)
+            othersTable.value.push(association)
         }
     }
 
@@ -75,14 +75,23 @@ const buildTables = (associationTable: any[]) => {
 
     // add a used field to each association
     for (const association of routersTable.value) {
-        association.used = false
+        association.used = false;
     }
     for (const association of switchesTable.value) {
-        association.used = false
+        association.used = false;
     }
     for (const association of apsTable.value) {
-        association.used = false
+        association.used = false;
     }
+    for (const association of othersTable.value) {
+        association.used = false;
+    }
+
+    // sort each table by the id field
+    routersTable.value.sort((a, b) => a.id.localeCompare(b.id))
+    switchesTable.value.sort((a, b) => a.id.localeCompare(b.id))
+    apsTable.value.sort((a, b) => a.id.localeCompare(b.id))
+    othersTable.value.sort((a, b) => a.id.localeCompare(b.id))
 
     console.log('[NAMING] routersTable: ', routersTable.value)
     console.log('[NAMING] switchesTable: ', switchesTable.value)
@@ -103,6 +112,32 @@ const renameDevices = () => {
             console.log('[NAMING] devicesList: ', devicesList.value);
             console.log('[NAMING] associationTable: ', config.associationTable);
             return;
+    }
+
+    if (devicesList.value.some((device: { associationId: string; }) => device.associationId)) {
+        // if there are already devices with an associationId, then we are configuring an existing network
+        // we need to add all the devices to the corresponding array and move them to the same index as their associationId in the respective table
+        for (const device of devicesList.value) {
+            if (device.type === 'router') {
+                routers.value.push(device);
+            } else if (device.type === 'switch') {
+                switches.value.push(device);
+            } else if (device.type === 'ap') {
+                aps.value.push(device);
+            } else {
+                others.value.push(device);
+            }
+        }
+
+        // sort the devices by associationId[associationId.length - 1]
+        routers.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
+        switches.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
+        aps.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
+        others.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
+
+        // since the devices are already named, we can return
+        return;
+        
     }
 
     for (const device of devicesList.value) {
@@ -146,7 +181,6 @@ const renameDevices = () => {
         device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', '');
     }
 
-    console.log('[NAMING] devicesList after renaming: ', devicesList.value);
 }
 
 const clearDeviceTags = (devices : any[]) => {
@@ -291,6 +325,8 @@ const setup = async() => {
     buildTables(config.associationTable);
 
     renameDevices();
+    console.log('[NAMING] devicesList after renaming: ', devicesList.value);
+    console.log('[NAMING] device lists: ', routers.value, switches.value, aps.value, others.value);
     autoUpdateTags();
 
     /*
