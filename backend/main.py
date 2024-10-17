@@ -94,7 +94,10 @@ def get_devices(network_id: str):
 # Get one network
 @app.get("/networks/{network_id}")
 def get_network(network_id: str):
-    network = dashboard.networks.getNetwork(network_id)
+    try:
+        network = dashboard.networks.getNetwork(network_id)
+    except Exception as e:
+        return {"error": str(e)}
 
     return network
 
@@ -179,6 +182,93 @@ def get_action_batch(org_id: str, actionBatchId: str):
     action_batch = dashboard.organizations.getOrganizationActionBatch(org_id, actionBatchId)
 
     return action_batch
+
+
+# ---------
+
+# Get all the firewall rules for a network (l3 in, l3 out, l7, cellular in, cellular out, wan services, port forwarding, 1:1 nat, 1:many nat)
+@app.get("/networks/{network_id}/firewallRules")
+def get_firewall_rules(network_id: str):
+        
+    inboundFirewallRules = dashboard.appliance.getNetworkApplianceFirewallInboundFirewallRules(network_id),
+    print('\nInbound Firewall Rules:\n' + str(inboundFirewallRules) + '\n')
+    l3FirewallRules = dashboard.appliance.getNetworkApplianceFirewallL3FirewallRules(network_id),
+    print('\nL3 Firewall Rules:\n' + str(l3FirewallRules) + '\n')
+    cellularFailoverRules = dashboard.appliance.getNetworkApplianceFirewallCellularFirewallRules(network_id),
+    print('\nCellular Failover Rules:\n' + str(cellularFailoverRules) + '\n')
+    inboundCellularFirewallRules = dashboard.appliance.getNetworkApplianceFirewallInboundCellularFirewallRules(network_id),
+    print('\nInbound Cellular Firewall Rules:\n' + str(inboundCellularFirewallRules) + '\n')
+    wanApplianceServices = dashboard.appliance.getNetworkApplianceFirewallFirewalledServices(network_id),
+    print('\nWAN Appliance Services:\n' + str(wanApplianceServices) + '\n')
+    l7FirewallRules = dashboard.appliance.getNetworkApplianceFirewallL7FirewallRules(network_id),
+    print('\nL7 Firewall Rules:\n' + str(l7FirewallRules) + '\n')
+    portForwardingRules = dashboard.appliance.getNetworkApplianceFirewallPortForwardingRules(network_id),
+    print('\nPort Forwarding Rules:\n' + str(portForwardingRules) + '\n')
+    oneToOneNatRules = dashboard.appliance.getNetworkApplianceFirewallOneToOneNatRules(network_id),
+    print('\nOne to One NAT Rules:\n' + str(oneToOneNatRules) + '\n')
+    oneToManyNatRules = dashboard.appliance.getNetworkApplianceFirewallOneToManyNatRules(network_id)
+    print('\nOne to Many NAT Rules:\n' + str(oneToManyNatRules) + '\n')
+
+    return { "inboundFirewallRules": inboundFirewallRules[0],
+            "l3FirewallRules": l3FirewallRules[0],
+            "cellularFailoverRules": cellularFailoverRules[0],
+            "inboundCellularFirewallRules": inboundCellularFirewallRules[0],
+            "wanApplianceServices": wanApplianceServices[0],
+            "l7FirewallRules": l7FirewallRules[0],
+            "portForwardingRules": portForwardingRules[0],
+            "oneToOneNatRules": oneToOneNatRules[0],
+            "oneToManyNatRules": oneToManyNatRules}
+
+
+# ---------
+
+# get policy objects for an organization
+@app.get("/organizations/{org_id}/policyObjects")
+def get_policy_objects(org_id: str):
+    policy_objects = dashboard.organizations.getOrganizationPolicyObjects(org_id, total_pages='all')
+
+    group_objects = dashboard.organizations.getOrganizationPolicyObjectsGroups(org_id, total_pages='all')
+
+    res = []
+    for p_obj in policy_objects:
+        res.append({ "id": p_obj["id"], "name": p_obj["name"]})
+
+    for g_obj in group_objects:
+        res.append({ "id": g_obj["id"], "name": g_obj["name"]})
+
+
+    print('\nPolicy Objects:\n' + str(res) + '\n')
+
+    return res
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ------------------ POST ------------------
 
@@ -410,7 +500,7 @@ def get_vlan_settings(networkId: str):
 @app.get("/organizations/{org_id}/vpnStatuses")
 def get_vpn_statuses(org_id: str):
     try:
-        vpn_statuses = dashboard.appliance.getOrganizationApplianceVpnStatuses(org_id)
+        vpn_statuses = dashboard.appliance.getOrganizationApplianceVpnStatuses(org_id, total_pages='all')
     except Exception as e:
         return {"error": str(e)}
 
@@ -572,6 +662,109 @@ def update_network(update_network: UpdateNetwork):
         return {"error": str(e)}
 
     return updated_network
+
+
+# ----------
+
+# update firewall rules
+
+class UpdateFirewallRules(BaseModel):
+    network_id: str
+    payload: Optional[dict] = None
+
+@app.put("/networks/firewallRules/update")
+def update_firewall_rules(update_firewall_rules: UpdateFirewallRules):
+    network_id = update_firewall_rules.network_id
+    payload = update_firewall_rules.payload
+
+    #print('\nPayload:\n' + str(payload) + '\n')
+
+    res = {}
+
+    if not payload:
+        return {"error": "No payload provided"}
+    
+    if "inboundFirewallRules" in payload:
+        try:
+            print('\nInbound Firewall Rules:\n' + str(payload["inboundFirewallRules"]['rules']) + '\n')
+            updated_inbound_firewall_rules = dashboard.appliance.updateNetworkApplianceFirewallInboundFirewallRules(network_id, rules=payload["inboundFirewallRules"]["rules"])
+            res["inboundFirewallRules"] = updated_inbound_firewall_rules
+        except Exception as e:
+            print('\nError:\n' + str(e) + '\n')
+            return {"error": str(e)}
+    
+    if "l3FirewallRules" in payload:
+        try:
+            updated_l3_firewall_rules = dashboard.appliance.updateNetworkApplianceFirewallL3FirewallRules(network_id, rules=payload["l3FirewallRules"]['rules'])
+            res["l3FirewallRules"] = updated_l3_firewall_rules
+        except Exception as e:
+            return {"error": str(e)}
+        
+    if "cellularFailoverRules" in payload:
+        try:
+            updated_cellular_failover_rules = dashboard.appliance.updateNetworkApplianceFirewallCellularFirewallRules(network_id, rules=payload["cellularFailoverRules"]['rules'])
+            res["cellularFailoverRules"] = updated_cellular_failover_rules
+        except Exception as e:
+            return {"error": str(e)}
+    
+    if "inboundCellularFirewallRules" in payload:
+        try:
+            updated_inbound_cellular_firewall_rules = dashboard.appliance.updateNetworkApplianceFirewallInboundCellularFirewallRules(network_id, rules=payload["inboundCellularFirewallRules"]['rules'])
+            res["inboundCellularFirewallRules"] = updated_inbound_cellular_firewall_rules
+        except Exception as e:
+            return {"error": str(e)}
+        
+    if "wanApplianceServices" in payload:
+        try:
+            updated_wan_appliance_services = []
+            for service in payload["wanApplianceServices"]:
+                updated_wan_appliance_services.append(dashboard.appliance.updateNetworkApplianceFirewallFirewalledService(network_id, **service))
+            res["wanApplianceServices"] = updated_wan_appliance_services
+        except Exception as e:
+            return {"error": str(e)}
+    
+    if "l7FirewallRules" in payload:
+        try:
+            updated_l7_firewall_rules = dashboard.appliance.updateNetworkApplianceFirewallL7FirewallRules(network_id, rules=payload["l7FirewallRules"]["rules"])
+            res["l7FirewallRules"] = updated_l7_firewall_rules
+        except Exception as e:
+            return {"error": str(e)}
+    
+    if "portForwardingRules" in payload:
+        try:
+            updated_port_forwarding_rules = dashboard.appliance.updateNetworkApplianceFirewallPortForwardingRules(network_id, rules=payload["portForwardingRules"]["rules"])
+            res["portForwardingRules"] = updated_port_forwarding_rules
+        except Exception as e:
+            return {"error": str(e)}
+    
+    if "oneToOneNatRules" in payload:
+        try:
+            updated_one_to_one_nat_rules = dashboard.appliance.updateNetworkApplianceFirewallOneToOneNatRules(network_id, rules=payload["oneToOneNatRules"]["rules"])
+            res["oneToOneNatRules"] = updated_one_to_one_nat_rules
+        except Exception as e:
+            return {"error": str(e)}
+    
+    if "oneToManyNatRules" in payload:
+        try:
+            updated_one_to_many_nat_rules = dashboard.appliance.updateNetworkApplianceFirewallOneToManyNatRules(network_id, payload["oneToManyNatRules"]["rules"])
+            res["oneToManyNatRules"] = updated_one_to_many_nat_rules
+        except Exception as e:
+            return {"error": str(e)}
+        
+    return res
+    
+    
+
+
+
+
+
+
+
+
+
+
+
 
 
 

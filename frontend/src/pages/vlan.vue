@@ -372,6 +372,8 @@ onMounted(() => {
             <h2>Auto configured VLANs</h2>
             <div class="make-column" v-for="(vlan, index) in vlanAutoConfigured" :key="index">
                 <hr />
+                <hr />
+                <p>------------------------------------------------------------------------------------</p>
                 <input class="margin-all-normal enboxed" v-model="vlan.payload[0].name" placeholder="VLAN name"/>
                 <p>ID</p>
                 <input class="margin-all-normal enboxed" v-model="vlan.id" placeholder="VLAN ID" type="number"/>

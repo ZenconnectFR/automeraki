@@ -36,6 +36,9 @@ const vpnSubnets = ref({} as { [key: string]: any })
 
 const vpnStatusesError = ref('')
 
+const loading = ref(false)
+const loaded = ref(false)
+
 // fill the vpnSubnets object with { name: { ranges: [], excepts: [], subnets: [] } }
 for (const vpnSubnet of vpnSubnetsConfig) {
     vpnSubnets.value[vpnSubnet.name] = {
@@ -46,7 +49,7 @@ for (const vpnSubnet of vpnSubnetsConfig) {
 }
 
 // immediately determine the available voice vlan and site-to-site vpn subnets
-const setup = async () => {
+const setup = useBoolStates([loading], [loaded], async () => {
     const vpnStatuses = await getVpnStatuses(orgId.value)
 
     // check for errors
@@ -91,7 +94,7 @@ const setup = async () => {
     }
 
     console.log('Free subnets: ', freeSubnets.value)
-}
+});
 
 const goBack = () => {
     router.push(getRoutePath(configStore.prevPage()))
@@ -111,7 +114,8 @@ onMounted(setup)
             <p>Next free subnet for : {{ name }} -> {{ subnet }}</p>
         </div>
         <p class="red" v-if="vpnStatusesError">{{ vpnStatusesError }}</p>
-        <p v-if="Object.entries(freeSubnets).length === 0">No free subnets available</p>
+        <p v-if="loading">Loading...</p>
+        <p v-if="loaded && Object.entries(freeSubnets).length === 0">No free subnets available</p>
     </div>
     <button @click="goBack">Back</button>
     <button @click="nextPage">Next</button>

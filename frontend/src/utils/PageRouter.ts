@@ -3,7 +3,7 @@ const routeTable = {
     fixedIp: "/fixed-ip",
     vlan: "/vlan",
     ports: "/ports",
-    firewall: "/next",
+    firewall: "/firewall",
     wans: "/wans",
     vpn: "/voice-and-spoke",
     tags: "/tag-network",

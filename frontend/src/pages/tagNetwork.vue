@@ -7,6 +7,7 @@ import { useConfigurationStore } from '@/stores/configuration'
 import { storeToRefs } from 'pinia'
 
 import { updateNetwork } from '@/endpoints/networks/UpdateNetwork'
+import { getNetwork } from '@/endpoints/networks/GetNetwork'
 
 import { useRouter, useRoute } from 'vue-router'
 import { useBoolStates } from '@/utils/Decorators'
@@ -38,6 +39,15 @@ const populateTags = async () => {
 
     // sort the tags alphabetically
     availableTags.value.sort()
+}
+
+const getNetworkTags = async () => {
+    const network = await getNetwork(newNetworkId.value)
+    for (const tag of network.tags) {
+        if (availableTags.value.find(t => t === tag)) {
+            addTag(tag)
+        }
+    }
 }
 
 const addTag = (tag: any) => {
@@ -81,6 +91,7 @@ const prevPage = () => {
 
 onMounted(() => {
     populateTags()
+    getNetworkTags()
 })
 </script>
 

@@ -189,7 +189,7 @@ const clearDeviceTags = (devices : any[]) => {
     }
 }
 
-const autoUpdateTags = () => {
+const autoUpdateTags = async () => {
     // TODO
     console.log('[NAMING] autoUpdateTags');
 
@@ -257,7 +257,7 @@ const autoUpdateTags = () => {
 
     // finally call the endpoint to update the tags
     for (const device of devicesList.value) {
-        updateTags(device.serial, device.tags);
+        await updateTags(device.serial, device.tags);
     }
     
 }
@@ -280,6 +280,8 @@ const changeNames = useBoolStates([renaming],[], async() => {
     for (const device of devicesList.value) {
         await changeDeviceName(device.serial, device.name);
     }
+
+    await autoUpdateTags();
 
 }, namesSaved);
 
@@ -327,8 +329,6 @@ const setup = async() => {
     renameDevices();
     console.log('[NAMING] devicesList after renaming: ', devicesList.value);
     console.log('[NAMING] device lists: ', routers.value, switches.value, aps.value, others.value);
-    autoUpdateTags();
-
     /*
     for (const device of devicesList.value) {
         updateTags(device.serial, device.tags);
@@ -403,6 +403,7 @@ onMounted(() => {
                 </div>
             </div>
             <button class="margin-padding" @click="changeNames">Save</button>
+            <p v-if="renaming">Renaming devices...</p>
             <div class="make-row margin-padding">
                 <button class="margin-padding" @click="goBack">Back</button>
                 <button class="margin-padding" @click="validate">Next</button>

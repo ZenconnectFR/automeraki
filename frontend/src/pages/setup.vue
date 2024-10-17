@@ -245,6 +245,8 @@ const configureNetwork = async () => {
     devicesList.forEach((device: { name: string }) => {
         // find the associationId in the device name, format string is "{networkName}-{associationName}"
         let associationName = device.name.split('-')[device.name.split('-').length - 1]
+        // remove whitespace from the associationName
+        associationName = associationName.replace(/\s/g, '')
         console.log('[SETUP] Device with name:', device.name, 'has associationName:', associationName)
         let association = associationTable.find((association: { name: string }) => association.name === associationName)
         console.log('[SETUP] Device with name:', device.name, 'has association:', association)
@@ -284,6 +286,7 @@ const goToVpn = async () => {
     }
 
     configuration.setConfiguration(templateData)
+    configuration.setCurrentPageConfig({ vpnSubnets: templateData.vpnSubnets });
 
     router.push('/voice-and-spoke')
 }

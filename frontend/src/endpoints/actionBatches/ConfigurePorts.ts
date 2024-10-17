@@ -24,8 +24,8 @@ const createBatchBody = (config: any[]) => {
 export async function configurePortsBatch(config: any[], orgId: string) : Promise<any> {
     const actions = createBatchBody(config)
     try {
-        console.log(actions)
-        console.log(orgId)
+        //console.log(actions)
+        //console.log(orgId)
         const response = await Axios.post('/startActionBatch', {
             orgId : orgId,
             actions : actions

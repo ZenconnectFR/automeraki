@@ -189,84 +189,7 @@
         {
             "type": "firewall",
             "data": {
-                "l3Outbound": [
-                    {
-                        "name": "test1",
-                        "policy": "allow",
-                        "protocol": "tcp",
-                        "destPort": [ "80", "443" ],
-                        "destCidr": "Any",
-                        "srcPort": "Any",
-                        "srcCidr": "Any",
-                        "syslogEnabled": false
-                    }
-                ],
-                "l7Outbound": [
-                    {
-                        "name": "test2",
-                        "policy": "allow",
-                        "protocol": "tcp",
-                        "destPort": [ "80", "443" ],
-                        "destCidr": "Any",
-                        "srcPort": "Any",
-                        "srcCidr": "Any",
-                        "syslogEnabled": false
-                    }
-                ],
-                "l3Inbound": [
-                    {
-                        "name": "test3",
-                        "policy": "allow",
-                        "protocol": "tcp",
-                        "destPort": [ "80", "443" ],
-                        "destCidr": "Any",
-                        "srcPort": "Any",
-                        "srcCidr": "Any",
-                        "syslogEnabled": false
-                    }
-                ],
-                "cellularOutbound": [
-                    {
-                        "name": "test4",
-                        "policy": "allow",
-                        "protocol": "tcp",
-                        "destPort": [ "80", "443" ],
-                        "destCidr": "Any",
-                        "srcPort": "Any",
-                        "srcCidr": "Any",
-                        "syslogEnabled": false
-                    }
-                ],
-                "cellularInbound": [
-                    {
-                        "name": "test5",
-                        "policy": "allow",
-                        "protocol": "tcp",
-                        "destPort": [ "80", "443" ],
-                        "destCidr": "Any",
-                        "srcPort": "Any",
-                        "srcCidr": "Any",
-                        "syslogEnabled": false
-                    }
-                ],
-                "firewalledServices": [
-                    {
-                        "service": "web",
-                        "access": "restricted",
-                        "allowedIps": "Any"
-                    }
-                ],
-                "portForwarding": [
-                    {
-                        "lanIp": "192.168.128.1",
-                        "allowedIps": [ "any" ],
-                        "name": "Description of Port Forwarding Rule",
-                        "protocol": "tcp",
-                        "publicPort": "8100-8101",
-                        "localPort": "442-443",
-                        "uplink": "both"
-                    }
-                ]
+
             }
         },
         {
@@ -397,15 +320,15 @@
                     },
                     {
                         "name": "Starlink",
-                        "auto": true,
+                        "auto": false,
                         "assiociatedTags" : [
                             "WAN1-STARLINK"
                         ],
-                        "wanIp": "",
-                        "mask": "255.255.255.248",
-                        "gateway": "",
-                        "primaryDns": "168.192.0.1",
-                        "secondaryDns": "8.8.8.8"
+                        "wanIp": "192.168.1.199",
+                        "mask": "255.255.255.0",
+                        "gateway": "192.168.1.1",
+                        "primaryDns": "8.8.8.8",
+                        "secondaryDns": "8.8.4.4"
                     }
                 ],
                 "wan2" : [
