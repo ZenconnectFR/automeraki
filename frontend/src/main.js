@@ -23,6 +23,7 @@ import voiceAndSpoke from './pages/voiceAndSpoke.vue';
 import TagNetwork from './pages/tagNetwork.vue';
 import Misc from './pages/misc.vue';
 import Complete from './pages/complete.vue';
+import Rickroll from './pages/rickroll.vue';
 
 import Next from './pages/next.vue';
 
@@ -40,7 +41,8 @@ const routes = [
     { path: '/tag-network', component: TagNetwork },
     { path: '/misc', component: Misc },
     { path: '/complete', component: Complete },
-    { path: '/next', component: Next }
+    { path: '/next', component: Next },
+    { path: '/rickroll', component: Rickroll }
 ]
 
 const Router = createRouter({

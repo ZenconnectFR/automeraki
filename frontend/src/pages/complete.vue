@@ -41,5 +41,7 @@ onMounted(() => {
             <h3>{{ comment.title }}</h3>
             <p v-for="line in comment.content" :key="line"> - {{ line }}</p>
         </div>
+        <button @click="router.push(getRoutePath(configStore.prevPage()))">Back</button>
+        <button @click="router.push('/rickroll')">Finish</button>
     </div>
 </template>
