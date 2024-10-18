@@ -752,6 +752,26 @@ def update_firewall_rules(update_firewall_rules: UpdateFirewallRules):
             return {"error": str(e)}
         
     return res
+
+
+# ----------
+
+# update site to site vpn
+class UpdateSiteToSiteVpn(BaseModel):
+    network_id: str
+    payload: Optional[dict] = None
+
+@app.put("/networks/siteToSiteVpn/update")
+def update_site_to_site_vpn(update_site_to_site_vpn: UpdateSiteToSiteVpn):
+    network_id = update_site_to_site_vpn.network_id
+    payload = update_site_to_site_vpn.payload
+
+    try:
+        updated_site_to_site_vpn = dashboard.appliance.updateNetworkApplianceVpnSiteToSiteVpn(network_id, **payload)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_site_to_site_vpn
     
     
 

@@ -79,7 +79,7 @@ const configureWans = () => {
         }
         // only fill in the info if config.auto is false
         if (!config.auto) {
-            configToAdd.ip = config.ip
+            configToAdd.ip = config.wanIp
             configToAdd.mask = config.mask
             configToAdd.gateway = config.gateway
             configToAdd.primaryDns = config.primaryDns
@@ -103,7 +103,7 @@ const configureWans = () => {
         }
         // only fill in the info if config.auto is false
         if (!config.auto) {
-            configToAdd.ip = config.ip
+            configToAdd.ip = config.wanIp
             configToAdd.mask = config.mask
             configToAdd.gateway = config.gateway
             configToAdd.primaryDns = config.primaryDns

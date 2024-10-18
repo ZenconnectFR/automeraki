@@ -121,7 +121,8 @@ const configureVlans = () => {
                     },
                     {
                         fixedIpAssignments: [],
-                        reservedIpRanges: []
+                        reservedIpRanges: [],
+                        dhcpOptions: []
                     }
                 ]
             }
@@ -163,6 +164,17 @@ const configureVlans = () => {
                 end: reservedIpRange.end,
                 comment: reservedIpRange.comment
             })
+        }
+
+        // add dhcpOptions to the vlanAutoConfigured payload
+        if (vlan.dhcpOptions) {
+            for (const dhcpOption of vlan.dhcpOptions) {
+                vlanAutoConfigured.value[vlanAutoConfigured.value.length - 1].payload[1].dhcpOptions.push({
+                    code: dhcpOption.code,
+                    type: dhcpOption.type,
+                    value: dhcpOption.value
+                })
+            }
         }
     }
 
@@ -212,7 +224,8 @@ const confirm = useBoolStates([savingChanges],[],async () => {
                 {
                     // for each fixedIpAssignment in payload[1].fixedIpAssignments, add it to the formatted payload
                     fixedIpAssignments: formatFixedAssignments(vlan.payload[1].fixedIpAssignments),
-                    reservedIpRanges: vlan.payload[1].reservedIpRanges
+                    reservedIpRanges: vlan.payload[1].reservedIpRanges,
+                    dhcpOptions: vlan.payload[1].dhcpOptions
                 }
             ]
         }
@@ -381,18 +394,20 @@ onMounted(() => {
                 <input class="margin-all-normal enboxed" v-model="vlan.payload[0].applianceIp" placeholder="Appliance IP"/>
                 <p>Subnet</p>
                 <input class="margin-all-normal enboxed" v-model="vlan.payload[0].subnet" placeholder="Subnet"/>
-                <p>Fixed IP assignments</p>
-                <div v-for="(assignment, index) in vlan.payload[1].fixedIpAssignments" :key="index">
-                    <div class="align-items-horizontally">
-                        <input class="margin-all-normal enboxed" v-model="assignment.ip" placeholder="IP address"/>
-                        <input class="margin-all-normal enboxed" v-model="assignment.name" placeholder="Name"/>
-                        <input class="margin-all-normal enboxed" v-model="assignment.mac" placeholder="MAC"/>
-                        <button class="margin-all-normal enboxed" @click="deleteFixedIp(vlan.id, assignment.mac)">Delete</button>
+                <div class="vlan-fields-section">
+                    <p>Fixed IP assignments</p>
+                    <div v-for="(assignment, index) in vlan.payload[1].fixedIpAssignments" :key="index">
+                        <div class="align-items-horizontally">
+                            <input class="margin-all-normal enboxed" v-model="assignment.ip" placeholder="IP address"/>
+                            <input class="margin-all-normal enboxed" v-model="assignment.name" placeholder="Name"/>
+                            <input class="margin-all-normal enboxed" v-model="assignment.mac" placeholder="MAC"/>
+                            <button class="margin-all-normal enboxed" @click="deleteFixedIp(vlan.id, assignment.mac)">Delete</button>
+                        </div>
                     </div>
                 </div>
-                <div class="margin-all-normal make-column">
+                <div class="margin-all-normal make-column vlan-fields-section">
                     <p>Reserved IP ranges</p>
-                    <table class="margin-all-normal">
+                    <table v-if="vlan.payload[1].reservedIpRanges.length > 0" class="margin-all-normal">
                         <tr>
                             <th>Start</th>
                             <th>End</th>
@@ -402,6 +417,21 @@ onMounted(() => {
                             <td><input class="margin-all-normal enboxed" v-model="range.start" placeholder="Start"/></td>
                             <td><input class="margin-all-normal enboxed" v-model="range.end" placeholder="End"/></td>
                             <td><input class="margin-all-normal enboxed" v-model="range.comment" placeholder="Comment"/></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="margin-all-normal make-column vlan-fields-section">
+                    <p>DHCP options</p>
+                    <table v-if="vlan.payload[1].dhcpOptions.length > 0" class="margin-all-normal">
+                        <tr>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr v-for="(option, index) in vlan.payload[1].dhcpOptions" :key="index">
+                            <td><input class="margin-all-normal enboxed" v-model="option.code" placeholder="Code"/></td>
+                            <td><input class="margin-all-normal enboxed" v-model="option.type" placeholder="Type"/></td>
+                            <td><input class="margin-all-normal enboxed" v-model="option.value" placeholder="Value"/></td>
                         </tr>
                     </table>
                 </div>
@@ -474,5 +504,11 @@ onMounted(() => {
 
     input.short {
         width: 50px;
+    }
+
+    .vlan-fields-section {
+        border: 1px solid black;
+        padding: 10px;
+        border-radius: 4px;
     }
 </style>

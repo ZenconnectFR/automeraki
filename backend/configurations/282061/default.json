@@ -381,6 +381,19 @@
                             }
                         ],
                         "reservedIpRanges": []
+                    },
+                    {
+                        "id": 115,
+                        "name": "Voice",
+                        "applianceIp": "10.101.39.1",
+                        "subnet": "10.101.39.0/24",
+                        "dhcpOptions": {
+                            "code": "66",
+                            "type": "text",
+                            "value": "https://burgerkingfrance.my3cx.fr/provisioning/tdm382daf1tgf"
+                        },
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
                     }
                 ],
                 "perPortVlan": [
@@ -767,7 +780,38 @@
                         "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
                         "excepts" : ["10.101.([12]?[0-9]|115).0/24"]
                     }
-                ]
+                ],
+                "siteToSite": {
+                    "useSpoke": true,
+                    "hubs": [
+                        {
+                            "hubId": "N_645703596574279937",
+                            "useDefaultRoute": false
+                        },
+                        {
+                            "hubId": "N_3812297084569125376",
+                            "useDefaultRoute": false
+                        },
+                        {
+                            "hubId": "L_645703596574260227",
+                            "useDefaultRoute": false
+                        },
+                        {
+                            "hubId": "N_645703596574316843",
+                            "useDefaultRoute": false
+                        }
+                    ],
+                    "subnets": [
+                        {
+                            "localSubnet": "10.101.11.0/24",
+                            "useVpn": true
+                        },
+                        {
+                            "localSubnet": "VLAN(115)",
+                            "useVpn": true
+                        }
+                    ]
+                }
             }
         },
         {
