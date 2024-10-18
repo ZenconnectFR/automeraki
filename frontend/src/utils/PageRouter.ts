@@ -7,6 +7,8 @@ const routeTable = {
     wans: "/wans",
     vpn: "/voice-and-spoke",
     tags: "/tag-network",
+    misc: "/misc",
+    complete: "/complete",
     eof: "/complete"
 }
 

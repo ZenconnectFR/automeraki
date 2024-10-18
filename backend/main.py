@@ -507,6 +507,23 @@ def get_vpn_statuses(org_id: str):
     return vpn_statuses
 
 
+# ----------
+
+# get splash page settings for a network
+@app.get("/networks/{network_id}/splashPageSettings")
+def get_splash_page_settings(network_id: str):
+    # 1 - get the list of ssids for the network
+    ssids = dashboard.wireless.getNetworkWirelessSsids(network_id)
+
+    # 2 - get the splash page settings for each ssid that: is enabled and has a splashPage != "None"
+    splash_page_settings = []
+    for ssid in ssids:
+        if ssid["enabled"] and ssid["splashPage"] != "None":
+            splash_page_settings.append(dashboard.wireless.getNetworkWirelessSsidSplashSettings(network_id, ssid["number"]))
+
+    return splash_page_settings
+
+
 
 
 
@@ -772,6 +789,30 @@ def update_site_to_site_vpn(update_site_to_site_vpn: UpdateSiteToSiteVpn):
         return {"error": str(e)}
 
     return updated_site_to_site_vpn
+
+
+# ----------
+
+# update splash page settings
+class UpdateSplashPageSettings(BaseModel):
+    network_id: str
+    payload: Optional[dict] = None
+
+@app.put("/networks/splashPageSettings/update")
+def update_splash_page_settings(update_splash_page_settings: UpdateSplashPageSettings):
+    network_id = update_splash_page_settings.network_id
+    payload = update_splash_page_settings.payload
+
+    number = payload["ssidNumber"]
+    # remove the number from the payload
+    del payload['ssidNumber']
+
+    try:
+        updated_splash_page_settings = dashboard.wireless.updateNetworkWirelessSsidSplashSettings(network_id, number, **payload)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_splash_page_settings
     
     
 

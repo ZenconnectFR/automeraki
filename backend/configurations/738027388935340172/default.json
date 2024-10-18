@@ -261,7 +261,7 @@
                                 },
                                 {
                                     "id": "14",
-                                    "vlan": "1",
+                                    "vlan": "2",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 }
@@ -292,7 +292,7 @@
                                 },
                                 {
                                     "id": "14",
-                                    "vlan": "1",
+                                    "vlan": "2",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 }
@@ -443,6 +443,18 @@
                     "WAN1-STARLINK",
                     "cradle",
                     "template"
+                ]
+            }
+        },
+        {
+            "type": "misc",
+            "data": {
+                "splashPages": [
+                    {
+                        "name": "test1 splash page",
+                        "url": "https://www.google.com",
+                        "number": 0
+                    }
                 ]
             }
         },

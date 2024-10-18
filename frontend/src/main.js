@@ -21,6 +21,7 @@ import FixedIp from './pages/fixedIp.vue';
 import Wans from './pages/wans.vue';
 import voiceAndSpoke from './pages/voiceAndSpoke.vue';
 import TagNetwork from './pages/tagNetwork.vue';
+import Misc from './pages/misc.vue';
 import Complete from './pages/complete.vue';
 
 import Next from './pages/next.vue';
@@ -37,6 +38,7 @@ const routes = [
     { path: '/wans', component: Wans},
     { path: '/voice-and-spoke', component: voiceAndSpoke },
     { path: '/tag-network', component: TagNetwork },
+    { path: '/misc', component: Misc },
     { path: '/complete', component: Complete },
     { path: '/next', component: Next }
 ]
