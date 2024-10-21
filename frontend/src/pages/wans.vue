@@ -30,6 +30,7 @@ let config = currentPageConfig.value
 
 const savingChanges = ref(false)
 const changesSaved = ref(false)
+const loaded = ref(false)
 
 const validWan1 = ref(true)
 const validWan2 = ref(true)
@@ -90,6 +91,10 @@ const configureWans = () => {
         wan1options.value.push(config.name)
     }
 
+    // set the selected wan1 config to the first one
+    selectedWan1Name.value = wan1options.value[0]
+    console.log('[WANS] Wan1 selected: ', selectedWan1Name.value)
+
     // repeat for wan2
     for (const config of wan2) {
         let configToAdd = {
@@ -113,6 +118,9 @@ const configureWans = () => {
         wan2config.value.push(configToAdd)
         wan2options.value.push(config.name)
     }
+
+    // set the selected wan2 config to the first one
+    selectedWan2Name.value = wan2options.value[0]
 }
 
 const setWan1Index = (option: string) => {
@@ -247,6 +255,7 @@ const nextPage = () => {
 
 onMounted(() => {
     configureWans()
+    loaded.value = true
     console.log('[WANS] Wan1 config: ', wan1config.value)
 })
 </script>
@@ -254,7 +263,7 @@ onMounted(() => {
 <template>
     <div class="make-column">
         <h1>WANs</h1>
-        <div class="make-colum">
+        <div v-if="loaded" class="make-colum">
             <!-- Dropdown to select which wan template to display, once selected, works with index in the wan1config array-->
             <Dropdown :options="wan1options" :modelValue="selectedWan1Name" :onSelect="setWan1Index"/>
             <table>
@@ -302,7 +311,7 @@ onMounted(() => {
                 </thead>
                 <tbody>
                     <template v-for="(config, index) in wan2config">
-                        <tr v-if="index === selectedWan2Index && !config.auto">
+                        <tr v-if="index === selectedWan2Index">
                             <td><input type="text" v-model="config.ip"></td>
                             <td><input type="text" v-model="config.mask"></td>
                             <td><input type="text" v-model="config.gateway"></td>
@@ -310,7 +319,7 @@ onMounted(() => {
                             <td><input type="text" v-model="config.secondaryDns"></td>
                         </tr>
                         <tr v-if="index === selectedWan2Index && config.auto">
-                            <td colspan="5">Auto configuration for this Wan is disabled</td>
+                            <td colspan="5">No configuration for this wan type.</td>
                         </tr>
                     </template>
                 </tbody>

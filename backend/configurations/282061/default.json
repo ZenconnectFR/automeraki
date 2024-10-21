@@ -398,7 +398,7 @@
                 ],
                 "perPortVlan": [
                     {
-                        "expectedEquipment": "R1",
+                        "applianceName": "R1",
                         "ports": [
                             {
                                 "id": "3",
@@ -426,7 +426,6 @@
                 "ports": [
                     {
                         "switchName": "S1",
-                        "default" : true,
                         "nbPorts" : 48,
                         "config": {
                             "default": {
@@ -439,13 +438,15 @@
                                     "id": "1",
                                     "vlan": "12",
                                     "name": "Téléphonie",
-                                    "type": "access"
+                                    "type": "access",
+                                    "voice": "115"
                                 },
                                 {
                                     "id": "2",
                                     "vlan": "12",
                                     "name": "Téléphonie",
-                                    "type": "access"
+                                    "type": "access",
+                                    "voice": "115"
                                 },
                                 {
                                     "id": "19",
@@ -473,37 +474,37 @@
                                 },
                                 {
                                     "id": "35",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "37",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "39",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "41",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "43",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "45",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
@@ -524,7 +525,6 @@
                     },
                     {
                         "switchName": "S2",
-                        "default" : true,
                         "nbPorts" : 48,
                         "config": {
                             "default": {
@@ -574,7 +574,6 @@
                     },
                     {
                         "switchName": "S3",
-                        "default" : true,
                         "nbPorts" : 48,
                         "config": {
                             "default": {
@@ -609,49 +608,49 @@
                                 },
                                 {
                                     "id": "14",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "16",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "18",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "20",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "22",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "40",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "42",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "44",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
@@ -672,7 +671,6 @@
                     },
                     {
                         "switchName": "S3",
-                        "default" : false,
                         "nbPorts" : 24,
                         "config": {
                             "default": {
@@ -707,31 +705,31 @@
                                 },
                                 {
                                     "id": "14",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "16",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "18",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "20",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
                                 {
                                     "id": "22",
-                                    "vlan": "11",
+                                    "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
                                 },
@@ -765,6 +763,63 @@
             }
         },
         {
+            "type": "wans",
+            "data": {
+                "wan1": [
+                    {
+                        "name": "Orange",
+                        "auto": false,
+                        "assiociatedTags" : [
+                            "WAN1-ORANGE"
+                        ],
+                        "wanIp": "",
+                        "mask": "255.255.255.252",
+                        "gateway": "",
+                        "primaryDns": "194.2.0.20",
+                        "secondaryDns": "8.8.8.8"
+                    },
+                    {
+                        "name": "Starlink",
+                        "auto": false,
+                        "assiociatedTags" : [
+                            "WAN1-STARLINK"
+                        ],
+                        "wanIp": "192.168.1.199",
+                        "mask": "255.255.255.0",
+                        "gateway": "192.168.1.1",
+                        "primaryDns": "8.8.8.8",
+                        "secondaryDns": "8.8.4.4"
+                    }
+                ],
+                "wan2" : [
+                    {
+                        "name": "Bouygues",
+                        "auto": false,
+                        "assiociatedTags" : [
+                            "WAN2-BOUYGUES"
+                        ],
+                        "wanIp": "",
+                        "mask": "255.255.255.248",
+                        "gateway": "",
+                        "primaryDns": "194.158.122.10",
+                        "secondaryDns": "8.8.8.8"
+                    },
+                    {
+                        "name": "Cradlepoint",
+                        "auto": true,
+                        "assiociatedTags" : [
+                            "cradle", "WAN2-5G"
+                        ],
+                        "wanIp": "",
+                        "mask": "",
+                        "gateway": "",
+                        "primaryDns": "",
+                        "secondaryDns": ""
+                    }
+                ]
+            }
+        },
+        {
             "type": "vpn",
             "data": {
                 "vpnSubnets": [
@@ -776,7 +831,7 @@
                     },
                     {
                         "name" : "Voice",
-                        "keywords" : ["voice", "voix", "voic", "3cx", "téléphonie"],
+                        "keywords" : ["voice", "voix", "voip", "voic 3cx", "3cx", "téléphonie", "tel", "voix 3cx", "voix3cx", "3cx voix", "voice 3cx", "voip 3cx", "telephonie 3cx"],
                         "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
                         "excepts" : ["10.101.([12]?[0-9]|115).0/24"]
                     }

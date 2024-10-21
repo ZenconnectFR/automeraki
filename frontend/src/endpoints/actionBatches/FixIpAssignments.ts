@@ -1,13 +1,32 @@
 import { axiosInstance as Axios } from '@/plugins/AxiosInstance'
 
+export interface ManagementInterfaceBody {
+    wan1: {
+        wanEnabled: string,
+        usingStaticIp: string,
+        staticIp?: string,
+        staticGatewayIp?: string,
+        staticSubnetMask?: string,
+        staticDns?: string[],
+        vlan?: number
+    }
+}
+
 const createBatchBody = (config: any[]) => {
     // turn the config array into an array of objects with the correct format
     let actions = [] as any[]
     for (const device of config) {
-        actions.push({
-            resource: `/devices/${device.serial}/managementInterface`,
-            operation: 'update',
-            body: {
+        let body: ManagementInterfaceBody;
+        if (device.useDhcp) {
+            body = {
+                wan1: {
+                    wanEnabled: "not configured",
+                    usingStaticIp: "false",
+                    vlan: device.config.vlan ? device.config.vlan : null
+                }
+            }
+        } else {
+            body = {
                 wan1: {
                     wanEnabled: "enabled",
                     usingStaticIp: "true",
@@ -18,6 +37,11 @@ const createBatchBody = (config: any[]) => {
                     vlan: device.config.vlan ? device.config.vlan : null
                 }
             }
+        }
+        actions.push({
+            resource: `/devices/${device.serial}/managementInterface`,
+            operation: 'update',
+            body: body
         })
     }
     return actions

@@ -48,18 +48,22 @@ let vlans = []
 
 const loading = ref(false)
 const loaded = ref(false)
+const orgWide = ref(false)
 
 // fill the vpnSubnets object with { name: { ranges: [], excepts: [], subnets: [] } }
-for (const vpnSubnet of vpnSubnetsConfig) {
-    vpnSubnets.value[vpnSubnet.name] = {
-        ranges: vpnSubnet.ranges,
-        excepts: vpnSubnet.excepts.map((except: string) => new RegExp(except)),
-        subnets: []
+const fillVpnSubnets = () => {
+    for (const vpnSubnet of config.vpnSubnets) {
+        vpnSubnets.value[vpnSubnet.name] = {
+            ranges: vpnSubnet.ranges,
+            excepts: vpnSubnet.excepts.map((except: string) => new RegExp(except)),
+            subnets: []
+        }
     }
 }
 
 // immediately determine the available voice vlan and site-to-site vpn subnets
 const setup = useBoolStates([loading], [loaded], async () => {
+    fillVpnSubnets();
     const vpnStatuses = await getVpnStatuses(orgId.value)
 
     // check for errors
@@ -70,6 +74,9 @@ const setup = useBoolStates([loading], [loaded], async () => {
         return
     }
 
+    // set of subnet names for debug:
+    let subnetNames = new Set<string>()
+
     // map subnets in different arrays depending on the names
     // structure of vpnStatuses: [ { "exportedSubnet": [ {"name": string, "subnet": string} ] } ]
 
@@ -78,12 +85,15 @@ const setup = useBoolStates([loading], [loaded], async () => {
         if (vpnStatus.vpnMode === 'hub') {
             continue
         }
+
         
         for (const subnet of vpnStatus.exportedSubnets) {
             // group by name, if the subnet.name.LowerCase() contains a keyword from the vpnSubnetsConfig, add it to the corresponding array vpnSubnets[vpnSubnetsConfig.name]
             for (const vpnSubnet of vpnSubnetsConfig) {
+                // add the name to the set
+                subnetNames.add(subnet.name.toLowerCase())
                 for (const keyword of vpnSubnet.keywords) {
-                    if (subnet.name.toLowerCase().includes(keyword)) {
+                    if (subnet.name.toLowerCase() == keyword.toLowerCase()) {
                         vpnSubnets.value[vpnSubnet.name].subnets.push(subnet.subnet)
                     }
                 }
@@ -92,6 +102,7 @@ const setup = useBoolStates([loading], [loaded], async () => {
     }
 
     console.log('VPN Subnets: ', vpnSubnets.value)
+    console.log('Subnet names: ', subnetNames)
 
     // find the next available subnet for each name
     for (const [name, vpnSubnet] of Object.entries(vpnSubnets.value)) {
@@ -101,6 +112,12 @@ const setup = useBoolStates([loading], [loaded], async () => {
     }
 
     console.log('Free subnets: ', freeSubnets.value)
+
+    // skip the rest of the setup if the orgWide flag is set
+    if (orgWide.value) {
+        loaded.value = true
+        return
+    }
 
     const siteToSiteConfig = config.siteToSite;
 
@@ -123,6 +140,7 @@ const setup = useBoolStates([loading], [loaded], async () => {
         })
     }
 
+    // populate the subnets
     for (const vlan of vlans) {
         // find if a config exists for this vlan
         let vlanConfig: { useVpn: any };
@@ -258,8 +276,14 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
 
     await updateSiteToSiteVpn(newNetworkId.value, siteToSitePayload)
 
+    // reset available subnets and empty vpnSubnets
+    freeSubnets.value = {}
+    for (const vpnSubnet of vpnSubnetsConfig) {
+        vpnSubnets.value[vpnSubnet.name].subnets = []
+    }
+
     // reload the page
-    setup()
+    await setup()
 });
 
 const goBack = () => {
@@ -271,9 +295,13 @@ const nextPage = () => {
 }
 
 onMounted(() => {
-    getVlans(newNetworkId.value).then((response) => {
-        vlans = response
-    })
+
+    orgWide.value = route.query.orgWide?true:false
+    if (!orgWide.value) {
+        getVlans(newNetworkId.value).then((response) => {
+            vlans = response
+        })
+    }
     setup()
 })
 </script>
@@ -291,12 +319,12 @@ onMounted(() => {
         <!-- Site to Site vpn options -->
         <!-- Show the list of hubs with the ability to add or remove them
         Show the list of subnets with the ability to modify their nat translation -->
-        <div v-if="loaded">
+        <div v-if="loaded && !orgWide">
             <h2>Site to Site VPN</h2>
             <h3>Hubs</h3>
             <div v-for="hub in vpnSiteToSite.hubs" :key="hub.id">
                 <p>{{ hub.name }} - {{ hub.id }}</p>
-                <input type="checkbox" v-model="hub.useDefaultRoute" />
+                <input v-if="!orgWide" type="checkbox" v-model="hub.useDefaultRoute" />
             </div>
             <h3>Subnets</h3>
             <div v-for="subnet in vpnSiteToSite.subnets" :key="subnet">
@@ -318,9 +346,11 @@ onMounted(() => {
             </div>
         </div>
     </div>
-    <button @click="saveVpnConfig">Save</button>
-    <button @click="goBack">Back</button>
-    <button @click="nextPage">Next</button>
+    <div v-if="!orgWide">
+        <button @click="saveVpnConfig">Save</button>
+        <button @click="goBack">Back</button>
+        <button @click="nextPage">Next</button>
+    </div>
 </template>
 
 <style scoped>

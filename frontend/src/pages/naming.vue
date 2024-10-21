@@ -253,13 +253,7 @@ const autoUpdateTags = async () => {
                 });
             });
         }
-    });
-
-    // finally call the endpoint to update the tags
-    for (const device of devicesList.value) {
-        await updateTags(device.serial, device.tags);
-    }
-    
+    });    
 }
 
 const updateNames = (src: any[], table: any[]) => {
@@ -281,7 +275,9 @@ const changeNames = useBoolStates([renaming],[], async() => {
         await changeDeviceName(device.serial, device.name);
     }
 
-    await autoUpdateTags();
+    for (const device of devicesList.value) {
+        await updateTags(device.serial, device.tags);
+    }
 
 }, namesSaved);
 
@@ -318,7 +314,7 @@ const blink = (serial: string) => {
 }
 
 const goBack = () => {
-    router.push('/claim');
+    router.push(getRoutePath(configStore.previousPage()));
 }
 
 const setup = async() => {
@@ -329,11 +325,8 @@ const setup = async() => {
     renameDevices();
     console.log('[NAMING] devicesList after renaming: ', devicesList.value);
     console.log('[NAMING] device lists: ', routers.value, switches.value, aps.value, others.value);
-    /*
-    for (const device of devicesList.value) {
-        updateTags(device.serial, device.tags);
-    }
-    */
+
+    autoUpdateTags();
 
     devicesLoaded.value = true;
 }
@@ -400,6 +393,23 @@ onMounted(() => {
                     <button class="margin-padding" :disabled="index===0" @click="moveUp(index, aps)">Up</button>
                     <button class="margin-padding" :disabled="index===aps.length-1" @click="moveDown(index, aps)">Down</button>
                     <button class="margin-padding" @click="blink(ap.serial)">Blink</button>
+                </div>
+            </div>
+            <hr />
+            <hr />
+            <hr />
+            <div>
+                <h2>Tagging</h2>
+                <!-- For each device, show its list of tags, and allow the user edit them -->
+                <div class="make-row" v-for="(device, index) in devicesList" :key="index">
+                    <div class="make-row" v-if="device.tags.length > 0">
+                        <p class="margin-padding">{{ device.name }}</p>
+                        <div v-for="(tag, tagIndex) in device.tags" :key="tagIndex" class="make-row">
+                            <input class="margin-padding" v-model="device.tags[tagIndex]">
+                            <button class="margin-padding" @click="device.tags.splice(tagIndex, 1)">Remove</button>
+                        </div>
+                        <button class="margin-padding" @click="device.tags.push('')">Add tag</button>
+                    </div>
                 </div>
             </div>
             <button class="margin-padding" @click="changeNames">Save</button>

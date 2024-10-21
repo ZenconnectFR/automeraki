@@ -52,11 +52,26 @@ const Router = createRouter({
 
 export default Router
 
+// Global error handler
+/*
+window.onerror = function (message, source, lineno, colno, error) {
+    console.log('Global error handler; Error: ', error, 'message: ', message, 'source: ', source, 'lineno: ', lineno, 'colno: ', colno)
+    window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+}
+*/
+
 const pinia = createPinia()
 const app = createApp(App)
 const vuetify = createVuetify({
     components
 })
+
+/*
+app.config.errorHandler = function (err, vm, info) {
+    console.log('Error handler; Error: ', err, 'vm: ', vm, 'info: ', info)
+    window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+}
+*/
 
 app.use(pinia)
 app.use(Router)

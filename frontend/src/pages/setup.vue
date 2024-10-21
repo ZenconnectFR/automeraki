@@ -285,10 +285,14 @@ const goToVpn = async () => {
         return
     }
 
-    configuration.setConfiguration(templateData)
-    configuration.setCurrentPageConfig({ vpnSubnets: templateData.vpnSubnets });
+    // set the vpn configuration in the configuration store
+    // get the action named 'vpn' from the template and set its data in the configuration store
+    let vpnAction = templateData.actions.find((action: { type: string }) => action.type === 'vpn')
 
-    router.push('/voice-and-spoke')
+    configuration.setConfiguration(templateData)
+    configuration.setCurrentPageConfig(vpnAction.data)
+
+    router.push({ path: '/voice-and-spoke', replace: true, query: { orgWide: "true" } })
 }
 
 // Setup function to run on page load

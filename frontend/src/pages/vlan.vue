@@ -83,13 +83,49 @@ const updateCommonIps = (value: string, part: string) => {
         applianceIp[parseInt(part.charAt(part.length - 1)) - 1] = value
         vlan.payload[0].applianceIp = applianceIp.join('.')
 
-        // change subnet is the part is not the last one
-        if (part !== 'part4') {
-            let subnet = vlan.payload[0].subnet.split('/')
-            let subnetIp = subnet[0].split('.')
-            subnetIp[parseInt(part.charAt(part.length - 1)) - 1] = value
-            vlan.payload[0].subnet = subnetIp.join('.') + '/' + subnet[1]
+        // change the part in the fixedIpAssignments
+        for (const assignment of vlan.payload[1].fixedIpAssignments) {
+            let ip = assignment.ip.split('.')
+            ip[parseInt(part.charAt(part.length - 1)) - 1] = value
+            assignment.ip = ip.join('.')
         }
+
+        // change the part in the reservedIpRanges
+        for (const reservedIpRange of vlan.payload[1].reservedIpRanges) {
+            let start = reservedIpRange.start.split('.')
+            start[parseInt(part.charAt(part.length - 1)) - 1] = value
+            reservedIpRange.start = start.join('.')
+
+            let end = reservedIpRange.end.split('.')
+            end[parseInt(part.charAt(part.length - 1)) - 1] = value
+            reservedIpRange.end = end.join('.')
+        }
+
+        // change subnet part but only modify the masked part (x.x.x.x/y -> y = 24 > the last part stays the same, y = 16 > the last 2 parts stay the same ... etc)
+        let [subnet, mask] = vlan.payload[0].subnet.split('/')
+        let subnetIp = subnet.split('.')
+        subnetIp[parseInt(part.charAt(part.length - 1)) - 1] = value
+        switch (parseInt(mask)) {
+            case 24:
+                subnetIp[3] = "0";
+                break;
+            case 16:
+                subnetIp[3] = "0";
+                subnetIp[2] = "0";
+                break;
+            case 8:
+                subnetIp[3] = "0";
+                subnetIp[2] = "0";
+                subnetIp[1] = "0";
+                break;
+            default:
+                subnetIp[0] = "0";
+                subnetIp[1] = "0";
+                subnetIp[2] = "0";
+                subnetIp[3] = "0";
+            break;
+        }
+        vlan.payload[0].subnet = subnetIp.join('.') + '/' + mask
     }
 }
 

@@ -56,14 +56,17 @@ const fixIp = useBoolStates([],[],async () => {
              * If found, push all the fields except expectedEquipment to fixedIpAssignment
              */
 
-            // if useDhcp is true, don't add the device to the fixedIpAssignments
+            // if useDhcp is defined and useDhcp.use is true, set the configFixedIp[i].config.vlan to useDhcp.vlan
+            console.log('[FIXED IP] testing useDhcp: ', configFixedIp[i].useDhcp)
             if (configFixedIp[i].useDhcp && configFixedIp[i].useDhcp.use) {
-                continue
+                console.log('[FIXED IP] Using DHCP for device: ', device.name)
+                configFixedIp[i].config.vlan = configFixedIp[i].useDhcp.vlan
             }
 
             fixedIpAssignments.value.push({
                 name: device.name,
                 serial: device.serial,
+                useDhcp: configFixedIp[i].useDhcp,
                 config: configFixedIp[i].config
             })
         }
@@ -113,6 +116,7 @@ onMounted(() => {
         <table class="space-elts">
             <thead>
                 <tr>
+                    <th> </th>
                     <th>Equipment</th>
                     <th>IP</th>
                     <th>Mask</th>
@@ -124,24 +128,29 @@ onMounted(() => {
             </thead>
             <tbody>
                 <tr v-for="assignment in fixedIpAssignments">
-                    <td> {{ assignment.name }} </td>
                     <td>
-                        <input type="text" v-model="assignment.config.ip" :disabled="assignment.config.ip === undefined">
+                        <span v-if="assignment.useDhcp?.use">Using DHCP</span>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.mask" :disabled="assignment.config.mask === undefined">
+                        <span>{{ assignment.name }}</span>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.vlan" :disabled="assignment.config.vlan === undefined">
+                        <input type="text" v-model="assignment.config.ip" :disabled="assignment.useDhcp?.use">
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.gateway" :disabled="assignment.config.gateway === undefined">
+                        <input type="text" v-model="assignment.config.mask" :disabled="assignment.useDhcp?.use">
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.primaryDns" :disabled="assignment.config.primaryDns === undefined">
+                        <input type="text" v-model="assignment.config.vlan">
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.secondaryDns" :disabled="assignment.config.secondaryDns === undefined">
+                        <input type="text" v-model="assignment.config.gateway" :disabled="assignment.useDhcp?.use">
+                    </td>
+                    <td>
+                        <input type="text" v-model="assignment.config.primaryDns" :disabled="assignment.useDhcp?.use">
+                    </td>
+                    <td>
+                        <input type="text" v-model="assignment.config.secondaryDns" :disabled="assignment.useDhcp?.use">
                     </td>
                 </tr>
             </tbody>
