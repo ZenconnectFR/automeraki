@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
@@ -34,8 +34,51 @@ let config = currentPageConfig.value
 const { newNetworkId, orgId } = storeToRefs(ids)
 // orgId.value = '282061'
 
-const freeSubnets = ref({} as { [key: string]: string })
+const freeSubnets = ref({} as { [key: string]: string[] })
+const visibleCounts = ref({} as { [key: string]: number })
 
+const getVisibleItems = (key: string) => {
+    // console.log('Getting visible items for key: ', key)
+    // console.log('Free subnets: ', freeSubnets.value)
+    const list = freeSubnets.value[key];
+    const count = visibleCounts.value[key] || 1;
+    return list.slice(0, count);
+}
+
+const toggleVisibility = (key: string) => {
+    const current = visibleCounts.value[key] || 1;
+    const listLen = freeSubnets.value[key].length;
+
+    console.log('Toggling visibility for key: ', key)
+    console.log('Current: ', current)
+    console.log('List length: ', listLen)
+
+    switch (current) {
+        case listLen:
+            visibleCounts.value[key] = 1;
+            break;
+        case 1:
+            visibleCounts.value[key] = 10;
+            break;
+        case 10:
+            visibleCounts.value[key] = listLen;
+            break;
+    }
+}
+
+const getBtnLabel = (key: string) => {
+    const current = visibleCounts.value[key] || 1;
+    const listLen = freeSubnets.value[key].length;
+
+    switch (current) {
+        case listLen:
+            return 'Show less';
+        case 1:
+            return 'Show more';
+        case 10:
+            return 'Show all';
+    }
+}
 const vpnSubnetsConfig = config.vpnSubnets
 
 const vpnSubnets = ref({} as { [key: string]: any })
@@ -49,6 +92,17 @@ let vlans = []
 const loading = ref(false)
 const loaded = ref(false)
 const orgWide = ref(false)
+
+const copiedText = ref('')
+
+const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    copiedText.value = text
+    // reset the copied text after 3 seconds
+    setTimeout(() => {
+        copiedText.value = ''
+    }, 3000)
+}
 
 // fill the vpnSubnets object with { name: { ranges: [], excepts: [], subnets: [] } }
 const fillVpnSubnets = () => {
@@ -68,8 +122,8 @@ const setup = useBoolStates([loading], [loaded], async () => {
 
     // check for errors
     if (vpnStatuses.error) {
-        console.log('VPN Statuses: ', vpnStatuses)
-        console.error('Error fetching VPN statuses: ', vpnStatuses.error)
+        // console.log('VPN Statuses: ', vpnStatuses)
+        // console.error('Error fetching VPN statuses: ', vpnStatuses.error)
         vpnStatusesError.value = vpnStatuses.error
         return
     }
@@ -107,8 +161,22 @@ const setup = useBoolStates([loading], [loaded], async () => {
     // find the next available subnet for each name
     for (const [name, vpnSubnet] of Object.entries(vpnSubnets.value)) {
 
-        const freeSubnet = findNextFreeSubnet(vpnSubnet.subnets, vpnSubnet.ranges, vpnSubnet.excepts)
-        freeSubnets.value[name] = freeSubnet
+        // const freeSubnet = findNextFreeSubnet(vpnSubnet.subnets, vpnSubnet.ranges, vpnSubnet.excepts)
+        
+        // for test: find 4 next free subnets
+        while (true) {
+            const freeSubnet = findNextFreeSubnet(vpnSubnet.subnets, vpnSubnet.ranges, vpnSubnet.excepts)
+            if (freeSubnet == null) {
+                break
+            }
+            // console.log('Free subnet for ', name, ': ', freeSubnet)
+            // console.log('free subnets array: ', freeSubnets.value)
+            if (!freeSubnets.value[name]) {
+                freeSubnets.value[name] = []
+            }
+            freeSubnets.value[name].push(freeSubnet)
+            vpnSubnet.subnets.push(freeSubnet)
+        }
     }
 
     console.log('Free subnets: ', freeSubnets.value)
@@ -143,12 +211,15 @@ const setup = useBoolStates([loading], [loaded], async () => {
     // populate the subnets
     for (const vlan of vlans) {
         // find if a config exists for this vlan
-        let vlanConfig: { useVpn: any };
+        let vlanConfig = {useVpn: false, localSubnet: '', translation: false}
+        console.log('subnets config: ', siteToSiteConfig.subnets)
         // check whether the vlan is in the config, either its subnet or its id like VLAN(id)
         for (const subnet of siteToSiteConfig.subnets) {
             console.log('Checking vlan: ', vlan, ' with subnet: ', subnet)
-            if (subnet.localSubnet == vlan.subnet || subnet.localSubnet == `VLAN(${vlan.id})`) {
-                vlanConfig = subnet
+            if (subnet.localSubnet == vlan.subnet || subnet.localSubnet == `VLAN(${vlan.id})` || subnet.localSubnet == `VNAT(${vlan.id})`) {
+                vlanConfig.useVpn = subnet.useVpn
+                vlanConfig.localSubnet = vlan.subnet
+                vlanConfig.translation = subnet.translation
                 break
             }
         }
@@ -163,8 +234,7 @@ const setup = useBoolStates([loading], [loaded], async () => {
             originalLocalSubnet: vlan.subnet,
             useVpn: vlanConfig ? vlanConfig.useVpn : false,
             modify: false,
-            translation: vlan.vpnNatSubnet ? true : false,
-            translationValue: vlan.vpnNatSubnet ? vlan.vpnNatSubnet : ''
+            translation: vlanConfig ? vlanConfig.translation : false,
         })
     }
 
@@ -202,6 +272,12 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
                             {
                                 applianceIp: newApplianceIp,
                                 subnet: subnet.localSubnet
+                            },
+                            {
+                                vpnNat: {
+                                    enabled: true,
+                                },
+                                vpnNatSubnet: ""
                             }
                         ]
                     }
@@ -217,6 +293,7 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
 
                 // refresh the vlan list
                 vlans = await getVlans(newNetworkId.value)
+                console.log('vlans updated: ', vlans)
             } else {
                 console.error('Vlan not found for subnet: ', subnet)
                 return
@@ -224,6 +301,7 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
         }
 
         // update the vpnNatSubnet of vlans that have translation enabled
+        /*
         if (subnet.translation) {
             console.log('Updating translation for subnet: ', subnet)
             const vlan = vlans.find((vlan: { subnet: string }) => vlan.subnet == subnet.originalLocalSubnet)
@@ -252,7 +330,11 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
                 console.error('Vlan not found for subnet: ', subnet)
                 return
             }
+            vlans = await getVlans(newNetworkId.value)
+            console.log('vlans updated: ', vlans)
         }
+        */
+        
     }
 
     // update the site to site vpn config
@@ -264,7 +346,7 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
                 useDefaultRoute: hub.useDefaultRoute
             }
         }),
-        subnets: vpnSiteToSite.value.subnets.map((subnet: { localSubnet: string, useVpn: boolean, translation: boolean, translationValue: string }) => {
+        subnets: vpnSiteToSite.value.subnets.map((subnet: { localSubnet: string, useVpn: boolean, translation: boolean}) => {
             return {
                 localSubnet: subnet.localSubnet,
                 useVpn: subnet.useVpn
@@ -295,6 +377,7 @@ const nextPage = () => {
 }
 
 onMounted(() => {
+    console.log('config: ', config)
 
     orgWide.value = route.query.orgWide?true:false
     if (!orgWide.value) {
@@ -309,8 +392,17 @@ onMounted(() => {
 <template>
     <div>
         <!-- show the next available subnet for each subnet name -->
-        <div v-for="([name, subnet], index) in Object.entries(freeSubnets)" :key="index">
-            <p>Next free subnet for : {{ name }} -> {{ subnet }}</p>
+        <div v-for="(name, index) in Object.keys(freeSubnets)" :key="index">
+            <h2>{{ name }}</h2>
+            <div class="make-row">
+                <ul>
+                    <li v-for="(subnet, index) in getVisibleItems(name)" :key="index">{{ subnet }}
+                        <button @click="copyToClipboard(subnet)">Copy</button>
+                        <span v-if="copiedText == subnet">Copied!</span>
+                    </li>
+                </ul>
+                <button @click="toggleVisibility(name)">{{ getBtnLabel(name) }}</button>
+            </div>
         </div>
         <p class="red" v-if="vpnStatusesError">{{ vpnStatusesError }}</p>
         <p v-if="loading">Loading...</p>
@@ -335,9 +427,8 @@ onMounted(() => {
                 <span v-else>{{ subnet.localSubnet }}</span>
                 <!-- enable vpn use part-->
                 use vpn: <input type="checkbox" v-model="subnet.useVpn" />
-                <!-- nat vpn translation part-->
-                use translation: <input type="checkbox" v-model="subnet.translation" />
-                <input type="text" v-model="subnet.translationValue" :enabled="subnet.translation"/>
+                
+                <p v-if="subnet.translation" style="max-width: 400px;">This VLAN subnet should use translation, pick a free subnet for it at the top and enter it in Meraki</p>
 
                 <p v-if="subnet.modify" class="red">
                     Warning: Changing the subnet will change the vlan subnet and appliance IP ! <br>

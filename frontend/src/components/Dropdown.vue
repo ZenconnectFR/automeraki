@@ -71,7 +71,7 @@ watch(
 onMounted(() => {
     generateArrowId()
     if (props.modelValue) {
-        console.log('modelValue:', props.modelValue)
+        //console.log('modelValue:', props.modelValue)
         selectedOption.value = props.modelValue
         search.value = typeof props.modelValue === 'string' ? props.modelValue : props.modelValue?.name || ''
         if (props.onSelect) {
@@ -124,7 +124,7 @@ const toggleDropdown = () => {
     <OnClickOutside @trigger="closeDropdown">
         <div class="dropdown-container">
             <div class="input-container">
-                <input autocomplete="off" v-model="search" type="text" :placeholder="'Select or search'" @click="openDropdown" @input="filterOptions" id="dropdown-input">
+                <input autocomplete="off" v-model="search" type="text" :placeholder="'Select or search'" @click="openDropdown" @input="filterOptions" id="dropdown-input"/>
                 <img src="@/assets/dropdown-arrow.png" alt="arrow-down" @click="toggleDropdown" class="dropdown-arrow" :id="arrowId">
             </div>
             <div v-if="showDropdown" class="options-container">

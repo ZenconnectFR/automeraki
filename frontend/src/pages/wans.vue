@@ -279,11 +279,11 @@ onMounted(() => {
                 <tbody>
                     <template v-for="(config, index) in wan1config">
                         <tr v-if="index === selectedWan1Index && !config.auto">
-                            <td><input type="text" v-model="config.ip"></td>
-                            <td><input type="text" v-model="config.mask"></td>
-                            <td><input type="text" v-model="config.gateway"></td>
-                            <td><input type="text" v-model="config.primaryDns"></td>
-                            <td><input type="text" v-model="config.secondaryDns"></td>
+                            <td><input type="text" v-model="config.ip"/></td>
+                            <td><input type="text" v-model="config.mask"/></td>
+                            <td><input type="text" v-model="config.gateway"/></td>
+                            <td><input type="text" v-model="config.primaryDns"/></td>
+                            <td><input type="text" v-model="config.secondaryDns"/></td>
                         </tr>
                         <tr v-if="index === selectedWan1Index && config.auto">
                             <td colspan="5">Auto configuration for this Wan is disabled</td>
@@ -312,11 +312,11 @@ onMounted(() => {
                 <tbody>
                     <template v-for="(config, index) in wan2config">
                         <tr v-if="index === selectedWan2Index">
-                            <td><input type="text" v-model="config.ip"></td>
-                            <td><input type="text" v-model="config.mask"></td>
-                            <td><input type="text" v-model="config.gateway"></td>
-                            <td><input type="text" v-model="config.primaryDns"></td>
-                            <td><input type="text" v-model="config.secondaryDns"></td>
+                            <td><input type="text" v-model="config.ip"/></td>
+                            <td><input type="text" v-model="config.mask"/></td>
+                            <td><input type="text" v-model="config.gateway"/></td>
+                            <td><input type="text" v-model="config.primaryDns"/></td>
+                            <td><input type="text" v-model="config.secondaryDns"/></td>
                         </tr>
                         <tr v-if="index === selectedWan2Index && config.auto">
                             <td colspan="5">No configuration for this wan type.</td>

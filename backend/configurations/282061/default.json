@@ -30,7 +30,7 @@
                         "name": "S3",
                         "id" : "S3",
                         "type": "switch",
-                        "switchPorts" : [ 28, 48 ]
+                        "switchPorts" : [ 24, 48 ]
                     },
                     {
                         "name": "AP1",
@@ -122,7 +122,7 @@
                         "expectedEquipment": "S1",
                         "config": {
                             "ip": "10.101.11.251",
-                            "vlan": "1",
+                            "vlan": "11",
                             "mask": "255.255.255.0",
                             "gateway": "10.101.11.1",
                             "primaryDns": "10.101.11.1",
@@ -133,7 +133,7 @@
                         "expectedEquipment": "S2",
                         "config": {
                             "ip": "10.101.11.252",
-                            "vlan": "1",
+                            "vlan": "11",
                             "mask": "255.255.255.0",
                             "gateway": "10.101.11.1",
                             "primaryDns": "10.101.11.1",
@@ -144,7 +144,7 @@
                         "expectedEquipment": "S3",
                         "config": {
                             "ip": "10.101.11.253",
-                            "vlan": "1",
+                            "vlan": "11",
                             "mask": "255.255.255.0",
                             "gateway": "10.101.11.1",
                             "primaryDns": "10.101.11.1",
@@ -323,25 +323,6 @@
                         ]
                     },
                     {
-                        "id": 12,
-                        "name": "Reboot",
-                        "applianceIp": "10.101.12.1",
-                        "subnet": "10.101.12.0/24",
-                        "fixedAssignments": [],
-                        "reservedIpRanges": [
-                            {
-                                "start": "192.168.1.1",
-                                "end": "192.168.1.253",
-                                "comment": "NO DHCP"
-                            },
-                            {
-                                "start": "192.168.1.87",
-                                "end": "192.168.1.89",
-                                "comment": "Kitchen Management System"
-                            }
-                        ]
-                    },
-                    {
                         "id": 14,
                         "name": "Public",
                         "applianceIp": "10.101.14.1",
@@ -380,19 +361,6 @@
                                 "ip": "10.101.14.253"
                             }
                         ],
-                        "reservedIpRanges": []
-                    },
-                    {
-                        "id": 115,
-                        "name": "Voice",
-                        "applianceIp": "10.101.39.1",
-                        "subnet": "10.101.39.0/24",
-                        "dhcpOptions": {
-                            "code": "66",
-                            "type": "text",
-                            "value": "https://burgerkingfrance.my3cx.fr/provisioning/tdm382daf1tgf"
-                        },
-                        "fixedAssignments": [],
                         "reservedIpRanges": []
                     }
                 ],
@@ -439,14 +407,14 @@
                                     "vlan": "12",
                                     "name": "Téléphonie",
                                     "type": "access",
-                                    "voice": "115"
+                                    "voiceVlan": "115"
                                 },
                                 {
                                     "id": "2",
                                     "vlan": "12",
                                     "name": "Téléphonie",
                                     "type": "access",
-                                    "voice": "115"
+                                    "voiceVlan": "115"
                                 },
                                 {
                                     "id": "19",
@@ -789,6 +757,18 @@
                         "gateway": "192.168.1.1",
                         "primaryDns": "8.8.8.8",
                         "secondaryDns": "8.8.4.4"
+                    },
+                    {
+                        "name": "Cradlepoint",
+                        "auto": true,
+                        "assiociatedTags" : [
+                            "cradle", "WAN2-5G"
+                        ],
+                        "wanIp": "",
+                        "mask": "",
+                        "gateway": "",
+                        "primaryDns": "",
+                        "secondaryDns": ""
                     }
                 ],
                 "wan2" : [
@@ -827,13 +807,13 @@
                         "name" : "Staff",
                         "keywords" : ["staff"],
                         "ranges" : ["10.113.1.0/24-10.113.255.0/24", "10.114.1.0/24-10.114.255.0/24"],
-                        "excepts" : ["10.113.([12]?[0-9]|115).0/24"]
+                        "excepts" : ["10.113.(1?[0-9]|115|81).0/24"]
                     },
                     {
                         "name" : "Voice",
                         "keywords" : ["voice", "voix", "voip", "voic 3cx", "3cx", "téléphonie", "tel", "voix 3cx", "voix3cx", "3cx voix", "voice 3cx", "voip 3cx", "telephonie 3cx"],
                         "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
-                        "excepts" : ["10.101.([12]?[0-9]|115).0/24"]
+                        "excepts" : ["10.101.(1?[0-9]|115|81).0/24"]
                     }
                 ],
                 "siteToSite": {
@@ -894,13 +874,30 @@
                     "WAN1-4G",
                     "WAN1-5G",
                     "WAN1-ADSL",
-                    "WAN1-Bouygues",
                     "WAN1-EFM",
                     "WAN1-FFTH",
                     "WAN1-FTTO",
                     "WAN1-STARLINK",
                     "cradle",
-                    "template"
+                    "template",
+                    "WAN2-4G",
+                    "WAN2-5G",
+                    "WAN2-ADSL",
+                    "WAN2-STARLINK",
+                    "WAN2-FTTO",
+                    "WAN2-FFTH"
+                ]
+            }
+        },
+        {
+            "type": "misc",
+            "data": {
+                "splashPages": [
+                    {
+                        "name": "test1 splash page",
+                        "url": "https://portal.weblib.com",
+                        "number": 0
+                    }
                 ]
             }
         },

@@ -9,6 +9,8 @@ import { storeToRefs } from 'pinia'
 
 import { getSplashPage } from '@/endpoints/networks/GetSplashPage'
 import { updateSplashPage } from '@/endpoints/networks/UpdateSplashPage'
+import { getDevice } from '@/endpoints/devices/GetDevice'
+import { updateNotes } from '@/endpoints/devices/UpdateNotes'
 
 import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
@@ -60,6 +62,24 @@ const initSplashPagesSection = () => {
     }
 }
 
+// 2 - MX Notes
+
+const mxNotes = ref('')
+
+const populateMXNotes = async() => {
+    const device = devicesList.value.find((device: any) => device.type === 'router')
+    console.log('device', device)
+    const resp = await getDevice(device.serial)
+    mxNotes.value = resp['notes']?resp['notes']:''
+    console.log('mxNotes [', mxNotes.value ,']')
+}
+
+const updateMXNotes = async() => {
+    const device = devicesList.value.find((device: any) => device.type === 'router')
+    const resp = await updateNotes(device.serial, mxNotes.value)
+    console.log('resp', resp)
+}
+
 const validate = useBoolStates([savingChanges], [changesSaved], async() => {
     for (const splashPage of splashPages.value) {
         if (splashPage.useExpectedUrl) {
@@ -91,6 +111,7 @@ const nextPage = () => {
 const setup = async() => {
     await populateSplashPages()
     initSplashPagesSection()
+    await populateMXNotes()
     loaded.value = true
 }
 
@@ -120,7 +141,26 @@ onMounted(() => {
         <button @click="validate">Save</button>
         <p v-if="savingChanges">Saving changes...</p>
         <p v-if="changesSaved">Changes saved</p>
-        <button @click="prevPage">Back</button>
+    </div>
+    <div>
+        <h3>MX Notes</h3>
+        <div v-if="!loaded">
+            <p>Loading...</p>
+        </div>
+        <div v-if="loaded">
+            <v-textarea class="notes-area" v-model="mxNotes" variant="outlined" auto-grow placeholder="Enter notes"/>
+            <button @click="updateMXNotes">Save</button>
+        </div>
+    </div>
+    <div>
+        <button @click="prevPage">Previous</button>
         <button @click="nextPage">Next</button>
     </div>
 </template>
+
+<style scoped>
+.notes-area {
+    width: 100%;
+    min-width: 300px;
+}
+</style>

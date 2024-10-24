@@ -14,8 +14,8 @@ import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 import { getRoutePath } from '@/utils/PageRouter'
 
 import { useBoolStates } from '@/utils/Decorators'
-
 import { createMac } from '@/utils/Misc'
+import { maskIpWithSubnet, modifyIpWithoutChangingMask } from '@/utils/ipType'
 
 import { useRouter, useRoute } from 'vue-router'
 
@@ -41,91 +41,242 @@ const perPortVlan = ref([])
 
 let autoMac = createMac()
 
-const commonIps = ref({
-    part1: '',
-    part2: '',
-    part3: '',
-    part4: ''
-})
+// groups of common ips: ip are "common" if they have at least two parts in common
+// each group is of the form : { vlans: [vlan1, vlan2, ...], commonParts: { part1: value1 | null, part2: value2 | null, ... } }
+// the common parts for two vlans appliance ip in a group must always be the same (so we need to be careful when checking on the 3rd potential member of the group)
 
-const computeCommonIps = () => {
-    let commonIpsValue = commonIps.value
-    let vlans = vlanAutoConfigured.value
+/**
+Using typescript
+I need to make a function to modify ipv4s that have similar octets values and one to edit the common octets values
+I start we a lot of "vlan" objects whose ips can be accessed via vlan.payload[0].applianceIp
+Some specifications are :
+groups of common ips: ip are "common" if they have at least two parts in common
+each group is of the form : { vlans: [vlanId1, vlanId2, ...], commonParts: { part1: value1 | null, part2: value2 | null, ... } }
+the common parts for two vlans appliance ip in a group must always be the same (so we need to be careful when checking on the 3rd potential member of the group)
 
-    for (const vlan of vlans) {
-        let applianceIp = vlan.payload[0].applianceIp.split('.')
-        for (let i = 0; i < applianceIp.length; i++) {
-            if (commonIpsValue[`part${i + 1}`] === '') {
-                commonIpsValue[`part${i + 1}`] = applianceIp[i]
-            } else if (commonIpsValue[`part${i + 1}`] !== applianceIp[i]) {
-                commonIpsValue[`part${i + 1}`] = '...'
+We will then have to display each of those common ip groups in a vue html element, so a v-for on the groups so that for each group,
+we can see the the vlanId of each vlan the group contains, and the common ip parts that are shared between them.
+Each part is in a input field, and if the part is common to all the vlans in the group, it can be edited. If not (ie it is null), it is disabled.
+When edited, it will trigger a call back function that will update the common ip parts of all the vlans in the group.
+ */
+const commonIpsGroups = ref([] as any[])
+
+const countCommonParts = (ip1: string, ip2: string | any) => {
+    // console.log('[VLAN] Counting common parts between: ', ip1, ip2)
+    let ip1Parts = ip1.split('.')
+    if (typeof ip2 === 'string') {
+        // console.log('[VLAN] ip2 is a string')
+        let ip2Parts = ip2.split('.')
+        let commonParts = 0
+        for (let i = 0; i < 4; i++) {
+            if (ip1Parts[i] === ip2Parts[i]) {
+                commonParts++
             }
         }
+        return commonParts
+    } else {
+        // console.log('[VLAN] ip2 is an array')
+        let commonParts = 0
+        if (ip2.part1 !== null && ip1Parts[0] === ip2.part1) {
+            commonParts++
+        }
+        if (ip2.part2 !== null && ip1Parts[1] === ip2.part2) {
+            commonParts++
+        }
+        if (ip2.part3 !== null && ip1Parts[2] === ip2.part3) {
+            commonParts++
+        }
+        if (ip2.part4 !== null && ip1Parts[3] === ip2.part4) {
+            commonParts++
+        }
+        return commonParts
     }
 }
 
-const updateCommonIps = (value: string, part: string) => {
-    // prevent wrong input
-    const ipPartRegex = new RegExp('^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?|0)$')
+// go over all the vlans and compute the common parts of the appliance IPs
+const computeIpsGroups = () => {
+    let groups = []
+    // console.log('[VLAN] Computing common ips groups')
+    // console.log('[VLAN] groups at the very beginning: ', JSON.stringify(groups))
+    for (const vlan of vlanAutoConfigured.value) {
+        // console.log('[VLAN] Computing common ips for vlan: ', vlan)
+        // console.log('[VLAN] Groups at the beginning: ', JSON.stringify(groups))
+        let ip = vlan.payload[0].applianceIp.split('.')
 
-    if (!ipPartRegex.test(value)) {
-        // remove the last character
-        commonIps.value[part] = value.slice(0, -1)
-        return
+        // case one, no group yet, create a new one
+        if (groups.length === 0) {
+            // console.log('[VLAN] No group yet, creating a new one')
+            groups.push({
+                vlans: [vlan.id],
+                commonParts: {
+                    part1: ip[0],
+                    part2: ip[1],
+                    part3: ip[2],
+                    part4: ip[3]
+                }
+            })
+            // console.log('[VLAN] Group created: ', groups[0])
+            // console.log('[VLAN] Groups after creation: ', groups)
+            continue
+        }
+        // case two, there is at least one group, find the group that has the most common parts with the current vlan
+        let maxCommonParts = 0
+        let bestGroupIndex = -1
+        for (let i = 0; i < groups.length; i++) {
+            let commonParts = countCommonParts(vlan.payload[0].applianceIp, groups[i].commonParts)
+            if (commonParts > maxCommonParts) {
+                maxCommonParts = commonParts
+                bestGroupIndex = i
+            }
+        }
+
+        // console.log('[VLAN] Best group index: ', bestGroupIndex, ' with ', maxCommonParts, ' common parts')
+
+        if (maxCommonParts < 2) {
+            // no group has at least 2 common parts with the current vlan, create a new group
+            groups.push({
+                vlans: [vlan.id],
+                commonParts: {
+                    part1: ip[0],
+                    part2: ip[1],
+                    part3: ip[2],
+                    part4: ip[3]
+                }
+            })
+            continue
+        }
+
+        // group is found, now we have two cases:
+        // 1. the group has only 1 vlan, thus there are no null parts in the commonParts object. We can update it to reflect the common parts with the current vlan
+        // 2. the group has more than 1 vlan, thus there may be null parts in the commonParts object. We only add the current vlan to the group if the common parts are the same
+        if (groups[bestGroupIndex].vlans.length === 1) {
+            // console.log('[VLAN] Group only has one vlan, updating common parts')
+            groups[bestGroupIndex].vlans.push(vlan.id)
+            groups[bestGroupIndex].commonParts = {
+                part1: ip[0] === groups[bestGroupIndex].commonParts.part1 ? ip[0] : null,
+                part2: ip[1] === groups[bestGroupIndex].commonParts.part2 ? ip[1] : null,
+                part3: ip[2] === groups[bestGroupIndex].commonParts.part3 ? ip[2] : null,
+                part4: ip[3] === groups[bestGroupIndex].commonParts.part4 ? ip[3] : null
+            }
+            // console.log('[VLAN] Updated group: ', groups[bestGroupIndex])
+        } else {
+            // console.log('[VLAN] Group has more than one vlan, checking common parts')
+            let isSame = true
+            if (groups[bestGroupIndex].commonParts.part1 !== null && ip[0] !== groups[bestGroupIndex].commonParts.part1) {
+                isSame = false
+                // console.log('[VLAN] Part 1 is different')
+            }
+            if (groups[bestGroupIndex].commonParts.part2 !== null && ip[1] !== groups[bestGroupIndex].commonParts.part2) {
+                isSame = false
+                // console.log('[VLAN] Part 2 is different')
+            }
+            if (groups[bestGroupIndex].commonParts.part3 !== null && ip[2] !== groups[bestGroupIndex].commonParts.part3) {
+                isSame = false
+                // console.log('[VLAN] Part 3 is different')
+            }
+            if (groups[bestGroupIndex].commonParts.part4 !== null && ip[3] !== groups[bestGroupIndex].commonParts.part4) {
+                isSame = false
+                // console.log('[VLAN] Part 4 is different')
+            }
+            if (isSame) {
+                // console.log('[VLAN] Common parts are the same, adding vlan to group')
+                groups[bestGroupIndex].vlans.push(vlan.id)
+            } else {
+                // console.log('[VLAN] Common parts are different, creating a new group')
+                groups.push({
+                    vlans: [vlan.id],
+                    commonParts: {
+                        part1: ip[0],
+                        part2: ip[1],
+                        part3: ip[2],
+                        part4: ip[3]
+                    }
+                })
+            }
+        }
     }
 
-    // change the specified part of the commonIps object and update autoConfiguredVlans
-    // We change both the appliance Ips (x.x.x.x) and subnets (x.x.x.0/y) of all vlans
-    commonIps.value[part] = value
-    let vlans = vlanAutoConfigured.value
-    for (const vlan of vlans) {
-        let applianceIp = vlan.payload[0].applianceIp.split('.')
-        applianceIp[parseInt(part.charAt(part.length - 1)) - 1] = value
-        vlan.payload[0].applianceIp = applianceIp.join('.')
+    console.log('[VLAN] Common ips groups: ', groups)
+    commonIpsGroups.value = groups
+}
 
-        // change the part in the fixedIpAssignments
+const updateCommonIp = (group: any) => {
+    console.log('[VLAN] Updating common ip: ', group)
+    let vlans = vlanAutoConfigured.value.filter((vlan) => group.vlans.includes(vlan.id))
+    for (const vlan of vlans) {
+        // update applianceIp
+        let ip = vlan.payload[0].applianceIp.split('.')
+        if (group.commonParts.part1 !== null) {
+            ip[0] = group.commonParts.part1
+        }
+        if (group.commonParts.part2 !== null) {
+            ip[1] = group.commonParts.part2
+        }
+        if (group.commonParts.part3 !== null) {
+            ip[2] = group.commonParts.part3
+        }
+        if (group.commonParts.part4 !== null) {
+            ip[3] = group.commonParts.part4
+        }
+        vlan.payload[0].applianceIp = ip.join('.')
+
+        // update subnet
+        let subnet = vlan.payload[0].subnet.split('/')
+        let maskedIp = maskIpWithSubnet(vlan.payload[0].applianceIp, subnet[1])
+        vlan.payload[0].subnet = maskedIp + '/' + subnet[1]
+
+        // update fixedIpAssignments without changing the masked part
         for (const assignment of vlan.payload[1].fixedIpAssignments) {
             let ip = assignment.ip.split('.')
-            ip[parseInt(part.charAt(part.length - 1)) - 1] = value
-            assignment.ip = ip.join('.')
+            if (group.commonParts.part1 !== null) {
+                ip[0] = group.commonParts.part1
+            }
+            if (group.commonParts.part2 !== null) {
+                ip[1] = group.commonParts.part2
+            }
+            if (group.commonParts.part3 !== null) {
+                ip[2] = group.commonParts.part3
+            }
+            if (group.commonParts.part4 !== null) {
+                ip[3] = group.commonParts.part4
+            }
+            console.log('[VLAN] Updating fixed ip: ', assignment.ip, 'to ', ip.join('.'), ' with subnet mask: ', subnet[1])
+            assignment.ip = modifyIpWithoutChangingMask(assignment.ip, ip.join('.'), subnet[1])
+            console.log('[VLAN] Updated fixed ip: ', assignment.ip)
         }
 
-        // change the part in the reservedIpRanges
+        // update reservedIpRanges without changing the masked part
         for (const reservedIpRange of vlan.payload[1].reservedIpRanges) {
             let start = reservedIpRange.start.split('.')
-            start[parseInt(part.charAt(part.length - 1)) - 1] = value
-            reservedIpRange.start = start.join('.')
+            if (group.commonParts.part1 !== null) {
+                start[0] = group.commonParts.part1
+            }
+            if (group.commonParts.part2 !== null) {
+                start[1] = group.commonParts.part2
+            }
+            if (group.commonParts.part3 !== null) {
+                start[2] = group.commonParts.part3
+            }
+            if (group.commonParts.part4 !== null) {
+                start[3] = group.commonParts.part4
+            }
+            reservedIpRange.start = modifyIpWithoutChangingMask(reservedIpRange.start, start.join('.'), subnet[1])
 
             let end = reservedIpRange.end.split('.')
-            end[parseInt(part.charAt(part.length - 1)) - 1] = value
-            reservedIpRange.end = end.join('.')
+            if (group.commonParts.part1 !== null) {
+                end[0] = group.commonParts.part1
+            }
+            if (group.commonParts.part2 !== null) {
+                end[1] = group.commonParts.part2
+            }
+            if (group.commonParts.part3 !== null) {
+                end[2] = group.commonParts.part3
+            }
+            if (group.commonParts.part4 !== null) {
+                end[3] = group.commonParts.part4
+            }
+            reservedIpRange.end = modifyIpWithoutChangingMask(reservedIpRange.end, end.join('.'), subnet[1])
         }
-
-        // change subnet part but only modify the masked part (x.x.x.x/y -> y = 24 > the last part stays the same, y = 16 > the last 2 parts stay the same ... etc)
-        let [subnet, mask] = vlan.payload[0].subnet.split('/')
-        let subnetIp = subnet.split('.')
-        subnetIp[parseInt(part.charAt(part.length - 1)) - 1] = value
-        switch (parseInt(mask)) {
-            case 24:
-                subnetIp[3] = "0";
-                break;
-            case 16:
-                subnetIp[3] = "0";
-                subnetIp[2] = "0";
-                break;
-            case 8:
-                subnetIp[3] = "0";
-                subnetIp[2] = "0";
-                subnetIp[1] = "0";
-                break;
-            default:
-                subnetIp[0] = "0";
-                subnetIp[1] = "0";
-                subnetIp[2] = "0";
-                subnetIp[3] = "0";
-            break;
-        }
-        vlan.payload[0].subnet = subnetIp.join('.') + '/' + mask
     }
 }
 
@@ -333,7 +484,9 @@ const makeNewVlan = () => {
                     subnet: ''
                 },
                 {
-                    fixedIpAssignments: []
+                    fixedIpAssignments: [],
+                    reservedIpRanges: [],
+                    dhcpOptions: []
                 }
             ]
         }
@@ -390,8 +543,9 @@ const goBack = () => {
 
 onMounted(() => {
     configureVlans()
-    computeCommonIps()
-    console.log('[VLAN] commonIps: ', commonIps.value)
+    // computeCommonIps()
+    // console.log('[VLAN] commonIps: ', commonIps.value)
+    computeIpsGroups()
 })
 
 </script>
@@ -407,15 +561,15 @@ onMounted(() => {
              When one of these part is edited, all the vlan appliance IPs will be updated with the new part. -->
             <div class="make-column" id="commonIps">
                 <p>Common appliance IPs</p>
-                <div class="make-row">
-                    <input class="margin-all-normal lateral-margin-small short" @input="updateCommonIps(commonIps.part1, 'part1')"
-                        v-model="commonIps.part1" placeholder="Part 1" :disabled="commonIps.part1==='...'"/>
-                    <input class="margin-all-normal lateral-margin-small short" @input="updateCommonIps(commonIps.part2, 'part2')"
-                        v-model="commonIps.part2" placeholder="Part 2" :disabled="commonIps.part2==='...'"/>
-                    <input class="margin-all-normal lateral-margin-small short" @input="updateCommonIps(commonIps.part3, 'part3')"
-                        v-model="commonIps.part3" placeholder="Part 3" :disabled="commonIps.part3==='...'"/>
-                    <input class="margin-all-normal lateral-margin-small short" @input="updateCommonIps(commonIps.part4, 'part4')"
-                        v-model="commonIps.part4" placeholder="Part 4" :disabled="commonIps.part4==='...'"/>
+                <div v-for="(group, index) in commonIpsGroups" :key="index">
+                    <div class="align-items-horizontally">
+                        <span class="lateral-margin-small">Vlans</span>
+                        <span class="lateral-margin-small" v-for="(vlan, index) in group.vlans" :key="index">{{ vlan }} </span>
+                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part1" :disabled="group.commonParts.part1 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part2" :disabled="group.commonParts.part2 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part3" :disabled="group.commonParts.part3 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part4" :disabled="group.commonParts.part4 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                    </div>
                 </div>
             </div>
             <h2>Auto configured VLANs</h2>

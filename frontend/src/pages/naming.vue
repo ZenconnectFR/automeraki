@@ -236,9 +236,9 @@ const autoUpdateTags = async () => {
 
             matchingDevices.sort((a, b) => {
                 if (order === 'asc') {
-                    return a.associationId - b.associationId;
+                    return a.associationId.localeCompare(b.associationId);
                 } else {
-                    return b.associationId - a.associationId;
+                    return b.associationId.localeCompare(a.associationId);
                 }
             });
 
@@ -314,7 +314,7 @@ const blink = (serial: string) => {
 }
 
 const goBack = () => {
-    router.push(getRoutePath(configStore.previousPage()));
+    router.push('/claim');
 }
 
 const setup = async() => {
@@ -359,8 +359,8 @@ onMounted(() => {
                 </div>
                 <div v-for="(router, index) in routers" :key="index" class="make-row">
                     <p class="margin-padding">{{ router.serial }}</p>
-                    <input class="margin-padding" v-model="router.name">
-                    <input class="margin-padding" v-model="routersTable[index].name">
+                    <input class="margin-padding" v-model="router.name"/>
+                    <input class="margin-padding" v-model="routersTable[index].name"/>
                     <p class="margin-padding">id : {{ routersTable[index].id }}</p>
                     <button class="margin-padding" :disabled="index===0" @click="moveUp(index, routers)">Up</button>
                     <button class="margin-padding" :disabled="index===routers.length-1" @click="moveDown(index, routers)">Down</button>
@@ -373,8 +373,8 @@ onMounted(() => {
                 </div>
                 <div v-for="(switchDevice, index) in switches" :key="index" class="make-row">
                     <p class="margin-padding">{{ switchDevice.serial }}</p>
-                    <input class="margin-padding" v-model="switchDevice.name">
-                    <input class="margin-padding" v-model="switchesTable[index].name">
+                    <input class="margin-padding" v-model="switchDevice.name"/>
+                    <input class="margin-padding" v-model="switchesTable[index].name"/>
                     <p class="margin-padding">id: {{ switchesTable[index].id }}</p>
                     <button class="margin-padding" :disabled="index===0" @click="moveUp(index, switches)">Up</button>
                     <button class="margin-padding" :disabled="index===switches.length-1" @click="moveDown(index, switches)">Down</button>
@@ -387,8 +387,8 @@ onMounted(() => {
                 </div>
                 <div v-for="(ap, index) in aps" :key="index" class="make-row">
                     <p class="margin-padding">{{ ap.serial }}</p>
-                    <input class="margin-padding" v-model="ap.name">
-                    <input class="margin-padding" v-model="apsTable[index].name">
+                    <input class="margin-padding" v-model="ap.name"/>
+                    <input class="margin-padding" v-model="apsTable[index].name"/>
                     <p class="margin-padding">id: {{ apsTable[index].id }}</p>
                     <button class="margin-padding" :disabled="index===0" @click="moveUp(index, aps)">Up</button>
                     <button class="margin-padding" :disabled="index===aps.length-1" @click="moveDown(index, aps)">Down</button>
@@ -403,9 +403,9 @@ onMounted(() => {
                 <!-- For each device, show its list of tags, and allow the user edit them -->
                 <div class="make-row" v-for="(device, index) in devicesList" :key="index">
                     <div class="make-row" v-if="device.tags.length > 0">
-                        <p class="margin-padding">{{ device.name }}</p>
+                        <p class="margin-padding">{{ device.associationId }}</p>
                         <div v-for="(tag, tagIndex) in device.tags" :key="tagIndex" class="make-row">
-                            <input class="margin-padding" v-model="device.tags[tagIndex]">
+                            <input class="margin-padding" v-model="device.tags[tagIndex]"/>
                             <button class="margin-padding" @click="device.tags.splice(tagIndex, 1)">Remove</button>
                         </div>
                         <button class="margin-padding" @click="device.tags.push('')">Add tag</button>

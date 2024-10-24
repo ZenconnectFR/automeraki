@@ -135,22 +135,22 @@ onMounted(() => {
                         <span>{{ assignment.name }}</span>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.ip" :disabled="assignment.useDhcp?.use">
+                        <input type="text" v-model="assignment.config.ip" :disabled="assignment.useDhcp?.use"/>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.mask" :disabled="assignment.useDhcp?.use">
+                        <input type="text" v-model="assignment.config.mask" :disabled="assignment.useDhcp?.use"/>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.vlan">
+                        <input type="text" v-model="assignment.config.vlan"/>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.gateway" :disabled="assignment.useDhcp?.use">
+                        <input type="text" v-model="assignment.config.gateway" :disabled="assignment.useDhcp?.use"/>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.primaryDns" :disabled="assignment.useDhcp?.use">
+                        <input type="text" v-model="assignment.config.primaryDns" :disabled="assignment.useDhcp?.use"/>
                     </td>
                     <td>
-                        <input type="text" v-model="assignment.config.secondaryDns" :disabled="assignment.useDhcp?.use">
+                        <input type="text" v-model="assignment.config.secondaryDns" :disabled="assignment.useDhcp?.use"/>
                     </td>
                 </tr>
             </tbody>

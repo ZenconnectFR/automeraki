@@ -2,7 +2,7 @@ export function parseDevices(text: string): string[] {
     // Match serials like QXXX-XXXX-XXXX or QXXX=XXXX=XXXX
     let serials = text.match(/Q[0-9A-Z]{3}[-=][0-9A-Z]{4}[-=][0-9A-Z]{4}/g) as string[] | null;
     // replace = with - in serials
-    serials = serials ? serials.map(serial => serial.replace('=', '-')) : [];
+    serials = serials ? serials.map(serial => serial.replace(/=/g, '-')) : [];
     return serials ? serials : [];
 };
 

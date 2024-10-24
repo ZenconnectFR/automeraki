@@ -226,7 +226,8 @@
                                     "id": "2",
                                     "vlan": "2",
                                     "name": "Téléphonie",
-                                    "type": "access"
+                                    "type": "access",
+                                    "voiceVlan": 115
                                 },
                                 {
                                     "id": "14",
@@ -374,14 +375,14 @@
             "data": {
                 "vpnSubnets": [
                     {
-                        "name" : "Staff",
-                        "keywords" : ["staff", "vlan 1"],
+                        "name" : "VLAN 1",
+                        "keywords" : ["vlan 1"],
                         "ranges" : ["10.113.1.0/24-10.113.255.0/24", "10.114.1.0/24-10.114.255.0/24"],
                         "excepts" : ["10.113.([12]?[0-9]|115).0/24"]
                     },
                     {
-                        "name" : "Voice",
-                        "keywords" : ["voice", "voix", "voic", "3cx", "téléphonie", "vlan 115"],
+                        "name" : "VLAN 115",
+                        "keywords" : ["vlan 115"],
                         "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
                         "excepts" : ["10.101.([12]?[0-9]|115).0/24"]
                     }
@@ -396,16 +397,19 @@
                     ],
                     "subnets": [
                         {
-                            "localSubnet": "10.101.1.0/24",
-                            "useVpn": true
+                            "localSubnet": "VNAT(1)",
+                            "useVpn": true,
+                            "translation": true
                         },
                         {
                             "localSubnet": "VLAN(115)",
-                            "useVpn": true
+                            "useVpn": true,
+                            "translation": false
                         },
                         {
                             "localSubnet": "VLAN(2)",
-                            "useVpn": false
+                            "useVpn": false,
+                            "translation": false
                         }
                     ]
                 }

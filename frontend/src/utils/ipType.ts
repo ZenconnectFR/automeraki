@@ -176,12 +176,12 @@ export function findNextFreeSubnet(subnets: string[], allowed: string[], excepts
     // sort them by ip
     parsedSubnets.sort((a, b) => a.ip - b.ip);
 
-    console.log('parsedSubnets', parsedSubnets);
+    // console.log('parsedSubnets', parsedSubnets);
 
     // parse allowed into { start: number, end: number, mask: number } // mask will always be the same for a pair of start and end
     const parsedAllowed = allowed.map(range => {
         const [start, end] = range.split('-');
-        console.log('[IpType] start', start, 'end', end);
+        // console.log('[IpType] start', start, 'end', end);
         const [startIp, startMask] = start.split('/');
         const [endIp, endMask] = end.split('/');
         return { start: ipToInt(startIp), end: ipToInt(endIp), mask: parseInt(startMask) };
@@ -189,22 +189,22 @@ export function findNextFreeSubnet(subnets: string[], allowed: string[], excepts
 
     // sort them by start
     parsedAllowed.sort((a, b) => a.start - b.start);
-    console.log('[IpType] parsedAllowed', parsedAllowed);
+    // console.log('[IpType] parsedAllowed', parsedAllowed);
 
-    console.log('[IpType] Excepts:', excepts);
+    // console.log('[IpType] Excepts:', excepts);
 
     // Convert excepts into a function for testing
     const isExcept = (subnet: string) => {
         // Check if excepts is an array, if not, return false
         if (!Array.isArray(excepts)) {
-            console.log("[IpType] Excepts is not an array, ignoring exclusions.");
+            // console.log("[IpType] Excepts is not an array, ignoring exclusions.");
             return false; // No exclusions
         }
 
         // Ensure all elements in `excepts` are RegExp
         const allAreRegExps = excepts.every((ex) => ex instanceof RegExp);
         if (!allAreRegExps) {
-            console.error("[IpType] Excepts contains non-RegExp values.");
+            // console.error("[IpType] Excepts contains non-RegExp values.");
             return false; // Skip matching if excepts contains invalid values
         }
 
@@ -264,6 +264,51 @@ export function modifyIpToSubnet(ip: string, subnet: string): string {
     console.log('ipInt', ipInt, 'subnetInt', subnetInt, 'mask', mask, 'networkPart', networkPart, 'hostPart', hostPart, 'newIpInt', newIpInt);
 
     return intToIp(newIpInt);
+}
+
+/**
+ * Masks an ip with a subnet (ex: 10.101.11.1 with mask 24 gives 10.101.11.0)
+ * @param ip the ip to mask (ipv4)
+ * @param mask the mask to apply (number between 0 and 32)
+ */
+export function maskIpWithSubnet(ip: string, mask: string): string {
+    const maskInt = parseInt(mask);
+    const ipInt = ipToInt(ip);
+    const maskInt32 = -1 << (32 - maskInt) >>> 0;
+    const maskedIpInt = (ipInt & maskInt32) >>> 0;
+    return intToIp(maskedIpInt)
+}
+
+/**
+ * Modify an ip wihtout changing the masked part. Ex: 10.101.11.253 to 10.101.115.1 with mask 24 gives 10.101.115.253
+ * @param ip the ip to modify (ipv4)
+ * @param newIp the new ip to use (ipv4)
+ * @param mask the mask to apply (number between 0 and 32)
+ * @returns string - the modified ip
+ */
+export function modifyIpWithoutChangingMask(ip: string, newIp: string, mask: string): string {
+    // transform arguments to integers
+    const maskInt = parseInt(mask);
+    const ipInt = ipToInt(ip);
+    const newIpInt = ipToInt(newIp);
+
+    // console.log('ipInt', ipInt, 'newIpInt', newIpInt, 'maskInt', maskInt);
+
+    // create mask as a 32 bit integer
+    const maskInt32 = -1 << (32 - maskInt) >>> 0;
+    // console.log('maskInt32', maskInt32);
+
+    // result should be the masked part of the new ip and the host part of the old ip
+    const maskedNewIpInt = (newIpInt & maskInt32) >>> 0;
+    const hostPart = (ipInt & ~maskInt32) >>> 0;
+
+    // console.log('maskedNewIpInt', maskedNewIpInt, 'hostPart', hostPart);
+
+    // combine the two parts
+    const result = (maskedNewIpInt + hostPart) >>> 0;
+    // console.log('result', result);
+
+    return intToIp(result);
 }
 
 

@@ -108,7 +108,7 @@ onMounted(() => {
 
         <h2>Available Tags</h2>
         <div class="search-and-tags">
-            <input type="text" v-model="filter" placeholder="Search tags..." @input="filterTags">
+            <input type="text" v-model="filter" placeholder="Search tags..." @input="filterTags"/>
             <div class="tag-container">
                 <div v-for="tag in filteredTags" :key="tag" @click="addTag(tag)" class="tag">
                     {{ tag }}

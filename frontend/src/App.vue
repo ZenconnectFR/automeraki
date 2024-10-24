@@ -1,8 +1,17 @@
-<script setup>
+<script setup lang="ts">
 
 import { ref } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { RouterView } from 'vue-router'
+
+import { useErrorStore } from '@/stores/error'
+
+const error = useErrorStore()
+
+const removeErr = (index: number) => {
+  console.log('removing error')
+  error.removeError(index)
+}
 
 // state control to wait for orgId to be set
 const ready = ref(false)
@@ -26,6 +35,15 @@ if (orgId && orgId !== '-1') {
 
 <template>
   <div id="welcome">
+    <div>
+      <v-container class="alerts-container">
+        <div v-for="(err, index) in error.errors" :key="index" type="error" class="alert-popup" @click:close="removeErr(index)">
+          <v-alert color="error" closable>
+            {{ err }}
+          </v-alert>
+        </div>
+      </v-container>
+    </div>
     <h1>AutoMeraki</h1>
     <RouterView />
   </div>
@@ -40,5 +58,33 @@ if (orgId && orgId !== '-1') {
   justify-content: center;
   align-items: center;
   width: 100%;
+}
+
+.alert-popup {
+  width: 100%; /* Make alert take up full width of the container */
+  margin-top: 10px; /* Space between stacked alerts */
+  display: flex;
+  justify-content: center; /* Horizontally center content */
+  align-items: center; /* Vertically center content */
+}
+
+.alerts-container {
+  position: fixed;
+  top: 10px; /* Start at the top */
+  left: 25%; /* Start from the center */
+  /*transform: translateX(-50%); /* Center the alerts */
+  width: 50%; /* Take 50% of the page width */
+  z-index: 9999; /* Ensure it's above other elements */
+  display: flex;
+  flex-direction: column-reverse; /* Most recent at the top */
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn {
+  margin-left: 16px;
+  margin-right: 16px;
+  color: red; /* Customize the close button color if needed */
+  justify-self: flex-end; /* Align the close button to the right */
 }
 </style>

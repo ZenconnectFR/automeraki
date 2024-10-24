@@ -190,33 +190,33 @@ def get_action_batch(org_id: str, actionBatchId: str):
 @app.get("/networks/{network_id}/firewallRules")
 def get_firewall_rules(network_id: str):
         
-    inboundFirewallRules = dashboard.appliance.getNetworkApplianceFirewallInboundFirewallRules(network_id),
+    inboundFirewallRules = dashboard.appliance.getNetworkApplianceFirewallInboundFirewallRules(network_id)
     print('\nInbound Firewall Rules:\n' + str(inboundFirewallRules) + '\n')
-    l3FirewallRules = dashboard.appliance.getNetworkApplianceFirewallL3FirewallRules(network_id),
+    l3FirewallRules = dashboard.appliance.getNetworkApplianceFirewallL3FirewallRules(network_id)
     print('\nL3 Firewall Rules:\n' + str(l3FirewallRules) + '\n')
-    cellularFailoverRules = dashboard.appliance.getNetworkApplianceFirewallCellularFirewallRules(network_id),
+    cellularFailoverRules = dashboard.appliance.getNetworkApplianceFirewallCellularFirewallRules(network_id)
     print('\nCellular Failover Rules:\n' + str(cellularFailoverRules) + '\n')
-    inboundCellularFirewallRules = dashboard.appliance.getNetworkApplianceFirewallInboundCellularFirewallRules(network_id),
+    inboundCellularFirewallRules = dashboard.appliance.getNetworkApplianceFirewallInboundCellularFirewallRules(network_id)
     print('\nInbound Cellular Firewall Rules:\n' + str(inboundCellularFirewallRules) + '\n')
-    wanApplianceServices = dashboard.appliance.getNetworkApplianceFirewallFirewalledServices(network_id),
+    wanApplianceServices = dashboard.appliance.getNetworkApplianceFirewallFirewalledServices(network_id)
     print('\nWAN Appliance Services:\n' + str(wanApplianceServices) + '\n')
-    l7FirewallRules = dashboard.appliance.getNetworkApplianceFirewallL7FirewallRules(network_id),
+    l7FirewallRules = dashboard.appliance.getNetworkApplianceFirewallL7FirewallRules(network_id)
     print('\nL7 Firewall Rules:\n' + str(l7FirewallRules) + '\n')
-    portForwardingRules = dashboard.appliance.getNetworkApplianceFirewallPortForwardingRules(network_id),
+    portForwardingRules = dashboard.appliance.getNetworkApplianceFirewallPortForwardingRules(network_id)
     print('\nPort Forwarding Rules:\n' + str(portForwardingRules) + '\n')
-    oneToOneNatRules = dashboard.appliance.getNetworkApplianceFirewallOneToOneNatRules(network_id),
+    oneToOneNatRules = dashboard.appliance.getNetworkApplianceFirewallOneToOneNatRules(network_id)
     print('\nOne to One NAT Rules:\n' + str(oneToOneNatRules) + '\n')
     oneToManyNatRules = dashboard.appliance.getNetworkApplianceFirewallOneToManyNatRules(network_id)
     print('\nOne to Many NAT Rules:\n' + str(oneToManyNatRules) + '\n')
 
-    return { "inboundFirewallRules": inboundFirewallRules[0],
-            "l3FirewallRules": l3FirewallRules[0],
-            "cellularFailoverRules": cellularFailoverRules[0],
-            "inboundCellularFirewallRules": inboundCellularFirewallRules[0],
-            "wanApplianceServices": wanApplianceServices[0],
-            "l7FirewallRules": l7FirewallRules[0],
-            "portForwardingRules": portForwardingRules[0],
-            "oneToOneNatRules": oneToOneNatRules[0],
+    return { "inboundFirewallRules": inboundFirewallRules,
+            "l3FirewallRules": l3FirewallRules,
+            "cellularFailoverRules": cellularFailoverRules,
+            "inboundCellularFirewallRules": inboundCellularFirewallRules,
+            "wanApplianceServices": wanApplianceServices,
+            "l7FirewallRules": l7FirewallRules,
+            "portForwardingRules": portForwardingRules,
+            "oneToOneNatRules": oneToOneNatRules,
             "oneToManyNatRules": oneToManyNatRules}
 
 
@@ -268,7 +268,7 @@ def get_policy_objects(org_id: str):
 
 
 
-
+# MARK: - POST
 
 # ------------------ POST ------------------
 
@@ -541,6 +541,7 @@ def get_splash_page_settings(network_id: str):
 
 
 
+# MARK: - PUT
 
 # ------------------ PUT ------------------
 
@@ -813,6 +814,26 @@ def update_splash_page_settings(update_splash_page_settings: UpdateSplashPageSet
         return {"error": str(e)}
 
     return updated_splash_page_settings
+
+
+# ----------
+
+# update device notes
+class UpdateDeviceNotes(BaseModel):
+    serial: str
+    notes: str
+
+@app.put("/devices/updateNotes")
+def update_device_notes(update_device_notes: UpdateDeviceNotes):
+    serial = update_device_notes.serial
+    notes = update_device_notes.notes
+
+    try:
+        updated_device = dashboard.devices.updateDevice(serial, notes=notes)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_device
     
     
 
@@ -832,7 +853,7 @@ def update_splash_page_settings(update_splash_page_settings: UpdateSplashPageSet
 
 
 
-
+# MARK: - TEMPLATES
 
 '''
 ------------------------------ TEMPLATES ------------------------------

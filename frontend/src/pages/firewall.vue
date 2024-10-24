@@ -282,7 +282,7 @@ onMounted(() => {
                                         <img src="@/assets/plus.png" alt="Add CIDR">
                                     </button>
                                     <div class="plus-popup" v-if="rule.showSrcPopup">
-                                        <input type="text" v-model="newCidr" placeholder="CIDR">
+                                        <input type="text" v-model="newCidr" placeholder="CIDR"/>
                                         <button @click="addSrcCidr(rule.srcCidr, newCidr, rule)">Add</button>
                                     </div>
                                 </div>
@@ -305,7 +305,7 @@ onMounted(() => {
                                         <img src="@/assets/plus.png" alt="Add CIDR">
                                     </button>
                                     <div class="plus-popup" v-if="rule.showDestPopup">
-                                        <input type="text" v-model="newCidr" placeholder="CIDR">
+                                        <input type="text" v-model="newCidr" placeholder="CIDR"/>
                                         <button @click="addDestCidr(rule.destCidr, newCidr, rule)">Add</button>
                                     </div>
                                 </div>

@@ -3,8 +3,12 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import { createPinia } from 'pinia'
+import { useErrorStore } from './stores/error'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+// import 'vuetify/styles'
+import '@mdi/font/css/materialdesignicons.css'
 
 
 // Try to move this part to a separate file in the future if possible
@@ -52,26 +56,50 @@ const Router = createRouter({
 
 export default Router
 
-// Global error handler
-/*
-window.onerror = function (message, source, lineno, colno, error) {
-    console.log('Global error handler; Error: ', error, 'message: ', message, 'source: ', source, 'lineno: ', lineno, 'colno: ', colno)
-    window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-}
-*/
 
 const pinia = createPinia()
 const app = createApp(App)
 const vuetify = createVuetify({
-    components
+    components,
+    directives,
+    icons: {
+        defaultSet: 'mdi'
+    },
+    defaults: {
+        VBtn: {
+            rounded: 'lg',
+            variant: 'outlined'
+        }
+    }
 })
 
+
 /*
+
 app.config.errorHandler = function (err, vm, info) {
-    console.log('Error handler; Error: ', err, 'vm: ', vm, 'info: ', info)
-    window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    // set error in store
+    const errorStore = useErrorStore()
+    errorStore.addError(`${err.message} (in ${vm?.$options?.name || 'unknown'}${info ? `info: ${info}` : ''})`)
+    console.log(errorStore.errors)
+}
+
+window.onerror = function (message, source, lineno, colno, error) {
+    // set error in store
+    const errorStore = useErrorStore()
+    errorStore.addError(`${message} (at ${source}:${lineno}:${colno})`)
+    console.log(errorStore.errors)
+
+}
+
+window.onunhandledrejection = function (event) {
+    // set error in store
+    const errorStore = useErrorStore()
+    errorStore.addError(`${event.reason}`)
+    console.log(errorStore.errors)
+
 }
 */
+
 
 app.use(pinia)
 app.use(Router)
