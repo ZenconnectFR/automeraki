@@ -839,11 +839,13 @@
                     "subnets": [
                         {
                             "localSubnet": "10.101.11.0/24",
-                            "useVpn": true
+                            "useVpn": true,
+                            "translation": true
                         },
                         {
                             "localSubnet": "VLAN(115)",
-                            "useVpn": true
+                            "useVpn": true,
+                            "translation": false
                         }
                     ]
                 }
@@ -875,17 +877,18 @@
                     "WAN1-5G",
                     "WAN1-ADSL",
                     "WAN1-EFM",
-                    "WAN1-FFTH",
+                    "WAN1-FTTH",
                     "WAN1-FTTO",
                     "WAN1-STARLINK",
                     "cradle",
                     "template",
+                    "Tplink",
                     "WAN2-4G",
                     "WAN2-5G",
                     "WAN2-ADSL",
                     "WAN2-STARLINK",
                     "WAN2-FTTO",
-                    "WAN2-FFTH"
+                    "WAN2-FTTH"
                 ]
             }
         },
@@ -895,7 +898,7 @@
                 "splashPages": [
                     {
                         "name": "test1 splash page",
-                        "url": "https://portal.weblib.com",
+                        "url": "https://v3.smartwifi.fr/v1/auth/meraki/",
                         "number": 0
                     }
                 ]

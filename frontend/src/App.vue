@@ -44,7 +44,6 @@ if (orgId && orgId !== '-1') {
         </div>
       </v-container>
     </div>
-    <h1>AutoMeraki</h1>
     <RouterView />
   </div>
 </template>

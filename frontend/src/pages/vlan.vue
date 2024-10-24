@@ -577,12 +577,12 @@ onMounted(() => {
                 <hr />
                 <hr />
                 <p>------------------------------------------------------------------------------------</p>
-                <input class="margin-all-normal enboxed" v-model="vlan.payload[0].name" placeholder="VLAN name"/>
-                <p>ID</p>
-                <input class="margin-all-normal enboxed" v-model="vlan.id" placeholder="VLAN ID" type="number"/>
-                <p>Appliance IP</p>
-                <input class="margin-all-normal enboxed" v-model="vlan.payload[0].applianceIp" placeholder="Appliance IP"/>
-                <p>Subnet</p>
+                <p>
+                    {{ vlan.payload[0].name }}<br>
+                    Id: {{ vlan.id }}<br>
+                    Appliance IP: {{ vlan.payload[0].applianceIp }}<br>
+                </p>
+                <span>Subnet : </span>
                 <input class="margin-all-normal enboxed" v-model="vlan.payload[0].subnet" placeholder="Subnet"/>
                 <div class="vlan-fields-section">
                     <p>Fixed IP assignments</p>
@@ -626,14 +626,14 @@ onMounted(() => {
                     </table>
                 </div>
                 <div class="margin-all-normal make-row">
-                    <button @click="makeNewIpAssignment(vlan.id)">Add new IP assignment</button>
-                    <button @click="deleteVlan(vlan.id)">Delete VLAN</button>
+                    <!--button @click="makeNewIpAssignment(vlan.id)">Add new IP assignment</button>
+                    <button @click="deleteVlan(vlan.id)">Delete VLAN</button-->
                 </div>
             </div>
             <hr />
-            <div class="margin-all-normal make-row">
+            <!--div class="margin-all-normal make-row">
                 <button @click="makeNewVlan">Add new VLAN</button>
-            </div>
+            </div-->
             <p v-if="savingChanges">Saving changes...</p>
             <button @click="confirm">Save changes</button>
             <div class="margin-all-normal make-row">

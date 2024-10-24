@@ -42,6 +42,8 @@ const switchesTable = ref([])
 const apsTable = ref([])
 const othersTable = ref([])
 
+const address = ref('')
+
 
 const typeFinder = (model: string) => {
     if (model.includes('MX')) {
@@ -206,6 +208,11 @@ const autoUpdateTags = async () => {
         clearDeviceTags(devices.value);
     });
 
+    // sort all devices lists by associationId
+    [routers, switches, aps, others].forEach((devices) => {
+        devices.value.sort((a, b) => a.associationId.localeCompare(b.associationId));
+    });
+
     function getDeviceByType(targetType: string) {
         switch (targetType) {
             case 'router':
@@ -234,6 +241,7 @@ const autoUpdateTags = async () => {
 
             console.log('[NAMING] matchingDevices: ', matchingDevices);
 
+            // sort the devices by associationId
             matchingDevices.sort((a, b) => {
                 if (order === 'asc') {
                     return a.associationId.localeCompare(b.associationId);
@@ -309,6 +317,14 @@ const moveDown = (index: number, devices: any[]) => {
     devices[index + 1].name = temp;
 }
 
+const changeAddress = async () => {
+    // change every device address to the new address
+    for (const device of devicesList.value) {
+        await changeDeviceAddress(device.serial, address.value);
+        //console.log('[NAMING] changeAddress response: ', resp);
+    }
+}
+
 const blink = (serial: string) => {
     blinkDevice(serial);
 }
@@ -325,6 +341,9 @@ const setup = async() => {
     renameDevices();
     console.log('[NAMING] devicesList after renaming: ', devicesList.value);
     console.log('[NAMING] device lists: ', routers.value, switches.value, aps.value, others.value);
+
+    // sort deviceList by associationId
+    devicesList.value.sort((a, b) => a.associationId.localeCompare(b.associationId));
 
     autoUpdateTags();
 
@@ -358,6 +377,7 @@ onMounted(() => {
                     <h2>Routers</h2>
                 </div>
                 <div v-for="(router, index) in routers" :key="index" class="make-row">
+                    <p class="margin-padding">{{ router.model }}</p>
                     <p class="margin-padding">{{ router.serial }}</p>
                     <input class="margin-padding" v-model="router.name"/>
                     <input class="margin-padding" v-model="routersTable[index].name"/>
@@ -372,6 +392,7 @@ onMounted(() => {
                     <h2>Switches</h2>
                 </div>
                 <div v-for="(switchDevice, index) in switches" :key="index" class="make-row">
+                    <p class="margin-padding">{{ switchDevice.model }}</p>
                     <p class="margin-padding">{{ switchDevice.serial }}</p>
                     <input class="margin-padding" v-model="switchDevice.name"/>
                     <input class="margin-padding" v-model="switchesTable[index].name"/>
@@ -386,6 +407,7 @@ onMounted(() => {
                     <h2>Access Points</h2>
                 </div>
                 <div v-for="(ap, index) in aps" :key="index" class="make-row">
+                    <p class="margin-padding">{{ ap.model }}</p>
                     <p class="margin-padding">{{ ap.serial }}</p>
                     <input class="margin-padding" v-model="ap.name"/>
                     <input class="margin-padding" v-model="apsTable[index].name"/>
@@ -411,6 +433,11 @@ onMounted(() => {
                         <button class="margin-padding" @click="device.tags.push('')">Add tag</button>
                     </div>
                 </div>
+            </div>
+            <div>
+                <h2>Address</h2>
+                <input v-model="address" placeholder="Enter an address"/>
+                <button @click="changeAddress">Save</button>
             </div>
             <button class="margin-padding" @click="changeNames">Save</button>
             <p v-if="renaming">Renaming devices...</p>

@@ -48,6 +48,7 @@ const noDevicesToAdd = ref(false)
 const fullFinalDevices = ref([]) // full devices info after adding them to the network
 
 const usedByAnotherOrg = ref(false)
+const alreadyInCurrentNetwork = ref(false)
 
 const claiming = ref(false)
 
@@ -96,6 +97,11 @@ const changeAddresses = async() => {
 const addDevices = async () => {
     // parse the devices from the input field
     parsedDevices.value = parseDevices(newNetworkDevices.value)
+
+    // empty all the necessary arrays in case the user adds devices multiple times
+    alreadyInNetwork.value = []
+    alreadyInNetworkWithInfo.value = []
+    toClaim.value = []
 
     console.log('[CLAIM] Parsed devices: ', parsedDevices.value)
 
@@ -155,8 +161,12 @@ const addDevices = async () => {
         await changeAddresses() // immediately change the addresses of the devices
         devicesAdded.value = true
     } else {
-        usedByAnotherOrg.value = true
-        console.error('[CLAIM] Error adding devices to network, most likely the devices are already used by another organization')
+        if (response && response.error === 'Devices already claimed') {
+            alreadyInCurrentNetwork.value = true
+        } else {
+            usedByAnotherOrg.value = true
+            console.error('[CLAIM] Error adding devices to network, most likely the devices are already used by another organization')
+        }
     }
     claiming.value = false
 }
@@ -236,11 +246,15 @@ const validate = async() => {
                     {{device.serial}} is in network {{device.network}}
                 </li>
             </ul>
-            <button class="margin-padding-all-normal" @click="moveDevices">I understand, move them to the new network</button>
-            <button class="margin-padding-all-normal" @click="showMoveNetwork = false; confirmMoveNetwork = true; removeAlreadyInNetwork() ;addDevices()">Continue without those devices</button>
+            <p>Please either remove them from their networks or continue without them</p>
+            <!--button class="margin-padding-all-normal" @click="moveDevices">I understand, move them to the new network</button>
+            <button class="margin-padding-all-normal" @click="showMoveNetwork = false; confirmMoveNetwork = true; removeAlreadyInNetwork() ;addDevices()">Continue without those devices</button-->
         </template>
         <template v-if="usedByAnotherOrg">
             <p>Impossible to claim some devices, they most likely belong to another organization inventory</p>
+        </template>
+        <template v-if="alreadyInCurrentNetwork">
+            <p>Some devices are already in the network</p>
         </template>
         <p v-if="devicesAdded">Devices added to network</p>
         <p v-if="noDevicesToAdd">No new devices to add to the new network</p>

@@ -7,9 +7,9 @@ import { storeToRefs } from 'pinia'
 
 import { getPorts } from '@/endpoints/devices/GetPorts'
 import { configurePortsBatch } from '@/endpoints/actionBatches/ConfigurePorts'
-import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 import { updateMTUSize } from '@/endpoints/devices/switch/UpdateMTUSize'
 import { updateSTPSettings } from '@/endpoints/devices/switch/UpdateSTPSettings'
+import { getVlans } from '@/endpoints/networks/GetVlans'
 
 import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
@@ -29,7 +29,7 @@ const { currentPageConfig } = storeToRefs(configStore)
 let config = currentPageConfig.value
 
 const { newNetworkId, orgId } = storeToRefs(ids)
-const { devicesList, vlans } = storeToRefs(devices)
+const { devicesList } = storeToRefs(devices)
 
 const typeOptions = ['access', 'trunk']
 
@@ -42,10 +42,18 @@ const changesSaved = ref(false)
 // define any[] type for switches
 const switches = ref([] as any[])
 
+const vlans = ref([] as { id: string; name: string }[])
+const vlanOptions = ref([] as any[])
+
 const stpPayload = ref([] as any[])
 
 const stpRef = ref(<HTMLElement | null>(null))
 const topRef = ref(<HTMLElement | null>(null))
+
+interface Option {
+    name: string;
+    value: any;
+}
 
 function scrollTo(refName: string) {
     if (refName === 'stpRef') {
@@ -130,9 +138,10 @@ const configurePorts = async () => {
 
             // check if the vlan exists in the store
             let vlanExists = false
+            // console.log("vlans : ", vlans.value)
             for (const vlan of vlans.value) {
-                // console.log("comparing vlan : ", vlan, " with portConfig.vlan : ", portConfig.vlan)
-                if (vlan == portConfig.vlan) {
+                // console.log("vlan : ", vlan)
+                if (vlan['id'] == portConfig.vlan) {
                     vlanExists = true
                     break
                 }
@@ -197,6 +206,16 @@ const configurePorts = async () => {
 }
 
 const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
+
+    // for all ports, if any have a vlan that is not a string, transform it to a string with the id
+    portsAutoConfigured.value.forEach((switchPorts: { ports: any[] }) => {
+        switchPorts.ports.forEach((port: { vlan: any }) => {
+            if (typeof port.vlan !== 'string') {
+                port.vlan = port.vlan.value
+            }
+        })
+    })
+
     console.log('Confirming ports configuration : ', portsAutoConfigured.value)
 
     // for testing purpose: triple portsAutoConfigured to simulate a large number of ports
@@ -251,8 +270,26 @@ const nextPage = () => {
     router.push(getRoutePath(configStore.nextPage()))
 }
 
+const fetchVlans = async () => {
+    await getVlans(newNetworkId.value).then((response) => {
+        vlans.value = response
+    })
+    vlanOptions.value = vlans.value.map((vlan) => {
+        return {
+            value: `${vlan.id}`,
+            name: `${vlan.id} - ${vlan.name}`
+        }
+    })
+}
+
+const setup = async () => {
+    await fetchVlans()
+    console.log('Vlan Options : ', vlanOptions.value)
+    await configurePorts()
+}
+
 onMounted(() => {
-    configurePorts()
+    setup()
 })
 
 </script>
@@ -289,17 +326,20 @@ onMounted(() => {
                     <template v-for="port in switchPorts.ports">
                         <tr>
                             <td>{{ port.id }}</td>
-                            <td><input type="text" v-model="port.name"/></td>
+                            <!--td><input type="text" v-model="port.name"/></td>
                             <td>
-                                <Dropdown class="add-margin" :options="vlans"
+                                <Dropdown class="add-margin" :options="vlanOptions"
                                     :modelValue="port.vlan"
-                                    :onSelect="(option) => port.vlan = option"/> <!-- vlans is a string[], port.vlan is a string-->
+                                    :onSelect="(option) => port.vlan = option"/>
                             </td>
                             <td>
                                 <Dropdown class="add-margin" :options="typeOptions"
                                     :modelValue="port.type"
-                                    :onSelect="(option) => port.type = option" /><!-- port.type is a string-->
-                            </td>
+                                    :onSelect="(option) => port.type = option" />
+                            </td-->
+                            <td>{{ port.name }}</td>
+                            <td>{{ port.vlan }}</td>
+                            <td>{{ port.type }}</td>
                         </tr>
                     </template>
                 </tbody>
@@ -337,5 +377,9 @@ onMounted(() => {
 
     .add-margin {
         margin: 20px;
+    }
+
+    table {
+        width: 25%;
     }
 </style>

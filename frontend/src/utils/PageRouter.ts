@@ -1,4 +1,4 @@
-const routeTable = {
+export const routeTable = {
     naming: "/naming",
     fixedIp: "/fixed-ip",
     vlan: "/vlan",
