@@ -5,6 +5,7 @@ import { useIdsStore } from '@/stores/ids'
 import { RouterView } from 'vue-router'
 
 import { useErrorStore } from '@/stores/error'
+import NavBar from './components/NavBar.vue';
 
 const error = useErrorStore()
 
@@ -44,6 +45,7 @@ if (orgId && orgId !== '-1') {
         </div>
       </v-container>
     </div>
+    <NavBar />
     <RouterView />
   </div>
 </template>
