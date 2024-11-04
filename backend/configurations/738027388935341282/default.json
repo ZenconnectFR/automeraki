@@ -1,0 +1,618 @@
+{
+
+    "commentary": "fields called 'commentary' are for documentation only, they will be ignored by the app won't be put in built templates",
+
+    "orgName": "Popeyes (documentation field)",
+    
+    "name": "default",
+    "networkToClone": "",
+    "preFilledName": "PY000000 - ",
+    "actions": [
+        {
+            "type": "naming",
+            "data": {
+                "name": "{networkName} - {associationName}",
+                "commentary": "the currently available vars are 'networkName' and 'associationName'",
+                "associationTable": [
+                    {
+                        "name": "R1",
+                        "id" : "R1",
+                        "type": "router",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "S1",
+                        "id" : "S1",
+                        "type": "switch",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "S2",
+                        "id" : "S2",
+                        "type": "switch",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "S3",
+                        "id" : "S3",
+                        "type": "switch",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP1",
+                        "id" : "AP1",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP2",
+                        "id" : "AP2",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP3",
+                        "id" : "AP3",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP4",
+                        "id" : "AP4",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP5",
+                        "id" : "AP5",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP6",
+                        "id" : "AP6",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP7",
+                        "id" : "AP7",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP8",
+                        "id" : "AP8",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    }
+                ],
+                "tags" : [
+                    {
+                        "useLimit": true,
+                        "limit": {
+                            "commentary": "the limit field is only provided when useLimit is true",
+                            "targetType": "ap",
+                            "number": 3,
+                            "order": "asc"
+                        },
+                        "name": "public",
+                        "equipments": [
+                            "AP1", "AP2", "AP3", "AP4", "AP5", "AP6", "AP7", "AP8"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "fixedIp",
+            "data": {
+                "fixedAssignments": [
+                    {
+                        "expectedEquipment": "S1",
+                        "useDhcp": {
+                            "commentary": "if useDhcp.use is true, the config field will be ignored and could be null or not present",
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "commentary": "some non essential fields can be left empty or not present",
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "S2",
+                        "useDhcp": {
+                            "use": false,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "S3",
+                        "useDhcp": {
+                            "use": false,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP1",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP2",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP3",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP4",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP5",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP6",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP7",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP8",
+                        "useDhcp": {
+                            "use": true,
+                            "vlan": 999
+                        },
+                        "config": {
+                            "ip": "",
+                            "vlan": "",
+                            "mask": "",
+                            "gateway": "",
+                            "primaryDns": "",
+                            "secondaryDns": ""
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "vlan",
+            "data": {
+                "vlans": [
+                    {
+                        "id": 999,
+                        "name": "VLAN 999",
+                        "applianceIp": "192.168.44.1",
+                        "subnet": "192.168.44.0/24",
+                        "fixedAssignments": [
+                            {
+                                "commentary": "If the expectedEquipment field contains an associationId, the assiociated device will be assigned to the fixed IP, else a random mac address will be assigned to the fixed IP",
+                                "expectedEquipment": "AP1",
+                                "ip": "192.168.44.101"
+                            },
+                            {
+                                "expectedEquipment": "AP2",
+                                "ip": "192.168.44.102"
+                            },
+                            {
+                                "expectedEquipment": "AP3",
+                                "ip": "192.168.44.103"
+                            },
+                            {
+                                "expectedEquipment": "AP4",
+                                "ip": "192.168.44.104"
+                            },
+                            {
+                                "expectedEquipment": "AP5",
+                                "ip": "192.168.44.105"
+                            },
+                            {
+                                "expectedEquipment": "AP6",
+                                "ip": "192.168.44.106"
+                            },
+                            {
+                                "expectedEquipment": "AP7",
+                                "ip": "192.168.44.108"
+                            },
+                            {
+                                "expectedEquipment": "AP8",
+                                "ip": "192.168.44.108"
+                            },
+                            {
+                                "expectedEquipment": "S1",
+                                "ip": "192.168.44.201"
+                            },
+                            {
+                                "expectedEquipment": "S2",
+                                "ip": "192.168.44.202"
+                            },
+                            {
+                                "expectedEquipment": "S3",
+                                "ip": "192.168.44.203"
+                            }
+
+                        ],
+                        "reservedIpRanges" : [
+                        ]
+                    }
+                ],
+                "perPortVlan" : [
+                    {
+                        "applianceName": "associationId",
+                        "ports": [
+                            {
+                                "id": "1",
+                                "vlan": "401",
+                                "type": "trunk"
+                            },
+                            {
+                                "id": "2",
+                                "vlan": "401",
+                                "type": "trunk"
+                            },
+                            {
+                                "id": "3",
+                                "vlan": "401",
+                                "type": "trunk"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "firewall",
+            "data": {}
+        },
+        {
+            "type": "ports",
+            "data": {
+                "ports": [
+                    {
+                        "switchName": "S1",
+                        "nbPorts": 48,
+                        "config": {
+                            "default": {
+                                "vlan": "301",
+                                "name": "Encaissement Oracle/Acrelec",
+                                "type": "access"
+                            },
+                            "ports": [
+                                {
+                                    "id": "1",
+                                    "vlan": "401",
+                                    "name": "Uplink",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "2",
+                                    "vlan": "401",
+                                    "name": "Corp",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "37",
+                                    "vlan": "401",
+                                    "name": "Corp",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "38",
+                                    "vlan": "401",
+                                    "name": "Corp",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "40",
+                                    "vlan": "401",
+                                    "name": "Corp",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "41",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "42",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "43",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "44",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "45",
+                                    "vlan": "401",
+                                    "name": "VolP",
+                                    "type": "access",
+                                    "voiceVlan": "601"
+                                },
+                                {
+                                    "id": "46",
+                                    "vlan": "401",
+                                    "name": "VolP",
+                                    "type": "access",
+                                    "voiceVlan": "601"
+                                },
+                                {
+                                    "id": "48",
+                                    "vlan": "501",
+                                    "name": "IoT",
+                                    "type": "access"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "switchName": "S2",
+                        "nbPorts": 24,
+                        "config": {
+                            "default": {
+                                "vlan": "301",
+                                "name": "Encaissement Oracle/Acrelec",
+                                "type": "access"
+                            },
+                            "ports": [
+                                {
+                                    "id": "1",
+                                    "vlan": "401",
+                                    "name": "Uplink",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "13",
+                                    "vlan": "401",
+                                    "name": "Corp",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "16",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "18",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "20",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "21",
+                                    "vlan": "501",
+                                    "name": "IoT",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "22",
+                                    "vlan": "501",
+                                    "name": "IoT",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "24",
+                                    "vlan": "501",
+                                    "name": "IoT",
+                                    "type": "access"
+                                }
+                            ]
+                        }
+
+                    }
+                ],
+                "mtuSize": 1500,
+                "stp": [
+                    {
+                        "stpPriority": 0,
+                        "switches": [
+                            "S1", "S2"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "wans",
+            "data": {
+                "wan1": [
+                    {
+                        "name": "default",
+                        "auto": true,
+                        "assiociatedTags" : [ "" ],
+                        "wanIP" : "",
+                        "mask" : "",
+                        "gateway" : "",
+                        "primaryDns" : "",
+                        "secondaryDns" : ""
+                    }
+                ],
+                "wan2": [
+                    {
+                        "name": "default",
+                        "auto": true,
+                        "assiociatedTags" : [ "" ],
+                        "wanIP" : "",
+                        "mask" : "",
+                        "gateway" : "",
+                        "primaryDns" : "",
+                        "secondaryDns" : ""
+                    }
+                ]
+            }
+        },
+        {
+            "type": "tags",
+            "data": {
+                "availableTags": [
+                    "WAN1-DELIVEROO",
+                    "oracle"
+                ]
+            }
+        },
+        {
+            "type": "misc",
+            "data": {
+                "splashPages": [
+                    {
+                        "name": "default",
+                        "url": "https://v3.smartwifi.fr/v1/auth/meraki/",
+                        "number": 1,
+                        "commentary": "number is the ssid number for the splash page, url is the url to pre-fill the splash page field"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "eof",
+            "data": {
+                "comments": [
+                    {
+                        "title": "WANs",
+                        "content": [
+                            "Pensez aux wans s'ils n'ont pas pu être configurés automatiquement"
+                        ]
+                    },
+                    {
+                        "title": "Alertes",
+                        "content": [
+                            "Pensez à ajouter les alertes (etape 8 de la procédure)"
+                        ]
+                    },
+                    {
+                        "title": "Licences",
+                        "content": [
+                            "Pensez à verifier les licences (etape 12 de la procédure)"
+                        ]
+                    },
+                    {
+                        "title": "Plans",
+                        "content": [
+                            "Pensez à ajouter les plans (etape 13 de la procédure)"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -2,18 +2,19 @@
 
     "commentary": "fields called 'commentary' are for documentation only, they will be ignored by the app won't be put in built templates",
     
-    "name": "",
+    "name": "default",
     "networkToClone": "",
-    "preFilledName": "",
+    "preFilledName": "default",
     "actions": [
         {
             "type": "naming",
             "data": {
-                "name": "",
+                "name": "variables in {} will be replaced by the value of the field in the device",
+                "commentary": "the currently available vars are 'networkName' and 'associationName'",
                 "associationTable": [
                     {
-                        "name": "",
-                        "id" : "",
+                        "name": "associationName",
+                        "id" : "associationId",
                         "type": "",
                         "switchPorts" : [ 0 ]
                     }
@@ -81,12 +82,7 @@
                                 "end": "",
                                 "comment": ""
                             }
-                        ],
-                        "vpnMode" : {
-                            "commentary": "vpnIp ignored if mode is disabled",
-                            "mode": "disabled",
-                            "vpnIp": ""
-                        }
+                        ]
                     }
                 ],
                 "perPortVlan" : [
@@ -104,6 +100,10 @@
             }
         },
         {
+            "type": "firewall",
+            "data": {}
+        },
+        {
             "type": "ports",
             "data": {
                 "ports": [
@@ -118,10 +118,12 @@
                             },
                             "ports": [
                                 {
+                                    "commentary": "voiceVlan is optional",
                                     "id": "",
                                     "vlan": "",
                                     "name": "",
-                                    "type": ""
+                                    "type": "",
+                                    "voiceVlan": 0
                                 }
                             ]
                         }
@@ -143,8 +145,8 @@
             "data": {
                 "wan1": [
                     {
-                        "name": "",
-                        "auto": false,
+                        "name": "default",
+                        "auto": true,
                         "assiociatedTags" : [ "" ],
                         "wanIP" : "",
                         "mask" : "",
@@ -155,8 +157,8 @@
                 ],
                 "wan2": [
                     {
-                        "name": "",
-                        "auto": false,
+                        "name": "defualt",
+                        "auto": true,
                         "assiociatedTags" : [ "" ],
                         "wanIP" : "",
                         "mask" : "",
@@ -173,22 +175,61 @@
                 "vpnSubnets": [
                     {
                         "name": "",
-                        "keywords": [ "" ],
-                        "ranges" : [
-                            {
-                                "start": "",
-                                "end": ""
-                            }
-                        ],
-                        "excepts" : [
-                            "regexString"
-                        ]
+                        "keywords": [ "to filter the subnets by name" ],
+                        "ranges" : [ "x.x.x.x-x.x.x.x"],
+                        "excepts" : [ "regexString" ]
                     }
                 ],
-                "vpnHubs" : [
+                "siteToSite": {
+                    "useSpoke": false,
+                    "hubs": [
+                        {
+                            "hubId": "",
+                            "useDefaultRoute": false
+                        }
+                    ],
+                    "subnets": [
+                        {
+                            "commentary": "localSubnet is either: a cidr, VNAT(vlanId) or VLAN(vlanId)",
+                            "localSubnet": "",
+                            "useVpn": false,
+                            "translation": false
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "tags",
+            "data": {
+                "availableTags": [
+                    ""
+                ]
+            }
+        },
+        {
+            "type": "misc",
+            "data": {
+                "splashPages": [
                     {
-                        "networkId" : "",
-                        "defaultRoute" : false
+                        "name": "",
+                        "url": "",
+                        "number": 0,
+                        "commentary": "number is the ssid number for the splash page, url is the url to pre-fill the splash page field"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "eof",
+            "data": {
+                "comments": [
+                    {
+                        "commentary": "comments to add at the end of the configuration process",
+                        "title": "",
+                        "content": [
+                            ""
+                        ]
                     }
                 ]
             }
