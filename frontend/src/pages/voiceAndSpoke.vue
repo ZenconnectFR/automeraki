@@ -95,9 +95,22 @@ const orgWide = ref(false)
 
 const copiedText = ref('')
 
+const nToCopy = ref(20)
+
 const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     copiedText.value = text
+    // reset the copied text after 3 seconds
+    setTimeout(() => {
+        copiedText.value = ''
+    }, 3000)
+}
+
+const copyNToCliboard = (subnets: string[]) => {
+    const n = nToCopy.value
+    const toCopy = subnets.slice(0, n)
+    navigator.clipboard.writeText(toCopy.join('\n'))
+    copiedText.value = toCopy.join('\n')
     // reset the copied text after 3 seconds
     setTimeout(() => {
         copiedText.value = ''
@@ -394,6 +407,7 @@ onMounted(() => {
         <!-- show the next available subnet for each subnet name -->
         <div v-for="(name, index) in Object.keys(freeSubnets)" :key="index">
             <h2>{{ name }}</h2>
+            <button @click="copyNToCliboard(freeSubnets[name])">Copy</button><input type="number" v-model="nToCopy" /><span>subnets.</span>
             <div class="make-row">
                 <ul>
                     <li v-for="(subnet, index) in getVisibleItems(name)" :key="index">{{ subnet }}
