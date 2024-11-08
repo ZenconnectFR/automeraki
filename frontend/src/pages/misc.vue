@@ -16,6 +16,7 @@ import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
 
 import { useRouter, useRoute } from 'vue-router'
+import Dropdown from '@/components/Dropdown.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -37,6 +38,9 @@ const changesSaved = ref(false)
 // 1 - Splash page(s)
 const splashPagesSettings = ref([] as any[])
 
+const splashPagesOptions = ref([] as {title: string, value: string}[])
+const selectedSplashPage = ref('0')
+
 const populateSplashPages = async() => {
     const response = await getSplashPage(newNetworkId.value)
     console.log('response', response)
@@ -56,19 +60,37 @@ const initSplashPagesSection = () => {
         if (found) {
             console.log('found: ', found)
             splashPage['expectedUrl'] = found.url
-            splashPages.value.push(splashPage)
+        } else {
+            splashPage['expectedUrl'] = ''
         }
         splashPage['useExpectedUrl'] = false
+        splashPages.value.push(splashPage)
+    }
+
+    // populate options for the dropdown
+    for (const splashPage of splashPages.value) {
+        splashPagesOptions.value.push({
+            title: `SSID ${splashPage.ssidNumber}`,
+            value: splashPage.ssidNumber
+        })
     }
 }
 
 // 2 - MX Notes
 
 const mxNotes = ref('')
+const mxPresent = ref(false)
 
 const populateMXNotes = async() => {
+    if (!devicesList.value) {
+        return
+    }
     const device = devicesList.value.find((device: any) => device.type === 'router')
     console.log('device', device)
+    if (!device) {
+        return
+    }
+    mxPresent.value = true
     const resp = await getDevice(device.serial)
     mxNotes.value = resp['notes']?resp['notes']:''
     console.log('mxNotes [', mxNotes.value ,']')
@@ -80,7 +102,7 @@ const updateMXNotes = async() => {
     console.log('resp', resp)
 }
 
-const validate = useBoolStates([savingChanges], [changesSaved], async() => {
+const validateSplash = useBoolStates([savingChanges], [changesSaved], async() => {
     for (const splashPage of splashPages.value) {
         if (splashPage.useExpectedUrl) {
             splashPage.splashUrl = splashPage.expectedUrl
@@ -128,21 +150,24 @@ onMounted(() => {
             <p>Loading...</p>
         </div>
         <div v-if="loaded">
-            <div v-for="splashPage in splashPages" :key="splashPage">
-                <div>
-                    <p>{{ splashPage.ssidNumber }}</p>
-                    <p>Current url entered : {{ splashPage.splashUrl }}</p>
-                    <input v-model="splashPage.expectedUrl" />
-                    <label for="useExpectedUrl">Use expected url</label>
-                    <input type="checkbox" id="useExpectedUrl" v-model="splashPage.useExpectedUrl" />
+            <v-autocomplete :items="splashPagesOptions" v-model="selectedSplashPage" label="Select SSID" variant="outlined"/>
+            <div v-for="splashPage in splashPages" :key="splashPage.ssidNumber">
+                <div v-if="splashPage.ssidNumber == selectedSplashPage">
+                    <h4>SSID {{ splashPage.ssidNumber }}</h4>
+                    <p>Current plash URL: {{ splashPage.splashUrl }}</p>
+                    <div>
+                        <input type="checkbox" v-model="splashPage.useExpectedUrl"/>
+                        <label>Use expected URL</label>
+                    </div>
+                    <input v-model="splashPage.expectedUrl" placeholder="Enter expected URL"/>
                 </div>
             </div>
         </div>
-        <button @click="validate">Save</button>
+        <button @click="validateSplash">Save</button>
         <p v-if="savingChanges">Saving changes...</p>
         <p v-if="changesSaved">Changes saved</p>
     </div>
-    <div>
+    <div v-if="mxPresent">
         <h3>MX Notes</h3>
         <div v-if="!loaded">
             <p>Loading...</p>
