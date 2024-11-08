@@ -483,7 +483,8 @@
                         "url": "https://www.google.com",
                         "number": 0
                     }
-                ]
+                ],
+                "mxHostname": "{networkName}-"
             }
         },
         {

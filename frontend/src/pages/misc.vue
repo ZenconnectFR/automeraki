@@ -11,6 +11,9 @@ import { getSplashPage } from '@/endpoints/networks/GetSplashPage'
 import { updateSplashPage } from '@/endpoints/networks/UpdateSplashPage'
 import { getDevice } from '@/endpoints/devices/GetDevice'
 import { updateNotes } from '@/endpoints/devices/UpdateNotes'
+import { getMxSettings } from '@/endpoints/networks/GetMxSettings'
+import { updateMxSettings } from '@/endpoints/networks/UpdateMxSettings'
+import { getNetwork } from '@/endpoints/networks/GetNetwork'
 
 import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
@@ -122,6 +125,44 @@ const validateSplash = useBoolStates([savingChanges], [changesSaved], async() =>
     }
 });
 
+// 3 - MX Hostname
+
+const mxHostname = ref('')
+const newMxHostname = ref('')
+const mxHostnameLoaded = ref(false)
+
+const populateMxHostname = async() => {
+    const resp = await getMxSettings(newNetworkId.value)
+    console.log('resp', resp)
+    mxHostname.value = resp.dynamicDns.prefix
+    mxHostnameLoaded.value = true
+
+    // load the new value from config
+    newMxHostname.value = config.mxHostname?config.mxHostname:''
+
+    // replace variables in the new value
+    newMxHostname.value = newMxHostname.value.replace(/{orgId}/g, orgId.value)
+    newMxHostname.value = newMxHostname.value.replace(/{networkId}/g, newNetworkId.value)
+    // handle network name variable
+    if (newMxHostname.value.includes('{networkName}')) {
+        console.log('networkName variable found')
+        const network = await getNetwork(newNetworkId.value)
+        newMxHostname.value = newMxHostname.value.replace(/{networkName}/g, network.name)
+    }
+
+    console.log('newMxHostname', newMxHostname.value)
+}
+
+const updateMxHostname = async() => {
+    const payload = {
+        dynamicDns: {
+            prefix: newMxHostname.value
+        }
+    }
+    const resp = await updateMxSettings(newNetworkId.value, payload)
+    console.log('resp', resp)
+}
+
 const prevPage = () => {
     router.push(getRoutePath(configStore.prevPage()))
 }
@@ -134,6 +175,7 @@ const setup = async() => {
     await populateSplashPages()
     initSplashPagesSection()
     await populateMXNotes()
+    await populateMxHostname()
     loaded.value = true
 }
 
@@ -175,6 +217,15 @@ onMounted(() => {
         <div v-if="loaded">
             <v-textarea class="notes-area" v-model="mxNotes" variant="outlined" auto-grow placeholder="Enter notes"/>
             <button @click="updateMXNotes">Save</button>
+        </div>
+    </div>
+    <div v-if="mxPresent && mxHostnameLoaded">
+        <h3>Mx Hostname</h3>
+        <div>
+            <p>Current MX hostname prefix: {{ mxHostname }}</p>
+            <p>New MX hostname prefix suggested:</p>
+            <input v-model="newMxHostname" placeholder="Enter MX hostname"/><span>-suffix</span>
+            <button @click="updateMxHostname">Save</button>
         </div>
     </div>
     <div>

@@ -242,6 +242,16 @@ def get_policy_objects(org_id: str):
     return res
 
 
+# ---------
+
+# get mx settings for a network
+@app.get("/getMxSettings/{network_id}")
+def get_mx_settings(network_id: str):
+    mx_settings = dashboard.appliance.getNetworkApplianceSettings(network_id)
+
+    return mx_settings
+
+
 
 
 
@@ -834,6 +844,26 @@ def update_device_notes(update_device_notes: UpdateDeviceNotes):
         return {"error": str(e)}
 
     return updated_device
+
+
+# ----------
+
+# update mx settings
+class UpdateMXSettings(BaseModel):
+    network_id: str
+    payload: Optional[dict] = None
+
+@app.put("/updateMxSettings")
+def update_mx_settings(update_mx_settings: UpdateMXSettings):
+    network_id = update_mx_settings.network_id
+    payload = update_mx_settings.payload
+
+    try:
+        updated_mx_settings = dashboard.appliance.updateNetworkApplianceSettings(network_id, **payload)
+    except Exception as e:
+        return {"error": str(e)}
+
+    return updated_mx_settings
     
     
 
