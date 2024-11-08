@@ -64,9 +64,9 @@ const fixIp = useBoolStates([],[],async () => {
             }
 
             fixedIpAssignments.value.push({
-                name: device.name,
+                name: device.associationName,
                 serial: device.serial,
-                useDhcp: configFixedIp[i].useDhcp,
+                useDhcp: configFixedIp[i].useDhcp?.use ? configFixedIp[i].useDhcp : null,
                 config: configFixedIp[i].config
             })
         }

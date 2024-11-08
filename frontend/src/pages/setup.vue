@@ -239,11 +239,19 @@ const configureNetwork = async () => {
     console.log('[SETUP] Template data:', templateData)
     configuration.setConfiguration(templateData)
 
+    //
+
     let associationTable = templateData.actions[0].data.associationTable
     console.log('[SETUP] Association table:', associationTable)
     // give each device their associationId, can break on complex format strings for devices names.
     devicesList.forEach((device: { name: string }) => {
         // find the associationId in the device name, format string is "{networkName}-{associationName}"
+
+        if (!device.name || device.name.split('-').length < 2) {
+            // the naming has not been done yet on this device / network, just skip the associationId part
+            return
+        }
+
         let associationName = device.name.split('-')[device.name.split('-').length - 1]
         // remove whitespace from the associationName
         associationName = associationName.replace(/\s/g, '')
@@ -258,6 +266,9 @@ const configureNetwork = async () => {
     })
 
     console.log('[SETUP] Devices with associationId: ', devicesList)
+
+    //
+    
     devices.setDevicesList(devicesList)
 
     configuration.setCurrentPageConfig(templateData.actions[0].data)
@@ -408,7 +419,7 @@ onMounted(()  => {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 400%;
+        width: 90%;
         position: relative;
     }
 </style>

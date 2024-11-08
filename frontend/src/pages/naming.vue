@@ -109,8 +109,8 @@ const renameDevices = () => {
     console.log('[NAMING] devicesList: ', devicesList.value);
     // few checks to ensure that the config is correct
     if (devicesList.value.length === 0 || config.associationTable.length === 0
-        || devicesList.value.length !== config.associationTable.length) {
-            console.error('Error renaming devices: devicesList or associationTable is empty or have different lengths');
+        || devicesList.value.length > config.associationTable.length) {
+            console.error('Error renaming devices: devicesList or associationTable is empty or devicesList is longer than associationTable');
             console.log('[NAMING] devicesList: ', devicesList.value);
             console.log('[NAMING] associationTable: ', config.associationTable);
             return;
@@ -237,6 +237,7 @@ const autoUpdateTags = async () => {
             console.log('[NAMING] tag with limit: ', tag);
             const { targetType, order, number } = limit;
             const devicesTyped = getDeviceByType(targetType);
+            console.log('[NAMING] devicesTyped: ', devicesTyped);
             let matchingDevices = getMatchingDevices(devicesTyped);
 
             console.log('[NAMING] matchingDevices: ', matchingDevices);
@@ -301,6 +302,11 @@ const moveUp = (index: number, devices: any[]) => {
     temp = devices[index].name;
     devices[index].name = devices[index - 1].name;
     devices[index - 1].name = temp;
+
+    // if type is ap, reorder the aps by ascending associationId
+    if (devices === aps.value) {
+        aps.value.sort((a, b) => a.associationId.localeCompare(b.associationId));
+    }
 }
 
 const moveDown = (index: number, devices: any[]) => {
@@ -315,6 +321,11 @@ const moveDown = (index: number, devices: any[]) => {
     temp = devices[index].name;
     devices[index].name = devices[index + 1].name;
     devices[index + 1].name = temp;
+
+    // if type is ap, reorder the aps by ascending associationId
+    if (devices === aps.value) {
+        aps.value.sort((a, b) => a.associationId.localeCompare(b.associationId));
+    }
 }
 
 const changeAddress = async () => {
@@ -425,6 +436,8 @@ onMounted(() => {
                 <!-- For each device, show its list of tags, and allow the user edit them -->
                 <div class="make-row" v-for="(device, index) in devicesList" :key="index">
                     <div class="make-row" v-if="device.tags.length > 0">
+                        <p class="margin-padding">{{ device.model }}</p>
+                        <p class="margin-padding">{{ device.serial }}</p>
                         <p class="margin-padding">{{ device.associationId }}</p>
                         <div v-for="(tag, tagIndex) in device.tags" :key="tagIndex" class="make-row">
                             <input class="margin-padding" v-model="device.tags[tagIndex]"/>

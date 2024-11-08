@@ -31,6 +31,18 @@
                         "id" : "AP1",
                         "type": "ap",
                         "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "AP2",
+                        "id" : "AP2",
+                        "type": "ap",
+                        "switchPorts" : [ 0 ]
+                    },
+                    {
+                        "name": "Printer",
+                        "id" : "Printer",
+                        "type": "printer",
+                        "switchPorts" : [ 2 ]
                     }
                 ],
                 "tags" : [
@@ -38,19 +50,19 @@
                         "useLimit" : true,
                         "limit": {
                             "targetType": "ap",
-                            "number": 2,
+                            "number": 1,
                             "order": "asc"
                         },
                         "name": "public",
                         "equipments": [
-                            "AP1"
+                            "AP1", "AP2"
                         ]
                     },
                     {
                         "useLimit" : false,
                         "name": "prod",
                         "equipments": [
-                            "AP1"
+                            "AP1", "AP2"
                         ]
                     }
                 ]
@@ -92,6 +104,20 @@
                     },
                     {
                         "expectedEquipment": "AP1",
+                        "useDhcp": {
+                            "use": false,
+                            "vlan": "0"
+                        },
+                        "config": {
+                            "ip": "10.101.2.2",
+                            "mask": "255.255.255.0",
+                            "gateway": "10.101.2.1",
+                            "primaryDns": "10.101.2.1",
+                            "secondaryDns": "8.8.8.8"
+                        }
+                    },
+                    {
+                        "expectedEquipment": "AP2",
                         "useDhcp": {
                             "use": false,
                             "vlan": "0"

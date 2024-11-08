@@ -1,4 +1,4 @@
-import { axiosInstance as Axios } from '@/plugins/AxiosInstance'
+import { handleActionBatches } from './BatchManager'
 
 export interface ManagementInterfaceBody {
     wan1: {
@@ -48,6 +48,13 @@ const createBatchBody = (config: any[]) => {
 
 }
 
+export async function fixIpAssignments(config: any[], orgId: string) {
+    const actions = createBatchBody(config);
+    const res = await handleActionBatches(actions, orgId);
+    return res
+}
+
+/*
 export async function fixIpAssignments(config: any[], orgId: string) : Promise<any> {
     const actions = createBatchBody(config)
     try {
@@ -62,3 +69,4 @@ export async function fixIpAssignments(config: any[], orgId: string) : Promise<a
         console.error('[CONFIGURE PORTS] Error: ', error)
     }
 }
+*/

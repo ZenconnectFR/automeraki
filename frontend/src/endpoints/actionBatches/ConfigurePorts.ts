@@ -1,5 +1,4 @@
-import { axiosInstance as Axios } from '@/plugins/AxiosInstance'
-import { getActionBatchStatus } from './GetActionBatch'
+import { handleActionBatches } from './BatchManager'
 
 const createBatchBody = (config: any[]) => {
     // turn the config array into an array of objects with the correct format
@@ -21,6 +20,14 @@ const createBatchBody = (config: any[]) => {
     }
     return actions
 }
+
+export async function configurePortsBatch(config: any[], orgId: string) {
+    const actions = createBatchBody(config);
+    const res = await handleActionBatches(actions, orgId);
+    return res
+}
+
+/*
 
 // split the actions into batches of batchSize. Beware of the last batch, it may be smaller than batchSize
 // returns an array of arrays
@@ -105,3 +112,4 @@ export async function configurePortsBatch(config: any[], orgId: string) : Promis
 
     return completedBatches
 }
+*/

@@ -812,8 +812,8 @@
                     {
                         "name" : "Voice",
                         "keywords" : ["voice", "voix", "voip", "voic 3cx", "3cx", "téléphonie", "tel", "voix 3cx", "voix3cx", "3cx voix", "voice 3cx", "voip 3cx", "telephonie 3cx"],
-                        "ranges" : ["10.101.1.0/24-10.101.255.0/24"],
-                        "excepts" : ["10.101.(1?[0-9]|115|81).0/24"]
+                        "ranges" : ["10.101.1.0/24-10.101.255.0/24", "10.201.1.0/24-10.201.254.0/24"],
+                        "excepts" : ["10.101.(1?[0-9]|20|115|118|81|111|112|138|205).0/24"]
                     }
                 ],
                 "siteToSite": {

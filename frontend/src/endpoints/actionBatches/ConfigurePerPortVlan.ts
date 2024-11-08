@@ -1,4 +1,4 @@
-import { axiosInstance as Axios } from '@/plugins/AxiosInstance'
+import { handleActionBatches } from './BatchManager'
 
 const createBatchBody = (config: any[], networkId : string) => {
     // turn the config array into an array of objects with the correct format
@@ -21,6 +21,13 @@ const createBatchBody = (config: any[], networkId : string) => {
 
 export async function configurePerPortVlan(config: any[], orgId: string, networkId : string) : Promise<any> {
     const actions = createBatchBody(config, networkId)
+    const res = await handleActionBatches(actions, orgId)
+    return res
+}
+
+/*
+export async function configurePerPortVlan(config: any[], orgId: string, networkId : string) : Promise<any> {
+    const actions = createBatchBody(config, networkId)
     try {
         console.log(actions)
         console.log(orgId)
@@ -33,3 +40,4 @@ export async function configurePerPortVlan(config: any[], orgId: string, network
         console.error('[CONFIGURE PORTS] Error: ', error)
     }
 }
+*/

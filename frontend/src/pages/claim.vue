@@ -68,16 +68,26 @@ const retrieveInventory = async (parsedDevices: string[]) => {
  * else add them to the toClaim array
  */
 const checkDevicePossessions = () => {
+    console.log('[CLAIM] Checking device possessions')
     for (const device of inventoryDevices.value) {
-        if (device.networkId) {
-            alreadyInNetwork.value.push(device)
-        } else {
-            toClaim.value.push(device.serial)
+        console.log('[CLAIM] Checking device in inventory: ', device)
+        // only consider the devices that are in the parsedDevices array
+        if (parsedDevices.value.includes(device.serial)) {
+            if (device.networkId) {
+                // if the device is already in a network, add it to the alreadyInNetwork array
+                console.log('[CLAIM] Device already in network: ', device)
+                alreadyInNetwork.value.push(device)
+            } else {
+                // if the device is not in a network, add it to the toClaim array
+                console.log('[CLAIM] Device not in network: ', device)
+                toClaim.value.push(device.serial)
+            }
         }
     }
     // add the devices in parsedDevices that are not in the inventory to the toClaim array
     for (const serial of parsedDevices.value) {
         if (!inventoryDevices.value.find(device => device.serial === serial)) {
+            console.log('[CLAIM] Device to add not found in inventory: ', serial)
             toClaim.value.push(serial)
         }
     }
@@ -85,8 +95,8 @@ const checkDevicePossessions = () => {
 
 const { address } = storeToRefs(devices)
 
-const changeAddresses = async() => {
-    for (const device of fullFinalDevices.value) {
+const changeAddresses = async(devicesToChange: { serial: string }[]) => {
+    for (const device of devicesToChange) {
         await changeDeviceAddress(device.serial, address.value);
     }
 }
@@ -98,10 +108,18 @@ const addDevices = async () => {
     // parse the devices from the input field
     parsedDevices.value = parseDevices(newNetworkDevices.value)
 
+    console.log('[CLAIM] alreadyInNetwork: ', JSON.stringify(alreadyInNetwork.value))
+    console.log('[CLAIM] alreadyInNetworkWithInfo: ', JSON.stringify(alreadyInNetworkWithInfo.value))
+    console.log('[CLAIM] toClaim: ', JSON.stringify(toClaim.value))
+
     // empty all the necessary arrays in case the user adds devices multiple times
-    alreadyInNetwork.value = []
-    alreadyInNetworkWithInfo.value = []
-    toClaim.value = []
+    alreadyInNetwork.value.splice(0, alreadyInNetwork.value.length)
+    alreadyInNetworkWithInfo.value.splice(0, alreadyInNetworkWithInfo.value.length)
+    toClaim.value.splice(0, toClaim.value.length)
+
+    console.log('[CLAIM] alreadyInNetwork after: ', JSON.stringify(alreadyInNetwork.value))
+    console.log('[CLAIM] alreadyInNetworkWithInfo after: ', JSON.stringify(alreadyInNetworkWithInfo.value))
+    console.log('[CLAIM] toClaim after: ', JSON.stringify(toClaim.value))
 
     console.log('[CLAIM] Parsed devices: ', parsedDevices.value)
 
@@ -119,11 +137,20 @@ const addDevices = async () => {
     if (alreadyInNetwork.value.length > 0 && !confirmMoveNetwork.value) {
         for (const device of alreadyInNetwork.value) {
             const network = await getNetwork(device.networkId)
-            alreadyInNetworkWithInfo.value.push({ serial: device.serial, network: network.name, network_id: network.id })
+            if (network) {
+                if (network.id !== newNetworkId.value) {
+                    alreadyInNetworkWithInfo.value.push({ serial: device.serial, network: network.name, network_id: network.id })
+                } else {
+                    // if the device is already in the new network, simply don't try to claim it
+                    toClaim.value = toClaim.value.filter(serial => serial !== device.serial)
+                }
+            }
         }
 
-        showMoveNetwork.value = true
-        return // we will call addDevices again after the user confirms (or not) the move
+        if (alreadyInNetworkWithInfo.value.length > 0) {
+            showMoveNetwork.value = true
+            return
+        }
     }
 
     console.log('[CLAIM] Devices to claim: ', toClaim.value)
@@ -158,8 +185,10 @@ const addDevices = async () => {
         console.log('[CLAIM] Updating devices store with new devices: ', fullFinalDevices.value)
         devices.addDevices(fullFinalDevices.value)
 
-        await changeAddresses() // immediately change the addresses of the devices
+        await changeAddresses(fullFinalDevices.value) // immediately change the addresses of the devices
         devicesAdded.value = true
+
+        await retrieveInventory(parsedDevices.value) // update the inventory
     } else {
         if (response && response.error === 'Devices already claimed') {
             alreadyInCurrentNetwork.value = true
