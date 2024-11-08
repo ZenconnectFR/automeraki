@@ -14,7 +14,6 @@ import { useConfigurationStore } from '@/stores/configuration';
 import { useBoolStates } from '@/utils/Decorators';
 
 import { useRouter, useRoute } from 'vue-router'
-import { get } from '@vueuse/core';
 
 const router = useRouter()
 const route = useRoute()
@@ -44,6 +43,57 @@ const othersTable = ref([])
 
 const address = ref('')
 
+// uses config.associationLogic to calculate the associationId
+const calculateAssociationId = (associationTable: any[], device: { type: string}) : any => {
+    // 1. get the list of associations of the type of the device (set of associations from both the devicelist and the associationTable)
+    const presentAssociations = devicesList.value.filter((device: { type: any; }) => device.type === device.type).map((device: { associationId: any; }) => device.associationId);
+    // add the associations from the associationTable
+    for (const association of associationTable) {
+        if (association.type === device.type) {
+            presentAssociations.push(association.id);
+        }
+    }
+    
+    /*2. determine the associationId based on the associationLogic 
+    the associationLogic is like:
+    "associationLogic": {
+        "ap": {
+            "commentAboutThis": "variables can be either {number}, {letter} or {alnum}",
+            "format": "AP{number}",
+            "initialNumber": 1,
+            "initialLetter": "A",
+            "initialAlnum": "1"
+        },
+        ...
+    */
+
+    let logic = JSON.parse(JSON.stringify(config.associationLogic[device.type]));
+    console.log('[NAMING] associationLogic: ', logic);
+    let associationId = logic.format.replace('{number}', logic.initialNumber).replace('{letter}', logic.initialLetter).replace('{alnum}', logic.initialAlnum);
+
+    // if the associationId is already present, increment each variable until we find a unique associationId
+    while (presentAssociations.includes(associationId)) {
+        // increment the number
+        logic.initialNumber++;
+        // increment the letter
+        logic.initialLetter = String.fromCharCode(logic.initialLetter.charCodeAt(0) + 1);
+        // increment the alnum
+        logic.initialAlnum++;
+        associationId = logic.format.replace('{number}', logic.initialNumber).replace('{letter}', logic.initialLetter).replace('{alnum}', logic.initialAlnum);
+    }
+
+    console.log('[NAMING] calculated associationId: ', associationId);
+
+    // reset the logic to its initial state
+    console.log('[NAMING] resetting logic: ', logic);
+
+    return {
+        id: associationId,
+        name: associationId,
+        type: device.type,
+        used: true
+    }
+}
 
 const typeFinder = (model: string) => {
     if (model.includes('MX')) {
@@ -95,9 +145,9 @@ const buildTables = (associationTable: any[]) => {
     apsTable.value.sort((a, b) => a.id.localeCompare(b.id))
     othersTable.value.sort((a, b) => a.id.localeCompare(b.id))
 
-    console.log('[NAMING] routersTable: ', routersTable.value)
-    console.log('[NAMING] switchesTable: ', switchesTable.value)
-    console.log('[NAMING] apsTable: ', apsTable.value)
+    console.log('[NAMING] routersTable: ', JSON.parse(JSON.stringify(routersTable.value)))
+    console.log('[NAMING] switchesTable: ', JSON.parse(JSON.stringify(switchesTable.value)))
+    console.log('[NAMING] apsTable: ', JSON.parse(JSON.stringify(apsTable.value)))
 }
 
 /**
@@ -107,44 +157,96 @@ const buildTables = (associationTable: any[]) => {
  */
 const renameDevices = () => {
     console.log('[NAMING] devicesList: ', devicesList.value);
-    // few checks to ensure that the config is correct
-    if (devicesList.value.length === 0 || config.associationTable.length === 0
-        || devicesList.value.length > config.associationTable.length) {
-            console.error('Error renaming devices: devicesList or associationTable is empty or devicesList is longer than associationTable');
+    // few checks to ensure that the config is correct (always one equipment and one device in the associationTable (the router))
+    if (devicesList.value.length === 0 || config.associationTable.length === 0) {
+            console.error('Error renaming devices: devicesList or associationTable is empty');
             console.log('[NAMING] devicesList: ', devicesList.value);
             console.log('[NAMING] associationTable: ', config.associationTable);
             return;
     }
 
+    /*
     if (devicesList.value.some((device: { associationId: string; }) => device.associationId)) {
         // if there are already devices with an associationId, then we are configuring an existing network
-        // we need to add all the devices to the corresponding array and move them to the same index as their associationId in the respective table
-        for (const device of devicesList.value) {
-            if (device.type === 'router') {
-                routers.value.push(device);
-            } else if (device.type === 'switch') {
-                switches.value.push(device);
-            } else if (device.type === 'ap') {
-                aps.value.push(device);
-            } else {
-                others.value.push(device);
-            }
-        }
-
-        // sort the devices by associationId[associationId.length - 1]
-        routers.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
-        switches.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
-        aps.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
-        others.value.sort((a, b) => a.associationId[a.associationId.length - 1] - b.associationId[b.associationId.length - 1]);
-
-        // since the devices are already named, we can return
-        return;
+        // we need to add the devices to the corresponding table and mark the association as used
+        // even on existing networks some devices may not have an associationId, so we need to calculate it if it's missing
         
     }
+        */
+
 
     for (const device of devicesList.value) {
         // assign a type to the device
         device.type = typeFinder(device.model);
+
+        // if the device already has an associationId, we add its info to the corresponding table and mark the association as used
+        // if the associationId is in the table, we just mark it as used
+        if (device.associationId) {
+            console.log('[NAMING] device already has associationId: ', device.associationId);
+            switch (device.type) {
+                case 'router':
+                    console.log('[NAMING] found router: ', device.associationId);
+                    if (routersTable.value.some((a) => a.id === device.associationId)) {
+                        console.log('[NAMING] found router in table: ', device.associationId);
+                        routersTable.value.find((a) => a.id === device.associationId).used = true;
+                    } else {
+                        console.log('[NAMING] adding router to table: ', device.associationId);
+                        routersTable.value.push({ id: device.associationId, name: device.associationId, type: 'router', used: true });
+                    }
+                    // add the device to the routers list
+                    routers.value.push(device);
+                    break;
+                case 'switch':
+                    console.log('[NAMING] found switch: ', device.associationId);
+                    if (switchesTable.value.some((a) => a.id === device.associationId)) {
+                        console.log('[NAMING] found switch in table: ', device.associationId);
+                        switchesTable.value.find((a) => a.id === device.associationId).used = true;
+                    } else {
+                        console.log('[NAMING] adding switch to table: ', device.associationId);
+                        switchesTable.value.push({ id: device.associationId, name: device.associationId, type: 'switch', used: true });
+                    }
+                    // add the device to the switches list
+                    switches.value.push(device);
+                    break;
+                case 'ap':
+                    console.log('[NAMING] found ap: ', device.associationId);
+                    if (apsTable.value.some((a) => a.id === device.associationId)) {
+                        console.log('[NAMING] found ap in table: ', device.associationId);
+                        apsTable.value.find((a) => a.id === device.associationId).used = true;
+                    } else {
+                        console.log('[NAMING] adding ap to table: ', device.associationId);
+                        apsTable.value.push({ id: device.associationId, name: device.associationId, type: 'ap', used: true });
+                    }
+                    // add the device to the aps list
+                    aps.value.push(device);
+                    break;
+                default:
+                    if (othersTable.value.some((a) => a.id === device.associationId)) {
+                        othersTable.value.find((a) => a.id === device.associationId).used = true;
+                    } else {
+                        othersTable.value.push({ id: device.associationId, name: device.associationId, type: 'other', used: true });
+                    }
+                    others.value.push(device);
+                    break;
+            }
+
+            // order each list by ascending associationId first, then by serial
+            routers.value.sort((a, b) => a.associationId.localeCompare(b.associationId) || a.serial.localeCompare(b.serial));
+            switches.value.sort((a, b) => a.associationId.localeCompare(b.associationId) || a.serial.localeCompare(b.serial));
+            aps.value.sort((a, b) => a.associationId.localeCompare(b.associationId) || a.serial.localeCompare(b.serial));
+            others.value.sort((a, b) => a.associationId.localeCompare(b.associationId) || a.serial.localeCompare(b.serial));
+
+            // same for the tables
+            routersTable.value.sort((a, b) => a.id.localeCompare(b.id));
+            switchesTable.value.sort((a, b) => a.id.localeCompare(b.id));
+            apsTable.value.sort((a, b) => a.id.localeCompare(b.id));
+            othersTable.value.sort((a, b) => a.id.localeCompare(b.id));
+
+            // if the device already has an associationId, we don't need to calculate it
+            continue;
+        }
+
+        console.log('[NAMING] device does not have associationId: ', device.serial);
         
         // depending on the type, find the first unused association in the corresponding table
         let association: { used: boolean; id: any; name: any; type: any; } | undefined;
@@ -162,10 +264,26 @@ const renameDevices = () => {
             others.value.push(device);
         }
 
-        // if no association is found, log an error and return
+        console.log('[NAMING] association found: ', association);
+
+        // if no association is found, automatically give the device the last association possible
         if (!association) {
-            console.error('Error renaming devices: no association found for device ', device);
-            return;
+            console.log('[NAMING] no association found for device: ', device.serial);
+            association = calculateAssociationId(config.associationTable, device);
+            switch (device.type) {
+                case 'router':
+                    routersTable.value.push(association);
+                    break;
+                case 'switch':
+                    switchesTable.value.push(association);
+                    break;
+                case 'ap':
+                    apsTable.value.push(association);
+                    break;
+                default:
+                    othersTable.value.push(association);
+                    break;
+            }
         }
 
         // mark the association as used
@@ -349,12 +467,14 @@ const setup = async() => {
     console.log('[NAMING] config: ', config);
     buildTables(config.associationTable);
 
+    console.log('[NAMING] devicesList before renaming: ', JSON.parse(JSON.stringify(devicesList.value)));
+
     renameDevices();
     console.log('[NAMING] devicesList after renaming: ', devicesList.value);
     console.log('[NAMING] device lists: ', routers.value, switches.value, aps.value, others.value);
 
     // sort deviceList by associationId
-    devicesList.value.sort((a, b) => a.associationId.localeCompare(b.associationId));
+    devicesList.value.sort((a: { associationId: string; }, b: { associationId: any; }) => a.associationId.localeCompare(b.associationId));
 
     autoUpdateTags();
 

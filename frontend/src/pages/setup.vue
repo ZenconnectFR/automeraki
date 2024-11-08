@@ -78,6 +78,19 @@ const newTemplateSelected = ref(true)
 
 const selectedOrgOption = ref(<Option> { name: '', value: '-1' });
 
+
+const typeFinder = (model: string) => {
+    if (model.includes('MX')) {
+        return 'router'
+    } else if (model.includes('MS')) {
+        return 'switch'
+    } else if (model.includes('MR')) {
+        return 'ap'
+    } else {
+        return 'other'
+    }
+}
+
 // if selectedOrgOption is modified, set the orgId in the store
 const setOrganizationOption = async () => {
     console.log('[SETUP] Selected org option in set org:', selectedOrgOption.value)
@@ -244,7 +257,7 @@ const configureNetwork = async () => {
     let associationTable = templateData.actions[0].data.associationTable
     console.log('[SETUP] Association table:', associationTable)
     // give each device their associationId, can break on complex format strings for devices names.
-    devicesList.forEach((device: { name: string }) => {
+    devicesList.forEach((device: { name: string, model: string}) => {
         // find the associationId in the device name, format string is "{networkName}-{associationName}"
 
         if (!device.name || device.name.split('-').length < 2) {
@@ -256,16 +269,13 @@ const configureNetwork = async () => {
         // remove whitespace from the associationName
         associationName = associationName.replace(/\s/g, '')
         console.log('[SETUP] Device with name:', device.name, 'has associationName:', associationName)
-        let association = associationTable.find((association: { name: string }) => association.name === associationName)
-        console.log('[SETUP] Device with name:', device.name, 'has association:', association)
-        if (association) {
-            device['associationId'] = association.id
-            device['associationName'] = association.name
-            device['type'] = association.type
-        }
+        // we just add both the associationName and id to the device object, and determine its type
+        device['associationId'] = associationName;
+        device['associationName'] = associationName;
+        device['type'] = typeFinder(device.model)
     })
 
-    console.log('[SETUP] Devices with associationId: ', devicesList)
+    console.log('[SETUP] Devices with associationId: ', JSON.stringify(devicesList))
 
     //
     

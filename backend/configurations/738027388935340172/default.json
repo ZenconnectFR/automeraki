@@ -15,18 +15,6 @@
                         "switchPorts" : [ 0 ]
                     },
                     {
-                        "name": "S1",
-                        "id" : "S1",
-                        "type": "switch",
-                        "switchPorts" : [ 24 ]
-                    },
-                    {
-                        "name": "S2",
-                        "id" : "S2",
-                        "type": "switch",
-                        "switchPorts" : [ 48, 24 ]
-                    },
-                    {
                         "name": "AP1",
                         "id" : "AP1",
                         "type": "ap",
@@ -45,6 +33,27 @@
                         "switchPorts" : [ 2 ]
                     }
                 ],
+                "associationLogic": {
+                    "ap": {
+                        "commentAboutThis": "variables can be either {number}, {letter} or {alnum}",
+                        "format": "AP{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "A",
+                        "initialAlnum": "1"
+                    },
+                    "switch": {
+                        "format": "S{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "A",
+                        "initialAlnum": "1"
+                    },
+                    "router": {
+                        "format": "R{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "A",
+                        "initialAlnum": "1"
+                    }
+                },
                 "tags" : [
                     {
                         "useLimit" : true,
@@ -88,35 +97,6 @@
                         }
                     },
                     {
-                        "expectedEquipment": "S2",
-                        "useDhcp": {
-                            "use": true,
-                            "vlan": "1"
-                        },
-                        "config": {
-                            "ip": "",
-                            "vlan": "",
-                            "mask": "",
-                            "gateway": "",
-                            "primaryDns": "",
-                            "secondaryDns": ""
-                        }
-                    },
-                    {
-                        "expectedEquipment": "AP1",
-                        "useDhcp": {
-                            "use": false,
-                            "vlan": "0"
-                        },
-                        "config": {
-                            "ip": "10.101.2.2",
-                            "mask": "255.255.255.0",
-                            "gateway": "10.101.2.1",
-                            "primaryDns": "10.101.2.1",
-                            "secondaryDns": "8.8.8.8"
-                        }
-                    },
-                    {
                         "expectedEquipment": "AP2",
                         "useDhcp": {
                             "use": false,
@@ -130,7 +110,20 @@
                             "secondaryDns": "8.8.8.8"
                         }
                     }
-                ]
+                ],
+                "dhcpAssignments": {
+                    "default": {
+                        "vlan": "1"
+                    },
+                    "static": [
+                        {
+                            "vlan": "2",
+                            "equipments": [
+                                "S2"
+                            ]
+                        }
+                    ]
+                }
             }
         },
         {

@@ -1,0 +1,162 @@
+Date : 2024-11-08 14:41:27
+Directory : \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki
+Total : 99 files,  11362 codes, 652 comments, 1360 blanks, all 13374 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| JSON               |         10 |      5,224 |          0 |         14 |      5,238 |
+| vue                |         18 |      4,244 |         55 |        732 |      5,031 |
+| TypeScript         |         49 |        941 |        398 |        192 |      1,531 |
+| Python             |          1 |        510 |        107 |        326 |        943 |
+| JavaScript         |          9 |        287 |         78 |         66 |        431 |
+| CSS                |          3 |         71 |         14 |         13 |         98 |
+| JSON with Comments |          3 |         36 |          0 |          4 |         40 |
+| Markdown           |          1 |         26 |          0 |          9 |         35 |
+| HTML               |          1 |         13 |          0 |          1 |         14 |
+| XML                |          2 |          5 |          0 |          1 |          6 |
+| pip requirements   |          1 |          4 |          0 |          1 |          5 |
+| Shell Script       |          1 |          1 |          0 |          1 |          2 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                                  | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                     |         99 |     11,362 |        652 |      1,360 |     13,374 |
+| . (Files)                                                                                                                             |          2 |         36 |          0 |          9 |         45 |
+| backend                                                                                                                               |         10 |      4,344 |        107 |        339 |      4,790 |
+| backend (Files)                                                                                                                       |          3 |        515 |        107 |        328 |        950 |
+| backend\configurations                                                                                                                |          7 |      3,829 |          0 |         11 |      3,840 |
+| backend\configurations (Files)                                                                                                        |          2 |        319 |          0 |          2 |        321 |
+| backend\configurations\282061                                                                                                         |          1 |        925 |          0 |          0 |        925 |
+| backend\configurations\645703596574244875                                                                                             |          1 |        755 |          0 |          3 |        758 |
+| backend\configurations\738027388935340172                                                                                             |          2 |      1,217 |          0 |          1 |      1,218 |
+| backend\configurations\738027388935341282                                                                                             |          1 |        613 |          0 |          5 |        618 |
+| frontend                                                                                                                              |         87 |      6,982 |        545 |      1,012 |      8,539 |
+| frontend (Files)                                                                                                                      |          7 |      1,461 |          1 |         12 |      1,474 |
+| frontend\extension                                                                                                                    |          3 |        132 |         42 |         34 |        208 |
+| frontend\src                                                                                                                          |         77 |      5,389 |        502 |        966 |      6,857 |
+| frontend\src (Files)                                                                                                                  |          2 |        143 |         27 |         30 |        200 |
+| frontend\src\assets                                                                                                                   |          4 |         15 |          0 |          4 |         19 |
+| frontend\src\components                                                                                                               |          2 |        221 |          0 |         38 |        259 |
+| frontend\src\endpoints                                                                                                                |         44 |        698 |        213 |        112 |      1,023 |
+| frontend\src\endpoints\actionBatches                                                                                                  |          6 |        184 |        132 |         25 |        341 |
+| frontend\src\endpoints\devices                                                                                                        |         12 |        187 |         23 |         30 |        240 |
+| frontend\src\endpoints\devices (Files)                                                                                                |         10 |        161 |         23 |         26 |        210 |
+| frontend\src\endpoints\devices\switch                                                                                                 |          2 |         26 |          0 |          4 |         30 |
+| frontend\src\endpoints\networks                                                                                                       |         19 |        252 |         50 |         42 |        344 |
+| frontend\src\endpoints\organizations                                                                                                  |          5 |         55 |          8 |         11 |         74 |
+| frontend\src\endpoints\templates                                                                                                      |          2 |         20 |          0 |          4 |         24 |
+| frontend\src\pages                                                                                                                    |         15 |      3,946 |         55 |        679 |      4,680 |
+| frontend\src\plugins                                                                                                                  |          1 |          8 |          1 |          3 |         12 |
+| frontend\src\stores                                                                                                                   |          5 |        123 |         22 |         23 |        168 |
+| frontend\src\utils                                                                                                                    |          4 |        235 |        184 |         77 |        496 |
++---------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                                                              | language           | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\README.md                                                    | Markdown           |         26 |          0 |          9 |         35 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\automeraki.code-workspace                                    | JSON with Comments |         10 |          0 |          0 |         10 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\configurations\282061\default.json                   | JSON               |        925 |          0 |          0 |        925 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\configurations\645703596574244875\auBureau.json      | JSON               |        755 |          0 |          3 |        758 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\configurations\738027388935340172\bk.json            | JSON               |        725 |          0 |          1 |        726 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\configurations\738027388935340172\default.json       | JSON               |        492 |          0 |          0 |        492 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\configurations\738027388935341282\default.json       | JSON               |        613 |          0 |          5 |        618 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\configurations\templateTemplate.json                 | JSON               |        236 |          0 |          2 |        238 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\configurations\tmp.json                              | JSON               |         83 |          0 |          0 |         83 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\main.py                                              | Python             |        510 |        107 |        326 |        943 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\requirements.txt                                     | pip requirements   |          4 |          0 |          1 |          5 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\backend\run.sh                                               | Shell Script       |          1 |          0 |          1 |          2 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\extension\background.js                             | JavaScript         |         20 |          1 |          3 |         24 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\extension\contentScript.js                          | JavaScript         |         51 |         27 |         21 |         99 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\extension\extension.css                             | CSS                |         61 |         14 |         10 |         85 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\index.html                                          | HTML               |         13 |          0 |          1 |         14 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\jsconfig.json                                       | JSON with Comments |          8 |          0 |          1 |          9 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\manifest.json                                       | JSON               |         26 |          0 |          1 |         27 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\package-lock.json                                   | JSON               |      1,343 |          0 |          1 |      1,344 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\package.json                                        | JSON               |         26 |          0 |          1 |         27 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\App.vue                                         | vue                |         77 |          0 |         15 |         92 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\assets\base.css                                 | CSS                |          0 |          0 |          2 |          2 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\assets\logo.svg                                 | XML                |          1 |          0 |          1 |          2 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\assets\main.css                                 | CSS                |         10 |          0 |          1 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\assets\plus.svg                                 | XML                |          4 |          0 |          0 |          4 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\components\Dropdown.vue                         | vue                |        164 |          0 |         26 |        190 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\components\NavBar.vue                           | vue                |         57 |          0 |         12 |         69 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\actionBatches\BatchManager.ts         | TypeScript         |         65 |         11 |          8 |         84 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\actionBatches\ConfigurePerPortVlan.ts | TypeScript         |         22 |         17 |          5 |         44 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\actionBatches\ConfigurePorts.ts       | TypeScript         |         25 |         87 |          3 |        115 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\actionBatches\FixIpAssignments.ts     | TypeScript         |         50 |         17 |          6 |         73 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\actionBatches\GetActionBatch.ts       | TypeScript         |          9 |          0 |          2 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\actionBatches\UpdateFirewallRules.ts  | TypeScript         |         13 |          0 |          1 |         14 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\BlinkDevice.ts                | TypeScript         |          9 |          0 |          3 |         12 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\ChangeDeviceAddress.ts        | TypeScript         |         12 |         10 |          3 |         25 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\ChangeDeviceName.ts           | TypeScript         |         12 |          0 |          2 |         14 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\ClaimDevices.ts               | TypeScript         |         23 |          3 |          3 |         29 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\EnableWan.ts                  | TypeScript         |         25 |          0 |          2 |         27 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\GetDevice.ts                  | TypeScript         |         10 |          5 |          4 |         19 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\GetPorts.ts                   | TypeScript         |         10 |          5 |          3 |         18 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\UpdateNotes.ts                | TypeScript         |         12 |          0 |          1 |         13 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\UpdateTags.ts                 | TypeScript         |         13 |          0 |          2 |         15 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\UpdateWans.ts                 | TypeScript         |         35 |          0 |          3 |         38 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\switch\UpdateMTUSize.ts       | TypeScript         |         12 |          0 |          2 |         14 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\devices\switch\UpdateSTPSettings.ts   | TypeScript         |         14 |          0 |          2 |         16 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\CloneNetwork.ts              | TypeScript         |         26 |          3 |          5 |         34 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\CreateVlansIfNotExists.ts    | TypeScript         |         34 |          9 |          4 |         47 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\DeleteTestNetworks.ts        | TypeScript         |         10 |          0 |          2 |         12 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\EnableVlans.ts               | TypeScript         |         12 |          5 |          3 |         20 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetFirewallRules.ts          | TypeScript         |         10 |          0 |          1 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetMxSettings.ts             | TypeScript         |          9 |          0 |          1 |         10 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetNetwork.ts                | TypeScript         |         10 |          5 |          2 |         17 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetNetworkDevices.ts         | TypeScript         |         10 |          8 |          3 |         21 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetNetworks.ts               | TypeScript         |         11 |          8 |          4 |         23 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetSiteToSiteVpn.ts          | TypeScript         |          9 |          0 |          2 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetSplashPage.ts             | TypeScript         |         10 |          0 |          1 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetVlanSettings.ts           | TypeScript         |          9 |          0 |          2 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\GetVlans.ts                  | TypeScript         |          9 |          0 |          2 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\RemoveDeviceFromNetwork.ts   | TypeScript         |         13 |          6 |          3 |         22 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\UpdateMxSettings.ts          | TypeScript         |         12 |          0 |          1 |         13 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\UpdateNetwork.ts             | TypeScript         |         13 |          0 |          1 |         14 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\UpdateNetworkVlan.ts         | TypeScript         |         20 |          6 |          3 |         29 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\UpdateSplashPage.ts          | TypeScript         |         12 |          0 |          1 |         13 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\networks\updateSiteToSiteVpn.ts       | TypeScript         |         13 |          0 |          1 |         14 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\organizations\GetInventoryDevice.ts   | TypeScript         |         10 |          0 |          3 |         13 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\organizations\GetInventoryDevices.ts  | TypeScript         |         15 |          5 |          3 |         23 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\organizations\GetOrganizations.ts     | TypeScript         |         11 |          3 |          3 |         17 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\organizations\GetPolicyObjects.ts     | TypeScript         |         10 |          0 |          1 |         11 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\organizations\GetVpnStatuses.ts       | TypeScript         |          9 |          0 |          1 |         10 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\templates\GetTemplateData.ts          | TypeScript         |         10 |          0 |          2 |         12 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\endpoints\templates\GetTemplates.ts             | TypeScript         |         10 |          0 |          2 |         12 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\main.js                                         | JavaScript         |         66 |         27 |         15 |        108 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\claim.vue                                 | vue                |        273 |          2 |         55 |        330 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\complete.vue                              | vue                |         36 |          0 |         11 |         47 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\firewall.vue                              | vue                |        648 |         15 |         57 |        720 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\fixedIp.vue                               | vue                |        184 |          2 |         32 |        218 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\home.vue                                  | vue                |         23 |          0 |          9 |         32 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\misc.vue                                  | vue                |        205 |          0 |         37 |        242 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\naming.vue                                | vue                |        407 |          1 |         79 |        487 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\next.vue                                  | vue                |         22 |          0 |          9 |         31 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\ports.vue                                 | vue                |        304 |         17 |         65 |        386 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\rickroll.vue                              | vue                |          6 |          0 |          1 |          7 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\setup.vue                                 | vue                |        337 |          0 |         89 |        426 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\tagNetwork.vue                            | vue                |        186 |          0 |         40 |        226 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\vlan.vue                                  | vue                |        620 |         10 |         75 |        705 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\voiceAndSpoke.vue                         | vue                |        391 |          5 |         74 |        470 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\pages\wans.vue                                  | vue                |        304 |          3 |         46 |        353 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\plugins\AxiosInstance.ts                        | TypeScript         |          8 |          1 |          3 |         12 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\stores\configuration.js                         | JavaScript         |         31 |          0 |          5 |         36 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\stores\devices.js                               | JavaScript         |         28 |          6 |          4 |         38 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\stores\error.js                                 | JavaScript         |         14 |          0 |          2 |         16 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\stores\ids.js                                   | JavaScript         |         18 |          0 |          4 |         22 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\stores\ports.js                                 | JavaScript         |         32 |         16 |          8 |         56 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\utils\Decorators.ts                             | TypeScript         |         14 |          8 |          3 |         25 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\utils\Misc.ts                                   | TypeScript         |         23 |          6 |          8 |         37 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\utils\PageRouter.ts                             | TypeScript         |         52 |          0 |          2 |         54 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\src\utils\ipType.ts                                 | TypeScript         |        146 |        170 |         64 |        380 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\tsconfig.json                                       | JSON with Comments |         18 |          0 |          3 |         21 |
+| \\wsl.localhost\Ubuntu\home\revototo\travail\zenconnect\stage\automeraki\frontend\vite.config.js                                      | JavaScript         |         27 |          1 |          4 |         32 |
+| Total                                                                                                                                 |                    |     11,362 |        652 |      1,360 |     13,374 |
++---------------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

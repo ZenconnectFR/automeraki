@@ -44,6 +44,7 @@ const fixedIpDone = ref(false)
 const fixIp = useBoolStates([],[],async () => {
     // load fixed ip assignments from config file
     const configFixedIp = config.fixedAssignments
+    const dhcpAssignments = config.dhcpAssignments
 
     console.log('[FIXED IP] Config fixed ip: ', configFixedIp)
     console.log('[FIXED IP] Devices list: ', devicesList.value)
@@ -69,6 +70,43 @@ const fixIp = useBoolStates([],[],async () => {
                 useDhcp: configFixedIp[i].useDhcp?.use ? configFixedIp[i].useDhcp : null,
                 config: configFixedIp[i].config
             })
+        }
+    }
+
+    // for all reamining devices in devicesList that are not of router type, push them to fixedIpAssignment with useDhcp.use = true and :
+    // if they are found in dhcpAssignments.static.equipements, set the vlan to dhcpAssignments.static.vlan, else set the vlan to dhcpAssignments.default.vlan
+    for (let i = 0; i < devicesList.value.length; i++) {
+        const device = devicesList.value[i]
+        if (device.type !== 'router') {
+            if (!fixedIpAssignments.value.find((assignment: { serial: string }) => assignment.serial === device.serial)) {
+                console.log('[FIXED IP] Device not found in fixed ip assignments: ', device.name)
+                let isStatic = false
+                let i = 0
+                for (const staticAssignment of dhcpAssignments.static) {
+                    console.log('[FIXED IP] Testing static assignment: ', staticAssignment)
+                    if (staticAssignment.equipments.includes(device.associationId)) {
+                        isStatic = true
+                        break
+                    }
+                    i++
+                }
+
+                const vlan = isStatic ? dhcpAssignments.static[i].vlan : dhcpAssignments.default.vlan
+
+                fixedIpAssignments.value.push({
+                    name: device.associationName,
+                    serial: device.serial,
+                    useDhcp: { use: true, vlan },
+                    config: {
+                        ip: 'None',
+                        mask: 'None',
+                        vlan,
+                        gateway: 'None',
+                        primaryDns: 'None',
+                        secondaryDns: 'None'
+                    }
+                })
+            }
         }
     }
 }, fixedIpDone);
