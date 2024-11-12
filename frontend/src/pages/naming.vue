@@ -44,7 +44,9 @@ const othersTable = ref([])
 const address = ref('')
 
 // uses config.associationLogic to calculate the associationId
-const calculateAssociationId = (associationTable: any[], device: { type: string}) : any => {
+const calculateAssociationId = (associationTable: any[], device: {
+    switchPorts: any; type: string
+}) : any => {
     // 1. get the list of associations of the type of the device (set of associations from both the devicelist and the associationTable)
     const presentAssociations = devicesList.value.filter((device: { type: any; }) => device.type === device.type).map((device: { associationId: any; }) => device.associationId);
     // add the associations from the associationTable
@@ -91,6 +93,7 @@ const calculateAssociationId = (associationTable: any[], device: { type: string}
         id: associationId,
         name: associationId,
         type: device.type,
+        switchPorts: device.switchPorts? device.switchPorts : 0, // this the actual nb of ports of the switch
         used: true
     }
 }
@@ -301,6 +304,38 @@ const renameDevices = () => {
         device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', '');
     }
 
+}
+
+// reorder switches to fit the config according to ports number (associationTable[n].switchPorts)
+const reorderSwitches = async () => {
+    for (const switchDevice of switchesTable.value.filter((device: { type: string; }) => device.type === 'switch')) {
+        // find the first switch in the associationTable that has the same number of ports as the switchDevice
+        // the property switchPorts is an array of integers representing the possible number of ports for the switch, ordered by preference
+        // we find the first association in the associationTable that has the same number of ports as the switchDevice and move the switchDevice to the corresponding position
+        const switchPorts = switchDevice.switchPorts;
+        const association = config.associationTable.find((a: { type: string; switchPorts: any; }) => a.type === 'switch' && a.switchPorts.includes(switchPorts));
+        if (!association) {
+            console.error('Error reordering switches: no association found for switch with serial: ', switchDevice.serial);
+            continue;
+        }
+
+        // find the index of the association in the associationTable
+        const index = config.associationTable.indexOf(association);
+
+        // find the index of the switchDevice in the devicesList
+        const deviceIndex = switchesTable.value.indexOf(switchDevice);
+
+        // if the indexes are different, exange the devices in the table
+        if (index !== deviceIndex) {
+            let temp = switchesTable.value[index].associationId;
+            switchesTable.value[index].associationId = switchDevice.associationId;
+            switchDevice.associationId = temp;
+
+            temp = switchesTable.value[index].name;
+            switchesTable.value[index].name = switchDevice.name;
+            switchDevice.name = temp;
+        }
+    }
 }
 
 const clearDeviceTags = (devices : any[]) => {

@@ -15,6 +15,18 @@
                         "switchPorts" : [ 0 ]
                     },
                     {
+                        "name": "S1",
+                        "id" : "S1",
+                        "type": "switch",
+                        "switchPorts" : [ 24 ]
+                    },
+                    {
+                        "name": "S2",
+                        "id" : "S2",
+                        "type": "switch",
+                        "switchPorts" : [ 48 ]
+                    },
+                    {
                         "name": "AP1",
                         "id" : "AP1",
                         "type": "ap",
