@@ -458,18 +458,9 @@ const confirm = useBoolStates([savingChanges],[],async () => {
 
     // save perPortVlan settings with endpoint
     console.log('[VLAN] Saving perPortVlan settings : ', perPortVlan.value)
-    const firstResponse =  await configurePerPortVlan(perPortVlan.value, orgId.value, newNetworkId.value)
-    // is an action batch, loop until completed
-    if (!firstResponse.status.completed) {
-        while (true) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            const response = await getActionBatchStatus(firstResponse.id, orgId.value)
-            if (response.status.completed) {
-                console.log('[VLAN] Action batch completed: ', response)
-                break
-            }
-        }
-    }
+    const response =  await configurePerPortVlan(perPortVlan.value, orgId.value, newNetworkId.value)
+
+    console.log('[VLAN] Response: ', response)
 });
 
 const makeNewVlan = () => {

@@ -74,6 +74,7 @@ export async function handleActionBatches(actions: any, orgId: string) {
                 }
             } else {
                 // console.log('Batch not completed yet')
+                continue
             }
         }
         // console.log('Waiting 1 second before checking again')

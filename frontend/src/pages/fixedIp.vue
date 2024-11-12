@@ -116,18 +116,9 @@ const validate = useBoolStates([savingChanges],[],async () => {
     console.log('[FIXED IP] Validating fixed ip assignments: ', fixedIpAssignments.value)
 
     // launch action batch to fix ip addresses
-    const actionBatchId = await fixIpAssignments(fixedIpAssignments.value, orgId.value)
+    const response = await fixIpAssignments(fixedIpAssignments.value, orgId.value)
 
-    while (true) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        const response = await getActionBatchStatus(actionBatchId.id, orgId.value)
-        if (response.status.completed) {
-            console.log('[FIXED IP] Action batch completed: ', response)
-            break
-        } else {
-            console.log('[FIXED IP] Action batch not completed yet: ', response)
-        }
-    }
+    console.log('[FIXED IP] Fix ip response: ', response)
 }, changesSaved);
 
 const goBack = () => {

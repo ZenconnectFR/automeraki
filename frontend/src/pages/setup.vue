@@ -349,6 +349,17 @@ const setup = async () => {
     }
 
     organizationsNotLoaded.value = false
+
+    // empty store values if set 
+    ids.setNewNetworkId('')
+    ids.setNetworkId('')
+    ids.setOrgId('')
+
+    devices.setDevicesList([])
+    devices.setNetwork('')
+    devices.setAddress('')
+
+    configuration.setConfiguration({})
 };
 
 // Run setup function on page load
@@ -375,11 +386,11 @@ onMounted(()  => {
                     <p class="red" v-if="!newTemplateSelected">Please select a template</p>
 
                     <h3>Choose a new network name</h3>
-                    <input v-model="newNetworkNameInput" type="text" placeholder="New network name" @input="newNameEntered=true"/>
+                    <input class="bigger-input" v-model="newNetworkNameInput" type="text" placeholder="New network name" @input="newNameEntered=true"/>
                     <p class="red" v-if="!newNameEntered">Please enter a new network name</p>
 
                     <h3>Choose a new network address</h3>
-                    <input v-model="newNetworkAddress" type="text" placeholder="New network address" @input="newAddressEntered=true"/>
+                    <input class="bigger-input" v-model="newNetworkAddress" type="text" placeholder="New network address" @input="newAddressEntered=true"/>
                     <p class="red" v-if="!newAddressEntered">Please enter a new network address</p>
 
                     <button class="margin-padding-all-normal" @click="continueWithTemplate">Continue with this template</button>
@@ -431,5 +442,10 @@ onMounted(()  => {
         align-items: center;
         width: 90%;
         position: relative;
+    }
+
+    .bigger-input {
+        width: 300px;
+        height: 30px;
     }
 </style>

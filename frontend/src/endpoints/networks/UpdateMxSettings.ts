@@ -2,7 +2,7 @@ import { axiosInstance as Axios } from "@/plugins/AxiosInstance";
 
 export async function updateMxSettings(networkId: string, settings: any) {
     try {
-        const response = await Axios.post(`/updateMxSettings`, {
+        const response = await Axios.put(`/updateMxSettings`, {
             network_id: networkId,
             payload: settings
         });
