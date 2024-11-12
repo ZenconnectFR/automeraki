@@ -297,6 +297,9 @@ const renameDevices = () => {
         // assign the association id to the device
         device.associationId = association.id;
 
+        // assign the association name to the device
+        device.associationName = association.name;
+
         // also assign the association type to the device
         device.type = association.type;
 
@@ -447,10 +450,14 @@ const moveUp = (index: number, devices: any[]) => {
     // swap the device at index with the device at index - 1
     devices.splice(index - 1, 0, devices.splice(index, 1)[0]);
 
-    // update the association id and name of the devices
+    // update the association id, association name and name of the devices
     let temp = devices[index].associationId;
     devices[index].associationId = devices[index - 1].associationId;
     devices[index - 1].associationId = temp;
+
+    temp = devices[index].associationName;
+    devices[index].associationName = devices[index - 1].associationName;
+    devices[index - 1].associationName = temp;
 
     temp = devices[index].name;
     devices[index].name = devices[index - 1].name;
@@ -466,10 +473,14 @@ const moveDown = (index: number, devices: any[]) => {
     // swap the device at index with the device at index + 1
     devices.splice(index + 1, 0, devices.splice(index, 1)[0]);
 
-    // update the association id and name of the devices
+    // update the association id, association name and name of the devices
     let temp = devices[index].associationId;
     devices[index].associationId = devices[index + 1].associationId;
     devices[index + 1].associationId = temp;
+
+    temp = devices[index].associationName;
+    devices[index].associationName = devices[index + 1].associationName;
+    devices[index + 1].associationName = temp;
 
     temp = devices[index].name;
     devices[index].name = devices[index + 1].name;
