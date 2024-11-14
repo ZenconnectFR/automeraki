@@ -20,6 +20,10 @@ const goToConfig = () => {
     router.push('/setup')
 }
 
+const goToEdit = () => {
+    router.push('/edit-network')
+}
+
 </script>
 
 <template>
@@ -27,5 +31,6 @@ const goToConfig = () => {
         <h1>Home</h1>
         <button @click="goToManage">Manage templates</button>
         <button @click="goToConfig">Configure a network</button>
+        <button @click="goToEdit">Edit a network's equipement names</button>
     </div>
 </template>

@@ -1,4 +1,10 @@
+import EditNetwork from "@/pages/editNetwork.vue"
+
 export const routeTable = {
+    editNetwork: {
+        label: "Edit Network",
+        path: "/edit-network",
+    },
     naming: {
         label: "Naming",
         path: "/naming"
