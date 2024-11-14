@@ -1,4 +1,5 @@
 {
+    "$schema": "../templateSchema.json",
 
     "commentary": "fields called 'commentary' are for documentation only, they will be ignored by the app won't be put in built templates",
 
@@ -440,14 +441,14 @@
                                     "vlan": "401",
                                     "name": "VolP",
                                     "type": "access",
-                                    "voiceVlan": "601"
+                                    "voiceVlan": 601
                                 },
                                 {
                                     "id": "46",
                                     "vlan": "401",
                                     "name": "VolP",
                                     "type": "access",
-                                    "voiceVlan": "601"
+                                    "voiceVlan": 601
                                 },
                                 {
                                     "id": "48",
@@ -539,8 +540,8 @@
                     {
                         "name": "default",
                         "auto": true,
-                        "assiociatedTags" : [ "" ],
-                        "wanIP" : "",
+                        "associatedTags" : [ "" ],
+                        "wanIp" : "",
                         "mask" : "",
                         "gateway" : "",
                         "primaryDns" : "",
@@ -551,8 +552,8 @@
                     {
                         "name": "default",
                         "auto": true,
-                        "assiociatedTags" : [ "" ],
-                        "wanIP" : "",
+                        "associatedTags" : [ "" ],
+                        "wanIp" : "",
                         "mask" : "",
                         "gateway" : "",
                         "primaryDns" : "",

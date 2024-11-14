@@ -27,7 +27,7 @@ export async function handleActionBatches(actions: any, orgId: string) {
     const pendingBatches: {batchId: string, status: string}[] = [];
     const completedBatches: any[] = [];
     console.log('Initial actions: ', actions)
-    const batches = splitBatches(actions, 8)
+    const batches = splitBatches(actions, 100)
 
     console.log('Initial Batches: ', batches)
 

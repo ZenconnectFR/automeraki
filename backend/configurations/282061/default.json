@@ -1,4 +1,5 @@
 {
+    "$schema": "../templateSchema.json",
     "name": "Burger King",
     "networkToClone": "L_645703596574254736",
     "preFilledName": "BKXXXXX-",
@@ -119,6 +120,9 @@
             "data": {
                 "fixedAssignments": [
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "S1",
                         "config": {
                             "ip": "10.101.11.251",
@@ -130,6 +134,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "S2",
                         "config": {
                             "ip": "10.101.11.252",
@@ -141,6 +148,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "S3",
                         "config": {
                             "ip": "10.101.11.253",
@@ -152,6 +162,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP1",
                         "config": {
                             "ip": "10.101.14.246",
@@ -162,6 +175,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP2",
                         "config": {
                             "ip": "10.101.14.247",
@@ -172,6 +188,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP3",
                         "config": {
                             "ip": "10.101.14.248",
@@ -182,6 +201,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP4",
                         "config": {
                             "ip": "10.101.14.249",
@@ -192,6 +214,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP5",
                         "config": {
                             "ip": "10.101.14.250",
@@ -202,6 +227,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP6",
                         "config": {
                             "ip": "10.101.14.251",
@@ -212,6 +240,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP7",
                         "config": {
                             "ip": "10.101.14.252",
@@ -222,6 +253,9 @@
                         }
                     },
                     {
+                        "useDhcp": {
+                            "use": false
+                        },
                         "expectedEquipment": "AP8",
                         "config": {
                             "ip": "10.101.14.253",
@@ -407,14 +441,14 @@
                                     "vlan": "12",
                                     "name": "Téléphonie",
                                     "type": "access",
-                                    "voiceVlan": "115"
+                                    "voiceVlan": 115
                                 },
                                 {
                                     "id": "2",
                                     "vlan": "12",
                                     "name": "Téléphonie",
                                     "type": "access",
-                                    "voiceVlan": "115"
+                                    "voiceVlan": 115
                                 },
                                 {
                                     "id": "19",
@@ -737,7 +771,7 @@
                     {
                         "name": "Orange",
                         "auto": false,
-                        "assiociatedTags" : [
+                        "associatedTags" : [
                             "WAN1-ORANGE"
                         ],
                         "wanIp": "",
@@ -749,7 +783,7 @@
                     {
                         "name": "Starlink",
                         "auto": false,
-                        "assiociatedTags" : [
+                        "associatedTags" : [
                             "WAN1-STARLINK"
                         ],
                         "wanIp": "192.168.1.199",
@@ -761,7 +795,7 @@
                     {
                         "name": "Cradlepoint",
                         "auto": true,
-                        "assiociatedTags" : [
+                        "associatedTags" : [
                             "cradle", "WAN2-5G"
                         ],
                         "wanIp": "",
@@ -775,7 +809,7 @@
                     {
                         "name": "Bouygues",
                         "auto": false,
-                        "assiociatedTags" : [
+                        "associatedTags" : [
                             "WAN2-BOUYGUES"
                         ],
                         "wanIp": "",
@@ -787,7 +821,7 @@
                     {
                         "name": "Cradlepoint",
                         "auto": true,
-                        "assiociatedTags" : [
+                        "associatedTags" : [
                             "cradle", "WAN2-5G"
                         ],
                         "wanIp": "",

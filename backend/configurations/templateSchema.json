@@ -1,0 +1,1124 @@
+{
+    "title": "Template Schema",
+    "description": "This is the schema for the template configuration",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the configuration template"
+        },
+        "networkToClone": {
+            "type": "string",
+            "description": "The network to clone when creating a new network"
+        },
+        "preFilledName": {
+            "type": "string",
+            "description": "Some text to pre-fill the name field when creating a new network"
+        },
+        "actions": {
+            "type": "array",
+            "description": "The actions to perform when creating a new network, in order.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "The type name of the action to perform.",
+                        "enum": ["naming", "fixedIp", "vlan", "firewall", "ports", "wans", "vpn", "tags", "misc", "eof"]
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "The data for the action"
+                    }
+                },
+                "required": ["type", "data"],
+                "allOf": [
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "naming"
+                                }
+                            }
+                        },
+                        "then" : {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "The format string to name the equipments. Variables are written as {variableName}. The available variables are 'networkName' and 'associationName'."
+                                        },
+                                        "associationTable": {
+                                            "type": "array",
+                                            "description": "The association table to use for naming",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "The name associated to the device"
+                                                    },
+                                                    "id": {
+                                                        "type": "string",
+                                                        "description": "The id associated to the device, must be unique and the same as the name"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "description": "The type of the device: 'switch', 'router', 'ap' or 'other'"
+                                                    },
+                                                    "switchPorts": {
+                                                        "type": "array",
+                                                        "description": "If the device is a switch, the number of ports it possibily has",
+                                                        "items": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["name", "id", "type", "switchPorts"]
+                                            }
+                                        },
+                                        "tags": {
+                                            "type": "array",
+                                            "description": "The tags to add to devices",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "useLimit": {
+                                                        "type": "boolean",
+                                                        "description": "If the tag has a limit"
+                                                    },
+                                                    "limit": {
+                                                        "type": "object",
+                                                        "description": "The limit of the tag",
+                                                        "properties": {
+                                                            "targetType": {
+                                                                "type": "string",
+                                                                "description": "The type of the target"
+                                                            },
+                                                            "number": {
+                                                                "type": "integer",
+                                                                "description": "The number of the limit"
+                                                            },
+                                                            "order": {
+                                                                "type": "string",
+                                                                "description": "The order to apply the limit"
+                                                            }
+                                                        },
+                                                        "required": ["targetType", "number", "order"]
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "The name of the tag"
+                                                    },
+                                                    "equipments": {
+                                                        "type": "array",
+                                                        "description": "The equipments to tag",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "description": "The associationId of the equipment",
+                                                            "enum": { 
+                                                                "$data": "1/data/associationTable/[*]/id"
+                                                            }
+
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["useLimit", "name", "equipments"]
+                                            }
+                                        },
+                                        "associationLogic": {
+                                            "type": "object",
+                                            "description": "The logic to use for the association. Variables are written as {variableName}. The available variables are 'number' and 'letter'.",
+                                            "properties": {
+                                                "ap": {
+                                                    "type": "object",
+                                                    "description": "The logic to use for the AP",
+                                                    "properties": {
+                                                        "format": {
+                                                            "type": "string",
+                                                            "description": "The format string to use for the AP"
+                                                        },
+                                                        "initialNumber": {
+                                                            "type": "integer",
+                                                            "description": "The initial number to use for the AP"
+                                                        },
+                                                        "initialLetter": {
+                                                            "type": "string",
+                                                            "description": "The initial letter to use for the AP"
+                                                        }
+                                                    },
+                                                    "required": ["format", "initialNumber", "initialLetter"]
+                                                },
+                                                "switch": {
+                                                    "type": "object",
+                                                    "description": "The logic to use for the switch",
+                                                    "properties": {
+                                                        "format": {
+                                                            "type": "string",
+                                                            "description": "The format string to use for the switch"
+                                                        },
+                                                        "initialNumber": {
+                                                            "type": "integer",
+                                                            "description": "The initial number to use for the switch"
+                                                        },
+                                                        "initialLetter": {
+                                                            "type": "string",
+                                                            "description": "The initial letter to use for the switch"
+                                                        }
+                                                    },
+                                                    "required": ["format", "initialNumber", "initialLetter"]
+                                                },
+                                                "router": {
+                                                    "type": "object",
+                                                    "description": "The logic to use for the router",
+                                                    "properties": {
+                                                        "format": {
+                                                            "type": "string",
+                                                            "description": "The format string to use for the router"
+                                                        },
+                                                        "initialNumber": {
+                                                            "type": "integer",
+                                                            "description": "The initial number to use for the router"
+                                                        },
+                                                        "initialLetter": {
+                                                            "type": "string",
+                                                            "description": "The initial letter to use for the router"
+                                                        }
+                                                    },
+                                                    "required": ["format", "initialNumber", "initialLetter"]
+                                                }
+                                            },
+                                            "required": ["ap"]
+                                        }
+                                    },
+                                    "required": ["name", "associationTable", "tags"]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "fixedIp"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "fixedAssignments": {
+                                            "type": "array",
+                                            "description": "The fixed assignments to use",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "expectedEquipment": {
+                                                        "type": "string",
+                                                        "description": "The associationId of the equipment",
+                                                        "enum": {
+                                                            "$data": "1/data/associationTable/[*]/id"
+                                                        }
+                                                    },
+                                                    "useDhcp": {
+                                                        "type": "object",
+                                                        "description": "If the equipment uses DHCP",
+                                                        "properties": {
+                                                            "use": {
+                                                                "type": "boolean",
+                                                                "description": "If the equipment uses DHCP"
+                                                            },
+                                                            "vlan": {
+                                                                "type": "integer",
+                                                                "description": "The vlan of the equipment"
+                                                            }
+                                                        },
+                                                        "if": {
+                                                            "properties": {
+                                                                "use": {
+                                                                    "const": true
+                                                                }
+                                                            }
+                                                        },
+                                                        "then": {
+                                                            "required": ["vlan"]
+                                                        },
+                                                        "required": ["use"]
+                                                    },
+                                                    "config": {
+                                                        "type": "object",
+                                                        "description": "The configuration of the equipment",
+                                                        "properties": {
+                                                            "ip": {
+                                                                "type": "string",
+                                                                "description": "The ip of the equipment"
+                                                            },
+                                                            "vlan": {
+                                                                "type": "string",
+                                                                "description": "The vlan of the equipment"
+                                                            },
+                                                            "mask": {
+                                                                "type": "string",
+                                                                "description": "The mask of the equipment"
+                                                            },
+                                                            "gateway": {
+                                                                "type": "string",
+                                                                "description": "The gateway of the equipment"
+                                                            },
+                                                            "primaryDns": {
+                                                                "type": "string",
+                                                                "description": "The primary DNS of the equipment"
+                                                            },
+                                                            "secondaryDns": {
+                                                                "type": "string",
+                                                                "description": "The secondary DNS of the equipment"                                                        }
+                                                        },
+                                                        "required": ["ip", "mask", "gateway", "primaryDns", "secondaryDns"]
+                                                    }
+                                                },
+                                                "required": ["expectedEquipment", "useDhcp", "config"],
+                                                "if" : {
+                                                    "properties": {
+                                                        "useDhcp": {
+                                                            "properties": {
+                                                                "use": {
+                                                                    "const": false
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "then": {
+                                                        "properties": {
+                                                            "config": {
+                                                                "properties": {
+                                                                    "ip": {
+                                                                        "format": "ipv4"
+                                                                    },
+                                                                    "vlan": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "mask": {
+                                                                        "format": "ipv4"
+                                                                    },
+                                                                    "gateway": {
+                                                                        "format": "ipv4"
+                                                                    },
+                                                                    "primaryDns": {
+                                                                        "format": "ipv4"
+                                                                    },
+                                                                    "secondaryDns": {
+                                                                        "format": "ipv4"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "dhcpAssignments": {
+                                            "type": "object",
+                                            "description": "The dhcp assignments to use",
+                                            "properties": {
+                                                "default": {
+                                                    "type": "object",
+                                                    "description": "The default configuration for the dhcp",
+                                                    "properties": {
+                                                        "vlan": {
+                                                            "type": "string",
+                                                            "description": "The vlan of the dhcp",
+                                                            "pattern": "^[0-9]+$"
+                                                        }
+                                                    },
+                                                    "required": ["vlan"]
+                                                },
+                                                "static": {
+                                                    "type": "array",
+                                                    "description": "The static assignments to use",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "vlan": {
+                                                                "type": "string",
+                                                                "description": "The vlan of the dhcp",
+                                                                "pattern": "^[0-9]+$"
+                                                            },
+                                                            "equipments": {
+                                                                "type": "array",
+                                                                "description": "The equipments to assign",
+                                                                "items": {
+                                                                    "type": "string",
+                                                                    "description": "The associationId of the equipment",
+                                                                    "enum": { 
+                                                                        "$data": "1/data/associationTable/[*]/id"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": ["vlan", "equipments"]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": ["fixedAssignments"]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "vlan"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "vlans": {
+                                            "type": "array",
+                                            "description": "The configured vlans",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "description": "The id of the vlan"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "The name of the vlan"
+                                                    },
+                                                    "applianceIp": {
+                                                        "type": "string",
+                                                        "description": "The appliance ip of the vlan",
+                                                        "format": "ipv4"
+                                                    },
+                                                    "subnet": {
+                                                        "type": "string",
+                                                        "description": "The subnet of the vlan",
+                                                        "pattern": "^(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\\/([1-2][0-9]|3[0-1])$"
+                                                    },
+                                                    "fixedAssignments": {
+                                                        "type": "array",
+                                                        "description": "The fixed assignments to use",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties" : {
+                                                                "expectedEquipment": {
+                                                                    "type": "string",
+                                                                    "description": "The associationId of the equipment",
+                                                                    "enum": {
+                                                                        "$data": "1/data/associationTable/[*]/id"
+                                                                    }
+                                                                },
+                                                                "ip": {
+                                                                    "type": "string",
+                                                                    "description": "The ip of the equipment",
+                                                                    "format": "ipv4"
+                                                                }
+                                                            },
+                                                            "required": ["expectedEquipment", "ip"]
+                                                        }
+                                                    },
+                                                    "reservedIpRanges": {
+                                                        "type": "array",
+                                                        "description": "The reserved ip ranges to use",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "start": {
+                                                                    "type": "string",
+                                                                    "description": "The start of the range",
+                                                                    "format": "ipv4"
+                                                                },
+                                                                "end": {
+                                                                    "type": "string",
+                                                                    "description": "The end of the range",
+                                                                    "format": "ipv4"
+                                                                },
+                                                                "comment": {
+                                                                    "type": "string",
+                                                                    "description": "The comment / name of the range"
+                                                                }
+                                                            },
+                                                            "required": ["start", "end", "comment"]
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["id", "name", "applianceIp", "subnet"]
+                                            }
+                                        },
+                                        "perPortVlan": {
+                                            "type": "array",
+                                            "description": "The per port vlan configuration",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "applianceName": {
+                                                        "type": "string",
+                                                        "description": "The name / id of the appliance",
+                                                        "enum": {
+                                                            "$data": "1/data/associationTable/[*]/id"
+                                                        }
+                                                    },
+                                                    "ports": {
+                                                        "type": "array",
+                                                        "description": "The ports to configure on the appliance",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "description": "The id of the port",
+                                                                    "pattern": "^[0-9]{1,2}$"
+                                                                },
+                                                                "vlan": {
+                                                                    "type": "string",
+                                                                    "description": "The vlan of the port",
+                                                                    "pattern": "^[0-9]+$"
+                                                                },
+                                                                "type": {
+                                                                    "type": "string",
+                                                                    "description": "The type of the port",
+                                                                    "enum": ["access", "trunk"]
+                                                                }
+                                                            },
+                                                            "required": ["id", "vlan", "type"]
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["applianceName", "ports"]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "firewall"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "The firewall configuration",
+                                    "properties": {
+                                        "comment": {
+                                            "type": "string",
+                                            "description": "The comment to add to the firewall configuration"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "ports"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "The ports configuration",
+                                    "properties": {
+                                        "ports": {
+                                            "type": "array",
+                                            "description": "The switches with ports to configure",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "switchName": {
+                                                        "type": "string",
+                                                        "description": "The name / id of the switch",
+                                                        "enum": {
+                                                            "$data": "1/data/associationTable/[*]/id"
+                                                        }
+                                                    },
+                                                    "nbPorts": {
+                                                        "type": "integer",
+                                                        "description": "The number of ports to configure on this switch"
+                                                    },
+                                                    "config": {
+                                                        "type": "object",
+                                                        "description": "The configuration of the ports",
+                                                        "properties": {
+                                                            "ports": {
+                                                                "type": "array",
+                                                                "description": "The ports to configure on the switch",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "string",
+                                                                            "description": "The id of the port",
+                                                                            "pattern": "^[0-9]{1,3}$"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string",
+                                                                            "description": "The type of the port",
+                                                                            "enum": ["access", "trunk"]
+                                                                        },
+                                                                        "vlan": {
+                                                                            "type": "string",
+                                                                            "description": "The vlan of the port",
+                                                                            "pattern": "^[0-9]+$"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "description": "The name of the port"
+                                                                        },
+                                                                        "voiceVlan": {
+                                                                            "type": "integer",
+                                                                            "description": "The voice vlan of the port"
+                                                                        }
+                                                                    },
+                                                                    "required": ["id", "type", "vlan", "name"]
+                                                                }
+                                                            },
+                                                            "default": {
+                                                                "type": "object",
+                                                                "description": "The default configuration for the ports",
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string",
+                                                                        "description": "The type of the port",
+                                                                        "enum": ["access", "trunk"]
+                                                                    },
+                                                                    "vlan": {
+                                                                        "type": "string",
+                                                                        "description": "The vlan of the port",
+                                                                        "pattern": "^[0-9]+$"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "description": "The name of the port"
+                                                                    }
+                                                                },
+                                                                "required": ["type", "vlan", "name"]
+                                                            }
+                                                        },
+                                                        "required": ["ports"],
+                                                        "if": {
+                                                            "not": {
+                                                                "properties": {
+                                                                    "ports": {
+                                                                        "maxItems": { 
+                                                                            "$data": "1/nbPorts"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "then": {
+                                                            "properties": {
+                                                                "ports": {
+                                                                    "items": {
+                                                                        "required": ["default"]
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["switchName", "nbPorts", "config"]
+                                            }
+                                        },
+                                        "mtuSize": {
+                                            "type": "integer",
+                                            "description": "The mtu size of the switch"
+                                        },
+                                        "stp": {
+                                            "type": "array",
+                                            "description": "The stp configurations of the switches",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "stpPriority": {
+                                                        "type": "integer",
+                                                        "description": "The stp priority of the switch"
+                                                    },
+                                                    "switches": {
+                                                        "type": "array",
+                                                        "description": "The switches to apply that stp priority to",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "description": "The name / id of the switch",
+                                                            "enum": {
+                                                                "$data": "1/data/associationTable/[*]/id"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["stpPriority", "switches"]
+                                            }
+                                        }
+                                    },
+                                    "required": ["ports", "mtuSize", "stp"]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "wans"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "The wans configuration",
+                                    "properties": {
+                                        "wan1": {
+                                            "type": "array",
+                                            "description": "The wan1 possible configurations",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "The name of the wan1 configuration"
+                                                    },
+                                                    "auto": {
+                                                        "type": "boolean",
+                                                        "description": "If the wan1 configuration is automatic"
+                                                    },
+                                                    "associatedTags": {
+                                                        "type": "array",
+                                                        "description": "The tags associated to the wan1 configuration",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "description": "The name of the tag"
+                                                        }
+                                                    },
+                                                    "wanIp": {
+                                                        "type": "string",
+                                                        "description": "The wan ip of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "mask": {
+                                                        "type": "string",
+                                                        "description": "The wan mask of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "gateway": {
+                                                        "type": "string",
+                                                        "description": "The wan gateway of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "primaryDns": {
+                                                        "type": "string",
+                                                        "description": "The wan primary dns of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "secondaryDns": {
+                                                        "type": "string",
+                                                        "description": "The wan secondary dns of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["name", "auto", "associatedTags", "wanIp", "mask", "gateway", "primaryDns", "secondaryDns"],
+                                                "allOf": [
+                                                    {
+                                                        "if": {
+                                                            "properties": {
+                                                                "wanIp": {
+                                                                    "type": "string"
+                                                                },
+                                                                "applianceIp": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "then": {
+                                                            "properties": {
+                                                                "wanIp": {
+                                                                    "not": {
+                                                                        "const": {
+                                                                            "$data": "1/gateway"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "wan2": {
+                                            "type": "array",
+                                            "description": "The wan1 possible configurations",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "The name of the wan1 configuration"
+                                                    },
+                                                    "auto": {
+                                                        "type": "boolean",
+                                                        "description": "If the wan1 configuration is automatic"
+                                                    },
+                                                    "associatedTags": {
+                                                        "type": "array",
+                                                        "description": "The tags associated to the wan1 configuration",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "description": "The name of the tag"
+                                                        }
+                                                    },
+                                                    "wanIp": {
+                                                        "type": "string",
+                                                        "description": "The wan ip of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "mask": {
+                                                        "type": "string",
+                                                        "description": "The wan mask of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "gateway": {
+                                                        "type": "string",
+                                                        "description": "The wan gateway of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "primaryDns": {
+                                                        "type": "string",
+                                                        "description": "The wan primary dns of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    },
+                                                    "secondaryDns": {
+                                                        "type": "string",
+                                                        "description": "The wan secondary dns of the wan1 configuration",
+                                                        "anyOf": {
+                                                            "format": "ipv4",
+                                                            "enum": [ "" ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["name", "auto", "associatedTags", "wanIp", "mask", "gateway", "primaryDns", "secondaryDns"],
+                                                "allOf": [
+                                                    {
+                                                        "if": {
+                                                            "properties": {
+                                                                "wanIp": {
+                                                                    "type": "string"
+                                                                },
+                                                                "applianceIp": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "then": {
+                                                            "properties": {
+                                                                "wanIp": {
+                                                                    "not": {
+                                                                        "const": {
+                                                                            "$data": "1/gateway"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "vpn"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "The vpn configuration",
+                                    "properties": {
+                                        "vpnSubnets": {
+                                            "type": "array",
+                                            "description": "The info about the useful vpn subnets when looking for a free one",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "The name of the vpn subnet"
+                                                    },
+                                                    "keywords": {
+                                                        "type": "array",
+                                                        "description": "The keywords to use to find all the subnets that belong to this vpn",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "description": "The keyword to use"
+                                                        }
+                                                    },
+                                                    "ranges": {
+                                                        "type": "array",
+                                                        "description": "The ranges of the vpn subnet",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "start": {
+                                                                    "type": "string",
+                                                                    "description": "The start of the range",
+                                                                    "pattern": "^(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])$"
+                                                                },
+                                                                "end": {
+                                                                    "type": "string",
+                                                                    "description": "The end of the range",
+                                                                    "pattern": "^(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])$"
+                                                                }
+                                                            },
+                                                            "required": ["start", "end"]
+                                                        }
+                                                    },
+                                                    "excepts": {
+                                                        "type": "array",
+                                                        "description": "The ranges to exclude from the vpn subnet",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "description": "The range to exclude, is a regex"
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["name", "keywords", "ranges", "excepts"]
+                                            },
+                                            "siteToSite": {
+                                                "type": "object",
+                                                "description": "The site to site vpn configuration",
+                                                "properties": {
+                                                    "useSpoke": {
+                                                        "type": "boolean",
+                                                        "description": "If the vpn is in spoke mode"
+                                                    },
+                                                    "hubs": {
+                                                        "type": "array",
+                                                        "description": "The hubs of the vpn",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "description": "The hub of the vpn",
+                                                            "properties": {
+                                                                "hubId": {
+                                                                    "type": "string",
+                                                                    "description": "The id of the hub"
+                                                                },
+                                                                "useDefaultRoute": {
+                                                                    "type": "boolean",
+                                                                    "description": "If the hub uses the default route"
+                                                                }
+                                                            },
+                                                            "required": ["hubId", "useDefaultRoute"]
+                                                        }
+                                                    },
+                                                    "subnets": {
+                                                        "type": "array",
+                                                        "description": "The subnets of the vpn",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "description": "The subnet of the vpn",
+                                                            "properties": {
+                                                                "localSubnet": {
+                                                                    "type": "string",
+                                                                    "description": "The local subnet of the vpn. Either a cidr, VLAN(id) or VNAT(id)"
+                                                                },
+                                                                "useVpn": {
+                                                                    "type": "boolean",
+                                                                    "description": "If the subnet has vpn mode enabled"
+                                                                },
+                                                                "translation": {
+                                                                    "type": "boolean",
+                                                                    "description": "If the subnet has vpn nat translation enabled"
+                                                                }
+                                                            },
+                                                            "required": ["localSubnet", "useVpn", "translation"]
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["useSpoke", "hubs", "subnets"]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "tags"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "The tags configuration",
+                                    "properties": {
+                                        "availableTags": {
+                                            "type": "array",
+                                            "description": "The available tags",
+                                            "items": {
+                                                "type": "string",
+                                                "description": "The name of the tag"
+                                            }
+                                        }
+                                    },
+                                    "required": ["availableTags"]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "misc"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "The misc configuration",
+                                    "properties": {
+                                        "splashPages": {
+                                            "type": "array",
+                                            "description": "The splash pages to use",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "The name of the splash page (not important atm)"
+                                                    },
+                                                    "url": {
+                                                        "type": "string",
+                                                        "description": "The url of the splash page"
+                                                    },
+                                                    "number": {
+                                                        "type": "integer",
+                                                        "description": "The number of the ssid this splash page is associated to"
+                                                    }
+                                                },
+                                                "required": ["url", "number"]
+                                            }
+                                        },
+                                        "mxHostname": {
+                                            "type": "string",
+                                            "description": "The hostname of the mx, can be a format string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "eof"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "description": "The end of the configuration",
+                                    "properties": {
+                                        "comments": {
+                                            "type": "array",
+                                            "description": "The comments to add to the configuration",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "The comment to add",
+                                                "properties": {
+                                                    "title": {
+                                                        "type": "string",
+                                                        "description": "The title of the comment"
+                                                    },
+                                                    "content": {
+                                                        "type": "array",
+                                                        "description": "The content of the comment, one line per item",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "description": "The line of the comment"
+                                                        }
+                                                    }
+                                                },
+                                                "required": ["title", "content"]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "required": ["name", "networkToClone", "actions"]
+}

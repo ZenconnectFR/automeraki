@@ -1,0 +1,266 @@
+{
+    "$schema": "../templateSchema.json",
+    "name": "Volfoni",
+    "networkToClone": "L_3818489534056759763",
+    "preFilledName": "Volfoni ",
+    "actions": [
+        {
+            "type": "naming",
+            "data": {
+                "name": "Volfoni-{siteName}-",
+                "associationTable": [
+                    {
+                        "name": "R1",
+                        "id": "R1",
+                        "type": "router",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "name": "S1",
+                        "id": "S1",
+                        "type": "switch",
+                        "switchPorts": [ 24, 48 ]
+                    },
+                    {
+                        "name": "S2",
+                        "id": "S2",
+                        "type": "switch",
+                        "switchPorts": [ 24, 48 ]
+                    }
+                ],
+                "associationLogic": {
+                    "ap": {
+                        "format": "AP{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "A"
+                    },
+                    "switch": {
+                        "format": "S{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "A"
+                    },
+                    "router": {
+                        "format": "R{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "A"
+                    }
+                },
+                "tags": []
+            }
+        },
+        {
+            "type": "fixedIp",
+            "data": {
+                "fixedAssignments": [],
+                "dhcpAssignments": {
+                    "default": {
+                        "vlan": "999"
+                    },
+                    "static": []
+                }
+            }
+        },
+        {
+            "type": "firewall",
+            "data": {}
+        },
+        {
+            "type": "vlan",
+            "data": {
+                "vlans": [
+                    {
+                        "id": 201,
+                        "name": "IOT",
+                        "applianceIp": "10.202.109.1",
+                        "subnet": "10.101.109.0/24",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    },
+                    {
+                        "id": 301,
+                        "name": "Corp",
+                        "applianceIp": "10.203.109.1",
+                        "subnet": "10.203.109.0/24",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    },
+                    {
+                        "id": 401,
+                        "name": "Telephonie",
+                        "applianceIp": "10.204.109.1",
+                        "subnet": "10.204.109.0/24",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    },
+                    {
+                        "id": 501,
+                        "name": "TV",
+                        "applianceIp": "10.205.109.1",
+                        "subnet": "10.205.109.0/24",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    },
+                    {
+                        "id": 601,
+                        "name": "Video Surveillance",
+                        "applianceIp": "10.206.109.1",
+                        "subnet": "10.206.109.0/24",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    },
+                    {
+                        "id": 701,
+                        "name": "Guest",
+                        "applianceIp": "10.207.109.1",
+                        "subnet": "10.207.109.0/24",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    },
+                    {
+                        "id": 999,
+                        "name": "Management",
+                        "applianceIp": "10.209.109.1",
+                        "subnet": "10.209.109.0/24",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    }
+                ],
+                "perPortVlan": [
+                    {
+                        "applianceName": "R1",
+                        "ports": [
+                            {
+                                "id": "3",
+                                "vlan": "301",
+                                "type": "trunk"
+                            },
+                            {
+                                "id": "4",
+                                "vlan": "301",
+                                "type": "trunk"
+                            },
+                            {
+                                "id": "5",
+                                "vlan": "101",
+                                "type": "trunk"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "ports",
+            "data": {
+                "ports": [
+                    {
+                        "switchName": "S1",
+                        "nbPorts": 24,
+                        "config": {
+                            "ports": [
+                                {
+                                    "id": "21",
+                                    "type": "trunk",
+                                    "vlan": "301",
+                                    "name": "Bornes WI-FI"
+                                },
+                                {
+                                    "id": "22",
+                                    "type": "trunk",
+                                    "vlan": "301",
+                                    "name": "Bornes WI-FI"
+                                },
+                                {
+                                    "id": "23",
+                                    "type": "trunk",
+                                    "vlan": "301",
+                                    "name": "Bornes WI-FI"
+                                },
+                                {
+                                    "id": "24",
+                                    "type": "trunk",
+                                    "vlan": "301",
+                                    "name": "Uplink"
+                                }
+                            ],
+                            "default": {
+                                "type": "access",
+                                "vlan": "301",
+                                "name": "CORP"
+                            }
+                        }
+                    }
+                ],
+                "mtuSize": 9000,
+                "stp": [
+                    {
+                        "stpPriority": 0,
+                        "switches": [
+                            "S1",
+                            "S2"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "wans",
+            "data": {
+                "wan1": [
+                    {
+                        "name": "default",
+                        "auto": true,
+                        "associatedTags": [],
+                        "wanIp": "",
+                        "mask": "",
+                        "gateway": "",
+                        "primaryDns": "",
+                        "secondaryDns": ""
+                    }
+                ],
+                "wan2": [
+                    {
+                        "name": "default",
+                        "auto": true,
+                        "associatedTags": [],
+                        "wanIp": "",
+                        "mask": "",
+                        "gateway": "",
+                        "primaryDns": "",
+                        "secondaryDns": ""
+                    }
+                ]
+            }
+        },
+        {
+            "type": "tags",
+            "data": {
+                "availableTags": []
+            }
+        },
+        {
+            "type": "misc",
+            "data": {
+                "splashPages": [
+                    {
+                        "name": "default",
+                        "url": "https://www.volfoni.com",
+                        "number": 3
+                    }
+                ],
+                "mxHostname": "volfoni.com"
+            }
+        },
+        {
+            "type": "eof",
+            "data": {
+                "comments": [
+                    {
+                        "title": "To do",
+                        "content": "Change MX mac address in DHCP Servers (Switch -> DHCP servers & ARP)"
+                    }
+                ]
+            }
+        }
+    ]
+}
