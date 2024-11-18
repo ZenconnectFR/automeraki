@@ -14,6 +14,7 @@ import { changeDeviceName } from '@/endpoints/devices/ChangeDeviceName';
 import { useBoolStates } from '@/utils/Decorators';
 
 import Dropdown from '@/components/Dropdown.vue';
+import { getNetwork } from '@/endpoints/networks/GetNetwork';
 
 const __DEBUG__ = import.meta.env.VITE_APP_DEBUG === 'true';
 
@@ -29,6 +30,8 @@ const orgsLoaded = ref(false);
 
 const selectedOrgOption = ref(null);
 const selectedNetwork = ref(null);
+
+const loaded = ref(false);
 
 const networks = ref([]);
 const networkOptions = ref([]);
@@ -166,49 +169,20 @@ const setNetworkOption = async(option: Option | { value: string; name: string })
 }
 
 const setup = async () => {
-    let fetchedOrgs = await getOrganizations()
-        // turn the fetchedOrgs.id into .value
-    organizations.value = fetchedOrgs.map((org: { id: string; name: string }) => {
-        return {
-            value: org.id,
-            name: org.name
-        }
-    })
+    console.log('[SETUP] Setting up edit network page')
 
-    // orgId is set by App.vue if the app is contained in meraki, else it defaults to -1
-    /*
-    if (orgId.value && orgId.value !== '-1') {
-        ids.setOrgId(orgId.value)
+    // setup network info
+    const fetchedNetwork = await getNetwork(networkId.value)
 
-        let selectedOrg = organizations.value.find(org => org.value === orgId.value)
-        console.log('[SETUP] Selected org at load:', selectedOrg)
-
-        selectedOrgOption.value = { name: selectedOrg.name, value: selectedOrg.value}
-        console.log('[SETUP] Selected orgOption at load:', selectedOrgOption.value)
-
-        // get the templates for the selected org
-        setOrganizationOption()
-    }
-    */
-    console.log('[EDIT NETWORK] Organizations loaded: ', organizations.value)
-
-    // set the first organization as selected
-    if (organizations.value.length > 0) {
-        selectedOrgOption.value = organizations.value[0]
+    selectedNetwork.value = {
+        value: fetchedNetwork.id,
+        name: fetchedNetwork.name
     }
 
-    setOrganizationOption()
+    // get the devices for the network in store
+    await getDevicesNames()
 
-    orgsLoaded.value = true
-
-    // empty store values if set 
-    ids.setNewNetworkId('')
-    ids.setNetworkId('')
-    ids.setOrgId('')
-
-    devices.setDevicesList([])
-    devices.setNetwork('')
-    devices.setAddress('')
+    loaded.value = true
 }
 
 onMounted(() => {
@@ -219,27 +193,12 @@ onMounted(() => {
 
 <template>
     <div class="container">
-        <div class="backbtn">
-            <button @click="router.push('/')">Back</button>
-        </div>
         <div class="row">
             <div class="col-12">
                 <h1>Edit Network</h1>
             </div>
         </div>
-        <div class="row">
-            <div v-if="orgsLoaded" class="col-r">
-                <div class="row">
-                    <span class="marg">Organization :</span>
-                    <Dropdown :options="organizations" v-model="selectedOrgOption" :onSelect="setOrganizationOption"/>
-                </div>
-                <div v-if="networksLoaded" class="row">
-                    <span class="marg">Network :</span>
-                    <Dropdown :options="networkOptions" v-model="selectedNetwork" :onSelect="setNetworkOption"/>
-                </div>
-            </div>
-        </div>
-        <div v-if="newNetworkSelected" class="row">
+        <div v-if="loaded" class="row">
             <div class="col">
                 <p>Selected network: {{ selectedNetwork.name }}</p>
                 <div class="row">
@@ -278,10 +237,8 @@ onMounted(() => {
                 </div>
             </div>
         </div>
-        <div v-if="!orgsLoaded" class="row">
-            <div class="col-12">
-                <p>Loading...</p>
-            </div>
+        <div v-if="!loaded" class="row">
+            <v-progress-circular indeterminate></v-progress-circular>
         </div>
     </div>
 </template>

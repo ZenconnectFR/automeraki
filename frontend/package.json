@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@primevue/themes": "^4.2.2",
     "@vueuse/components": "^11.1.0",
     "@vueuse/core": "^11.1.0",
     "axios": "^1.7.7",
     "pinia": "^2.2.2",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.2.2",
     "vue": "^3.4.29",
     "vue-router": "^4.4.5",
     "vue-simple-search-dropdown": "^1.0.1",
@@ -22,7 +25,10 @@
   "devDependencies": {
     "@mdi/font": "^7.4.47",
     "@vitejs/plugin-vue": "^5.0.5",
+    "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
     "vite": "^5.3.1"
   }
 }

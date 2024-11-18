@@ -6,6 +6,9 @@ import { useConfigurationStore } from '@/stores/configuration';
 
 import { useRouter, useRoute } from 'vue-router'
 
+import Button from 'primevue/button'
+import { Divider } from 'primevue';
+
 const router = useRouter()
 const route = useRoute()
 
@@ -27,10 +30,24 @@ const goToEdit = () => {
 </script>
 
 <template>
-    <div>
+    <div class="col home">
         <h1>Home</h1>
-        <button @click="goToManage">Manage templates</button>
-        <button @click="goToConfig">Configure a network</button>
-        <button @click="goToEdit">Edit a network's equipement names</button>
+        <Divider />
+        <!-- Button @click="goToManage" label="Manage templates" /-->
+        <Button class="button" @click="goToConfig" label="Configure a network" />
     </div>
 </template>
+
+<style scoped>
+.button {
+    margin: 10px;
+}
+
+.home {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: fixed;
+    top: 100px;
+}
+</style>

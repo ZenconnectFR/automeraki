@@ -1,5 +1,5 @@
 <template>
-    <button v-if="availablePages.length > 0" id="homebtn" @click="backHome">Home</button>
+    <Button id="homebtn" @click="backHome">Home</Button>
     <div class="stepper-container">
         <div v-for="(page, index) in availablePages" :key="index" class="stepper-item">
             <div class="stepper-label">
@@ -22,6 +22,8 @@ import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useConfigurationStore } from '@/stores/configuration';
 import { getRoutePath, getPageLabel } from '@/utils/PageRouter';
+
+import Button from 'primevue/button';
 
 const __DEBUG__ = import.meta.env.VITE_APP_DEBUG === 'true';
 const configStore = useConfigurationStore();
@@ -76,19 +78,11 @@ const getLineClass = (index: number) => {
 <style scoped>
 
 #homebtn {
-    background-color: rgb(224, 224, 224);
-    border: none;
-    padding: 5px 10px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-#homebtn:hover {
-    background-color: #9aacff;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    height: 40px;
+    padding: 0 20px;
 }
 
 .stepper-container {

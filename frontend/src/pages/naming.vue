@@ -15,6 +15,16 @@ import { useBoolStates } from '@/utils/Decorators';
 
 import { useRouter, useRoute } from 'vue-router'
 
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Divider from 'primevue/divider';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Select from 'primevue/select';
+import Tag from 'primevue/tag';
+import MultiSelect from 'primevue/multiselect';
+import Popover from 'primevue/popover';
+
 const router = useRouter()
 const route = useRoute()
 
@@ -42,6 +52,58 @@ const apsTable = ref([])
 const othersTable = ref([])
 
 const address = ref('')
+
+const editingRows = ref([])
+
+const saveAddressHelpRef = ref()
+
+const toggleSaveAddressHelp = (event) => {
+    saveAddressHelpRef.value.toggle(event);
+}
+
+const onRowEditSaveTags = (event: any, table: any) => {
+    console.log('[TAGGING] Row edit saved:', event);
+    const { newData, index } = event;
+    table[index].tags = newData.tags;
+};
+
+const onRowEditSave = (event: any, table: any) => {
+    let { data, newData, index } = event;
+
+    console.log('[NAMING] onRowEditSave: ', data, newData, index);
+
+    // can only edit the associationId and associationName, ids are unique so we switch the ids and names if the old id is not the same as the new id
+    if (data.associationId !== newData.associationId) {
+        console.log('[NAMING] associationId changed: ', data.associationId, newData.associationId);
+        // find the device with the new id
+        const initiatorDeviceIndex = table.findIndex((device: { associationId: any; }) => device.associationId === data.associationId);
+        const edgeAffectedDeviceIndex = table.findIndex((device: { associationId: any; }) => device.associationId === newData.associationId);
+
+        if (edgeAffectedDeviceIndex >= 0) {
+            const initiatorDevice = { ...table[initiatorDeviceIndex] };
+            const edgeAffectedDevice = { ...table[edgeAffectedDeviceIndex] };
+
+            [initiatorDevice.associationId, edgeAffectedDevice.associationId] = [edgeAffectedDevice.associationId, initiatorDevice.associationId];
+            [initiatorDevice.associationName, edgeAffectedDevice.associationName] = [edgeAffectedDevice.associationName, initiatorDevice.associationName];
+
+            Object.assign(table[initiatorDeviceIndex], initiatorDevice);
+            Object.assign(table[edgeAffectedDeviceIndex], edgeAffectedDevice);
+
+            Object.assign(data, initiatorDevice);
+            Object.assign(newData, edgeAffectedDevice);
+        }
+    }
+
+    // re-order the table by associationId
+    table.sort((a: { associationId: string; }, b: { associationId: any; }) => a.associationId.localeCompare(b.associationId));
+
+    editingRows.value = [];
+    setTimeout(() => {
+        editingRows.value = [...editingRows.value];
+    }, 0);
+
+    console.log('[NAMING] table after edit: ', table);
+}
 
 // uses config.associationLogic to calculate the associationId
 const calculateAssociationId = (associationTable: any[], device: {
@@ -432,9 +494,14 @@ const updateNames = (src: any[], table: any[]) => {
 }
 
 const changeNames = useBoolStates([renaming],[], async() => {
+    console.log('[NAMING] changeNames: tables values: ', routersTable.value, switchesTable.value, apsTable.value, othersTable.value);
+
     updateNames(routers.value, routersTable.value);
     updateNames(switches.value, switchesTable.value);
     updateNames(aps.value, apsTable.value);
+
+    console.log('[NAMING] changeNames: devicesList after renaming: ', devicesList.value);
+    console.log('[NAMING] changeNames: device lists: ', routers.value, switches.value, aps.value, others.value);
 
     for (const device of devicesList.value) {
         await changeDeviceName(device.serial, device.name);
@@ -546,83 +613,202 @@ onMounted(() => {
 
 
 <template>
-    <div id="naming page">
+    <div id="naming-page">
         <h1>Names</h1>
+        <Divider style="width: 250px;" />
         <div v-if="devicesLoaded" id="naming-form" class="make-column">
             <div class="make-column">
                 <div class="make-row">
                     <h2>Routers</h2>
                 </div>
-                <div v-for="(router, index) in routers" :key="index" class="make-row">
-                    <p class="margin-padding">{{ router.model }}</p>
-                    <p class="margin-padding">{{ router.serial }}</p>
-                    <input class="margin-padding" v-model="router.name"/>
-                    <input class="margin-padding" v-model="routersTable[index].name"/>
-                    <p class="margin-padding">id : {{ routersTable[index].id }}</p>
-                    <button class="margin-padding" :disabled="index===0" @click="moveUp(index, routers)">Up</button>
-                    <button class="margin-padding" :disabled="index===routers.length-1" @click="moveDown(index, routers)">Down</button>
-                    <button class="margin-padding" @click="blink(router.serial)">Blink</button>
-                </div>
+                <DataTable :value="routers" tableStyle="min-width: 50rem" editMode="row"
+                    @row-edit-save="(event) => onRowEditSave(event, routers)" v-model:editingRows="editingRows" dataKey="serial"
+                    @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
+                    :pt="{
+                        table: { style: 'min-width: 50rem' },
+                        column: {
+                            bodycell: ({ state }) => ({
+                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                            })
+                        }
+                    }"
+                >
+                    <Column field="model" header="Model" style="width: 15%;"></Column>
+                    <Column field="serial" header="Serial" style="min-width: 25%;"></Column>
+                    <Column field="name" header="Name" style="max-width: 10%;">
+                        <template #editor="{ data, field }">
+                            <InputText v-model="data[field]" fluid/>
+                        </template>
+                    </Column>
+                    <Column field="associationName" header="Association Name" style="width: 22%;">
+                        <template #editor="{ data, field }">
+                            <InputText v-model="data[field]" fluid/>
+                        </template>
+                    </Column>
+                    <Column field="associationId" header="ID" style="width: 10%;">
+                        <template #editor="{ data, field }">
+                            <Select v-model="data[field]" :options="routersTable"
+                                optionValue="id" optionLabel="id" fluid @change="console.log('[NAMING]: Data when changing the thingy: ', data); data.associationName = data.associationId">
+                                <!--template #option="slotProps">
+                                    <Tag :value="slotProps.option.id" :severity="slotProps.option.used? 'success' : 'warning'">{{ slotProps.option.id }}</Tag>
+                                </template-->
+                            </Select>
+                        </template>
+                    </Column>
+                    <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
+                </DataTable>
             </div>
             <div class="make-column">
-                <div class="make-row">
+                <div class="make-row" style="margin-top: 20px;">
                     <h2>Switches</h2>
                 </div>
-                <div v-for="(switchDevice, index) in switches" :key="index" class="make-row">
-                    <p class="margin-padding">{{ switchDevice.model }}</p>
-                    <p class="margin-padding">{{ switchDevice.serial }}</p>
-                    <input class="margin-padding" v-model="switchDevice.name"/>
-                    <input class="margin-padding" v-model="switchesTable[index].name"/>
-                    <p class="margin-padding">id: {{ switchesTable[index].id }}</p>
-                    <button class="margin-padding" :disabled="index===0" @click="moveUp(index, switches)">Up</button>
-                    <button class="margin-padding" :disabled="index===switches.length-1" @click="moveDown(index, switches)">Down</button>
-                    <button class="margin-padding" @click="blink(switchDevice.serial)">Blink</button>
-                </div>
+                <DataTable :value="switches" tableStyle="min-width: 50rem" editMode="row"
+                    @row-edit-save="(event) => onRowEditSave(event, switches)" v-model:editingRows="editingRows" dataKey="serial"
+                    @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
+                    :pt="{
+                        table: { style: 'min-width: 50rem' },
+                        column: {
+                            bodycell: ({ state }) => ({
+                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                            })
+                        }
+                    }"
+                >
+                    <Column field="model" header="Model" style="width: 15%;"></Column>
+                    <Column field="serial" header="Serial" style="min-width: 15%;"></Column>
+                    <Column field="name" header="Name">
+                        <template #editor="{ data, field }">
+                            <InputText v-model="data[field]" fluid/>
+                        </template>
+                    </Column>
+                    <Column field="associationName" header="Association Name" style="width: 25%;">
+                        <template #editor="{ data, field }">
+                            <InputText v-model="data[field]" fluid/>
+                        </template>
+                    </Column>
+                    <Column field="associationId" header="ID" style="width: 10%;">
+                        <template #editor="{ data, field }">
+                            <Select v-model="data[field]" :options="switchesTable"
+                                optionValue="id" optionLabel="id" fluid @change="console.log('[NAMING]: Data when changing the thingy: ', data); data.associationName = data.associationId">
+                                <!--template #option="slotProps">
+                                    <Tag :value="slotProps.option.id" :severity="slotProps.option.used? 'success' : 'warning'">{{ slotProps.option.id }}</Tag>
+                                </template-->
+                            </Select>
+                        </template>
+                    </Column>
+                    <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
+                </DataTable>
             </div>
             <div class="make-column">
-                <div class="make-row">
+                <div class="make-row" style="margin-top: 20px;">
                     <h2>Access Points</h2>
                 </div>
-                <div v-for="(ap, index) in aps" :key="index" class="make-row">
-                    <p class="margin-padding">{{ ap.model }}</p>
-                    <p class="margin-padding">{{ ap.serial }}</p>
-                    <input class="margin-padding" v-model="ap.name"/>
-                    <input class="margin-padding" v-model="apsTable[index].name"/>
-                    <p class="margin-padding">id: {{ apsTable[index].id }}</p>
-                    <button class="margin-padding" :disabled="index===0" @click="moveUp(index, aps)">Up</button>
-                    <button class="margin-padding" :disabled="index===aps.length-1" @click="moveDown(index, aps)">Down</button>
-                    <button class="margin-padding" @click="blink(ap.serial)">Blink</button>
-                </div>
+                <DataTable :value="aps" tableStyle="min-width: 50rem" editMode="row"
+                    @row-edit-save="(event) => onRowEditSave(event, aps)" v-model:editingRows="editingRows" dataKey="serial"
+                    @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
+                    :pt="{
+                        table: { style: 'min-width: 50rem' },
+                        column: {
+                            bodycell: ({ state }) => ({
+                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                            })
+                        }
+                    }"
+                >
+                    <Column field="model" header="Model" style="width: 15%;"></Column>
+                    <Column field="serial" header="Serial" style="min-width: 15%;"></Column>
+                    <Column field="name" header="Name">
+                        <template #editor="{ data, field }">
+                            <InputText v-model="data[field]" fluid/>
+                        </template>
+                    </Column>
+                    <Column field="associationName" header="Association Name" style="width: 25%;">
+                        <template #editor="{ data, field }">
+                            <InputText v-model="data[field]" fluid/>
+                        </template>
+                    </Column>
+                    <Column field="associationId" header="ID" style="width: 10%;">
+                        <template #editor="{ data, field }">
+                            <Select v-model="data[field]" :options="apsTable"
+                                optionValue="id" optionLabel="id" fluid @change="console.log('[NAMING]: Data when changing the thingy: ', data); data.associationName = data.associationId">
+                                <!--template #option="slotProps">
+                                    <Tag :value="slotProps.option.id" :severity="slotProps.option.used? 'success' : 'warning'">{{ slotProps.option.id }}</Tag>
+                                </template-->
+                            </Select>
+                        </template>
+                    </Column>
+                    <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
+                </DataTable>
             </div>
-            <hr />
-            <hr />
-            <hr />
-            <div>
+            <div class="col center" style="margin-top: 40px;">
                 <h2>Tagging</h2>
                 <!-- For each device, show its list of tags, and allow the user edit them -->
-                <div class="make-row" v-for="(device, index) in devicesList" :key="index">
+                <!--div class="make-row" v-for="(device, index) in devicesList" :key="index">
                     <div class="make-row" v-if="device.tags.length > 0">
                         <p class="margin-padding">{{ device.model }}</p>
                         <p class="margin-padding">{{ device.serial }}</p>
                         <p class="margin-padding">{{ device.associationId }}</p>
                         <div v-for="(tag, tagIndex) in device.tags" :key="tagIndex" class="make-row">
-                            <input class="margin-padding" v-model="device.tags[tagIndex]"/>
-                            <button class="margin-padding" @click="device.tags.splice(tagIndex, 1)">Remove</button>
+                            <InputText class="margin-padding" v-model="device.tags[tagIndex]"/>
+                            <Button class="margin-padding" @click="device.tags.splice(tagIndex, 1)">Remove</Button>
                         </div>
-                        <button class="margin-padding" @click="device.tags.push('')">Add tag</button>
+                        <Button class="margin-padding" @click="device.tags.push('')">Add tag</Button>
                     </div>
-                </div>
+                </div-->
+                <DataTable :value="aps" tableStyle="min-width: 50rem" editMode="row"
+                    @row-edit-save="(event) => onRowEditSaveTags(event, aps)" v-model:editingRows="editingRows" dataKey="serial"
+                    @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
+                    :pt="{
+                        table: { style: 'min-width: 50rem' },
+                        column: {
+                            bodycell: ({ state }) => ({
+                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                            })
+                        }
+                    }"
+                >
+                    <Column field="model" header="Model" style="min-width: 0%;"></Column>
+                    <Column field="serial" header="Serial" style="min-width: 15%;"></Column>
+                    <Column field="associationId" header="ID" style="min-width: 0%;"></Column>
+                    <Column field="tags" header="Tags" style="width: 40%;">
+                        <!-- -->
+                        <template #body="{ data }">
+                            <Tag v-for="(tag, index) in data.tags" :key="index" :value="tag"
+                                style="margin-left: 10px;"
+                            >{{ tag }}</Tag>
+                        </template>
+                        <template #editor="{ data, field }">
+                            <MultiSelect v-model="data[field]" :options="config.tags" fluid
+                                optionValue="name" optionLabel="name" placeholder="Select tags" display="chip"/>
+                        </template>
+                    </Column>
+                    <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
+                </DataTable>
             </div>
-            <div>
+            <div style="margin-top: 40px; margin-bottom: 10px">
                 <h2>Address</h2>
-                <input v-model="address" placeholder="Enter an address"/>
-                <button @click="changeAddress">Save</button>
+                <InputText v-model="address" placeholder="Enter an address" style="margin-right: 20px;"/>
+                <Button @click="changeAddress" style="margin-right: 15px;">Save</Button>
+
+                <span class="pi pi-question-circle" @click="toggleSaveAddressHelp" style="align-self: flex-end;"></span>
+
+                <Popover ref="saveAddressHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                    <p>Use this field in case you made a mistake setting the network address in the setup.<br>
+                        This field is only saved when using the dedicated button.</p>
+                </Popover>
             </div>
-            <button class="margin-padding" @click="changeNames">Save</button>
+            <Divider style="width: 250px;" />
+            <div style="margin-top: 20px;"></div>
+            <!--Button class="margin-padding" @click="changeNames">Save</Button-->
+            <Button class="margin-padding" @click="changeNames"
+            :disabled="(renaming)">
+            <v-progress-circular v-if="renaming" indeterminate color="#fff" width="3"></v-progress-circular>
+            <span v-else>Save changes</span>
             <p v-if="renaming">Renaming devices...</p>
+            </Button>
             <div class="make-row margin-padding">
-                <button class="margin-padding" @click="goBack">Back</button>
-                <button class="margin-padding" @click="validate">Next</button>
+                <Button class="margin-padding" @click="goBack">Back</Button>
+                <Button class="margin-padding" @click="validate">Next</Button>
             </div>
         </div>
     </div>
@@ -648,5 +834,20 @@ onMounted(() => {
 
     .fit-width {
         width: fit-content;
+    }
+
+    #naming-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .p-150 {
+        min-width: 150px;
+    }
+
+    p {
+        min-width: 100px;
     }
 </style>

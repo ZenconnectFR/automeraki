@@ -2,7 +2,7 @@
 
 import { ref } from 'vue'
 import { useIdsStore } from '@/stores/ids'
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 
 import { useErrorStore } from '@/stores/error'
 import NavBar from './components/NavBar.vue';
@@ -31,6 +31,22 @@ if (orgId && orgId !== '-1') {
   ready.value = true
 }
 
+// check if the user is on the home page
+const showNavBar = ref(false)
+
+// listen for route changes
+const router = useRouter()
+router.afterEach((to, from) => {
+  // show navbar if: 
+  // - user not in home page
+  // - user not in voice-and-spoke with query param orgWide=true
+  if (to.path !== '/' && !(to.path === '/voice-and-spoke' && to.query.orgWide === 'true') && to.path !== '/claim') {
+    showNavBar.value = true
+  } else {
+    showNavBar.value = false
+  }
+})
+
 
 </script>
 
@@ -45,7 +61,9 @@ if (orgId && orgId !== '-1') {
         </div>
       </v-container>
     </div>
-    <NavBar />
+    <NavBar v-if="showNavBar"/>
+    <div v-if="!showNavBar" class="make-space">
+    </div>
     <RouterView />
   </div>
 </template>
@@ -53,12 +71,11 @@ if (orgId && orgId !== '-1') {
 <style scoped>
 #welcome {
   text-align: center;
-  margin-top: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 90%;
+  width: 100%;
 }
 
 .alert-popup {
@@ -87,5 +104,9 @@ if (orgId && orgId !== '-1') {
   margin-right: 16px;
   color: red; /* Customize the close button color if needed */
   justify-self: flex-end; /* Align the close button to the right */
+}
+
+.make-space {
+  height: 60px;
 }
 </style>

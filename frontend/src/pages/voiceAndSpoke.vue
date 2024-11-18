@@ -21,6 +21,8 @@ import { useBoolStates } from '@/utils/Decorators'
 
 import { useRouter, useRoute } from 'vue-router'
 
+import Button from 'primevue/button';
+
 const router = useRouter()
 const route = useRoute()
 
@@ -131,6 +133,9 @@ const fillVpnSubnets = () => {
 // immediately determine the available voice vlan and site-to-site vpn subnets
 const setup = useBoolStates([loading], [loaded], async () => {
     fillVpnSubnets();
+
+    console.log('[VPN] orgId when setting up: ', orgId.value)
+
     const vpnStatuses = await getVpnStatuses(orgId.value)
 
     // check for errors
@@ -387,7 +392,13 @@ const goBack = () => {
 
 const nextPage = () => {
     router.push(getRoutePath(configStore.nextPage()))
-}
+};
+
+const backSetup = () => {
+    // empty configuration
+    configStore.setConfiguration(null);
+    router.push('/setup');
+};
 
 onMounted(() => {
     console.log('config: ', config)
@@ -403,6 +414,7 @@ onMounted(() => {
 </script>
 
 <template>
+    <Button v-if="orgWide" id="homebtn" @click="backSetup">Back</Button>
     <div>
         <!-- show the next available subnet for each subnet name -->
         <div v-for="(name, index) in Object.keys(freeSubnets)" :key="index">
@@ -465,5 +477,13 @@ onMounted(() => {
 
 .red {
     color: red;
+}
+
+#homebtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    height: 40px;
+    padding: 0 20px;
 }
 </style>

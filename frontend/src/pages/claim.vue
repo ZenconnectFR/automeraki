@@ -16,6 +16,10 @@ import { getDevice } from '@/endpoints/devices/GetDevice'
 
 import { getRoutePath } from '@/utils/PageRouter'
 
+import Textarea from 'primevue/textarea'
+import Divider from 'primevue/divider'
+import Button from 'primevue/button'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -53,6 +57,11 @@ const alreadyInCurrentNetwork = ref(false)
 const claiming = ref(false)
 
 // --------------------------- CLAIM REFACTORED ---------------------------
+
+const correctInput = () => {
+    let parsed = parseDevices(newNetworkDevices.value)
+    newNetworkDevices.value = parsed.join('\n')
+}
 
 const retrieveInventory = async (parsedDevices: string[]) => {
     // get the inventory devices
@@ -263,9 +272,15 @@ const validate = async() => {
 <template>
     <div id="claim-page">
         <h1>Claim Devices</h1>
-        <div id="claim-devices-form" class="make-column">
-            <textarea class="margin-padding-all-normal round-normal" v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials"></textarea>
-            <button class="margin-padding-all-normal" v-if="newNetworkId" @click="addDevices">Add Devices</button>
+        <Divider style="width: 250px;"/>
+        <div id="claim-devices-form" class="col center">
+            <Textarea id="claim-form" autoResize cols="50" rows="5" v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials" @change="correctInput"/>
+            <!--Button class="margin-padding-all-normal" style="width: 50%;" v-if="newNetworkId" @click="addDevices">Add Devices</Button-->
+            <Button class="margin-all-normal constant-width-250 constant-height-40" @click="addDevices"
+            :disabled="(!newNetworkId || claiming)">
+            <v-progress-circular v-if="claiming" indeterminate color="#fff" width="3"></v-progress-circular>
+            <span v-else>Add Devices</span>
+        </Button>
         </div>
         <p v-if="claiming">Claiming devices...</p>
         <template v-if="showMoveNetwork">
@@ -287,30 +302,14 @@ const validate = async() => {
         </template>
         <p v-if="devicesAdded">Devices added to network</p>
         <p v-if="noDevicesToAdd">No new devices to add to the new network</p>
-        <button class="margin-padding-all-normal" @click="validate">Next</button>
+        <Button class="margin-padding-all-normal" @click="validate">Next</Button>
     </div>
 </template>
 
 <style scoped>
-    .make-column {
-        display: flex;
-        flex-direction: column;
-    }
-
     .margin-padding-all-normal {
         margin: 10px;
         padding: 10px;
-    }
-
-    .round-normal {
-        border-radius: 4px;
-    }
-
-    #claim-devices-form {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
     }
 
     #claim-page {
@@ -319,11 +318,14 @@ const validate = async() => {
         align-items: center;
         min-width: 40%;
         width: 40%;
+        margin-top: 40px;
     }
 
-    textarea {
-        width: 100%;
-        height: 100px;
-        overflow-y: scroll;
+    #claim-form {
+        margin: 10px;
+        padding: 10px;
+        border : 1px solid rgb(136, 136, 136);
+        border-radius: 8px;
+        width: 500px;
     }
 </style>
