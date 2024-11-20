@@ -86,3 +86,19 @@ h3 {
     margin-bottom: 1rem;
 }
 
+::-webkit-scrollbar {
+    width: 10px; /* Adjust width of vertical scrollbar */
+    height: 10px; /* Adjust height of horizontal scrollbar */
+}
+
+/* Style the thumb (the draggable part of the scrollbar) */
+::-webkit-scrollbar-thumb {
+    background-color: #dcdcdc; /* Light gray color for the thumb */
+    border-radius: 10px; /* Rounded edges */
+}
+
+/* Style the track (the background of the scrollbar) */
+::-webkit-scrollbar-track {
+    background-color: #f1f1f1; /* Light gray background for the track */
+    border-radius: 10px; /* Rounded edges */
+}

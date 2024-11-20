@@ -13,6 +13,8 @@ import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';  
 import { definePreset } from '@primevue/themes';
 
+import ToastService from 'primevue/toastservice';
+
 
 // Try to move this part to a separate file in the future if possible
 import { createRouter, createWebHistory } from 'vue-router';
@@ -129,6 +131,7 @@ const MyPreset = definePreset(Aura, {
 app.use(pinia)
 app.use(Router)
 app.use(vuetify)
+app.use(ToastService)
 app.use(PrimeVue, {
     theme: {
         preset: MyPreset

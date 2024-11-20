@@ -25,6 +25,7 @@ import Drawer from 'primevue/drawer'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Divider from 'primevue/divider'
+import Popover from 'primevue/popover';
 
 const router = useRouter()
 const route = useRoute()
@@ -45,6 +46,8 @@ const vlanIsAutoConfigured = ref(false)
 const vlanAutoConfigured = ref([])
 
 const perPortVlan = ref([])
+
+const moreOptions = ref(false)
 
 let autoMac = createMac()
 
@@ -98,6 +101,12 @@ const countCommonParts = (ip1: string, ip2: string | any) => {
         }
         return commonParts
     }
+}
+
+const autoMacHelpRef = ref()
+
+const toggleAutoMacHelp = (event) => {
+    autoMacHelpRef.value.toggle(event);
 }
 
 // go over all the vlans and compute the common parts of the appliance IPs
@@ -333,7 +342,8 @@ const configureVlans = () => {
                     vlanAutoConfigured.value[vlanAutoConfigured.value.length - 1].payload[1].fixedIpAssignments.push({
                         ip: assignment.ip,
                         name: assignment.expectedEquipment,
-                        mac: device.mac
+                        mac: device.mac,
+                        autoMac: false
                     })
                     found = true
                     console.log('[VLAN] Device found: ', device)
@@ -345,7 +355,8 @@ const configureVlans = () => {
                 vlanAutoConfigured.value[vlanAutoConfigured.value.length - 1].payload[1].fixedIpAssignments.push({
                     ip: assignment.ip,
                     name: assignment.expectedEquipment,
-                    mac: autoMac
+                    mac: autoMac,
+                    autoMac: true
                 })
                 autoMac = createMac(autoMac)
             }
@@ -549,15 +560,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <div style="margin-top: 40px;">
-        <h1>VLAN</h1>
-        <!-- Show list of vlans from the config file, auto complete mac with the right equipement (filter name for the last group of letters) -->
-        <!-- The autoconfigured vlans will be displayed below and each info can be edited (thus we use an input to display them)-->
-        <div class="make-column" v-if="vlanIsAutoConfigured">
-            <!-- On top right, add a congregate of the vlans appliance IPs: once the vlans are configured, a new set of 4 ip parts will be generated.
-             that set will contain each part of the appliance IPs that are common to all vlans. If some parts differ, it'll be filled with ... and unable to be edited.
-             When one of these part is edited, all the vlan appliance IPs will be updated with the new part. -->
-            <Drawer />
+    <div style="margin-top: 40px; margin-bottom: 60px">
+        <Button icon="pi pi-chevron-left" @click="moreOptions = true" label="More" class="vpn-btn top-right-btn"/>
+
+        <Drawer v-model:visible="moreOptions" header="Extra features" position="right" style="width: 500px;">
+
+            <Divider />
+            
             <div class="make-column" id="commonIps">
                 <p>Common appliance IPs</p>
                 <div v-for="(group, index) in commonIpsGroups" :key="index">
@@ -571,8 +580,16 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
+        </Drawer>
+        <h1>VLAN</h1>
+        <!-- Show list of vlans from the config file, auto complete mac with the right equipement (filter name for the last group of letters) -->
+        <!-- The autoconfigured vlans will be displayed below and each info can be edited (thus we use an input to display them)-->
+        <div class="make-column" v-if="vlanIsAutoConfigured">
+            <!-- On top right, add a congregate of the vlans appliance IPs: once the vlans are configured, a new set of 4 ip parts will be generated.
+             that set will contain each part of the appliance IPs that are common to all vlans. If some parts differ, it'll be filled with ... and unable to be edited.
+             When one of these part is edited, all the vlan appliance IPs will be updated with the new part. -->
             <h2>Auto configured VLANs</h2>
-            <div class="make-column" v-for="(vlan, index) in vlanAutoConfigured" :key="index">
+            <!--div class="make-column" v-for="(vlan, index) in vlanAutoConfigured" :key="index">
                 <hr />
                 <hr />
                 <p>------------------------------------------------------------------------------------</p>
@@ -625,19 +642,59 @@ onMounted(() => {
                     </table>
                 </div>
                 <div class="margin-all-normal make-row">
-                    <!--button @click="makeNewIpAssignment(vlan.id)">Add new IP assignment</button>
-                    <button @click="deleteVlan(vlan.id)">Delete VLAN</button-->
                 </div>
             </div>
             <hr />
-            <!--div class="margin-all-normal make-row">
-                <button @click="makeNewVlan">Add new VLAN</button>
-            </div-->
             <p v-if="savingChanges">Saving changes...</p>
             <Button style="margin-bottom: 20px;" @click="confirm">Save on Meraki</Button>
             <div class="row center">
                 <Button style="margin-right: 15px;" @click="goBack">Back</Button>
                 <Button @click="validate">Next</Button>
+            </div-->
+
+            <div class="col center" style="margin-top: 20px;" v-for="(vlan, index) in vlanAutoConfigured" :key="index">
+                <Divider style="margin-top: 20px; width:300px" />
+                <div class="row center">
+                    <h3 style="margin: 10px;">{{ vlan.payload[0].name }}</h3>
+                    <Divider layout="vertical" />
+                    <h3 style="margin: 10px;">Id - {{ vlan.id }}</h3>
+                    <Divider layout="vertical" />
+                    <h3 style="margin: 10px;">Appliance IP - {{ vlan.payload[0].applianceIp }}</h3>
+                </div>
+                <div class="row center">
+                    <h3 style="margin: 10px;">Subnet - </h3>
+                    <InputText v-model="vlan.payload[0].subnet" placeholder="Subnet" style="margin: 10px;"/>
+                </div>
+                <div class="col center" v-if="vlan.payload[1].fixedIpAssignments?.length > 0">
+                    <Divider style="width:100px" />
+                    <h3 style="margin-top: 10px;">Fixed IP assignments</h3>
+                    <DataTable :value="vlan.payload[1].fixedIpAssignments" editMode="row" dataKey="serial"
+                        :pt="{
+                            table: { style: 'min-width: 50rem' },
+                            column: {
+                                bodycell: ({ state }) => ({
+                                    style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                                })
+                            }
+                        }"
+                    >
+                        <Column field="ip" header="IP Address"></Column>
+                        <Column field="name" header="Name"></Column>
+                        <Column field="mac" header="MAC Address">
+                            <template #body="{ data }">
+                                <InputText v-model="data.mac" :class="{ existingMac: !data.autoMac }" style="padding: 4px;"/>
+                                <!--i v-if="!data.autoMac" class="pi pi-exclamation-circle" style="margin-left: 10px; cursor: pointer; color: var(--p-indigo-500);" @click="toggleAutoMacHelp"></i>
+                                <Popover ref="autoMacHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                                    <p>This mac address has been determined automatically, if it is wrong, you can modify it</p>
+                                </Popover-->
+                            </template>
+                        </Column>
+                    </DataTable>
+                </div>
+                <div v-else class="col center" style="margin-bottom: 20px;">
+                    <Divider style="width:100px" />
+                    <h3 style="margin: 10px;">No fixed IP assignments</h3>
+                </div>
             </div>
         </div>
     </div>
@@ -684,13 +741,6 @@ onMounted(() => {
         align-items: center;
     }
 
-    #commonIps {
-        position: absolute;
-        top: 20%;
-        right: 5%;
-        width: 30%;
-    }
-
     input.short {
         width: 50px;
     }
@@ -699,5 +749,15 @@ onMounted(() => {
         border: 1px solid black;
         padding: 10px;
         border-radius: 4px;
+    }
+
+    .top-right-btn {
+        position: fixed;
+        top: 20px;
+        right: 0;
+    }
+
+    .existingMac {
+        box-shadow: 0 0 5px 0 var(--p-indigo-500);
     }
 </style>

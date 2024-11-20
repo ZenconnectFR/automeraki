@@ -222,21 +222,6 @@ const cloneNetworkAction = async (toCloneId : string, templateData: any) => {
     }
 }
 
-// Handle network cloning (when the clone network button is clicked)
-const cloneNetworkEvent = async () => {
-    if (selectedNetwork.value === null) {
-        newNetworkSelected.value = false
-        return
-    }
-
-    if (!fieldsCheck()) {return}
-
-    cloningNetwork.value = true
-
-    console.log('[SETUP] Cloning network:', selectedNetwork.value.value, newNetworkNameInput.value, orgId.value)
-    cloneNetworkAction(selectedNetwork.value.value)
-}
-
 // Continue with the selected template
 const continueWithTemplate = async () => {
     if (selectedTemplate.value.name == '') {

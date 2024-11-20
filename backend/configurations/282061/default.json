@@ -685,75 +685,6 @@
             }
         },
         {
-            "type": "wans",
-            "data": {
-                "wan1": [
-                    {
-                        "name": "Orange",
-                        "auto": false,
-                        "associatedTags" : [
-                            "WAN1-ORANGE"
-                        ],
-                        "wanIp": "",
-                        "mask": "255.255.255.252",
-                        "gateway": "",
-                        "primaryDns": "194.2.0.20",
-                        "secondaryDns": "8.8.8.8"
-                    },
-                    {
-                        "name": "Starlink",
-                        "auto": false,
-                        "associatedTags" : [
-                            "WAN1-STARLINK"
-                        ],
-                        "wanIp": "192.168.1.199",
-                        "mask": "255.255.255.0",
-                        "gateway": "192.168.1.1",
-                        "primaryDns": "8.8.8.8",
-                        "secondaryDns": "8.8.4.4"
-                    },
-                    {
-                        "name": "Cradlepoint",
-                        "auto": true,
-                        "associatedTags" : [
-                            "cradle", "WAN2-5G"
-                        ],
-                        "wanIp": "",
-                        "mask": "",
-                        "gateway": "",
-                        "primaryDns": "",
-                        "secondaryDns": ""
-                    }
-                ],
-                "wan2" : [
-                    {
-                        "name": "Bouygues",
-                        "auto": false,
-                        "associatedTags" : [
-                            "WAN2-BOUYGUES"
-                        ],
-                        "wanIp": "",
-                        "mask": "255.255.255.248",
-                        "gateway": "",
-                        "primaryDns": "194.158.122.10",
-                        "secondaryDns": "8.8.8.8"
-                    },
-                    {
-                        "name": "Cradlepoint",
-                        "auto": true,
-                        "associatedTags" : [
-                            "cradle", "WAN2-5G"
-                        ],
-                        "wanIp": "",
-                        "mask": "",
-                        "gateway": "",
-                        "primaryDns": "",
-                        "secondaryDns": ""
-                    }
-                ]
-            }
-        },
-        {
             "type": "vpn",
             "data": {
                 "vpnSubnets": [
@@ -855,7 +786,9 @@
                         "url": "https://v3.smartwifi.fr/v1/auth/meraki/",
                         "number": 0
                     }
-                ]
+                ],
+                "mxHostname": "{networkName}-wired",
+                "useHostname": false
             }
         },
         {
