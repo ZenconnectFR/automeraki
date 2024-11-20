@@ -414,6 +414,9 @@ onMounted(() => {
 </script>
 
 <template>
+    <div style="margin-top: 40px;">
+        <h1>VPN Configuration</h1>
+    </div>
     <Button v-if="orgWide" id="homebtn" @click="backSetup">Back</Button>
     <div>
         <!-- show the next available subnet for each subnet name -->

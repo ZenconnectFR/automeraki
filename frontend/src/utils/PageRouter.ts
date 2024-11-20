@@ -5,6 +5,10 @@ export const routeTable = {
         label: "Edit Network",
         path: "/edit-network",
     },
+    claim: {
+        label: "Claim",
+        path: "/claim"
+    },
     naming: {
         label: "Naming",
         path: "/naming"

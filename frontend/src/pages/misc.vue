@@ -21,6 +21,15 @@ import { getRoutePath } from '@/utils/PageRouter'
 import { useRouter, useRoute } from 'vue-router'
 import Dropdown from '@/components/Dropdown.vue'
 
+import Button from 'primevue/button'
+import Autocomplete from 'primevue/autocomplete'
+import Textarea from 'primevue/textarea'
+import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
+
+import { disableWan, enableWan } from '@/endpoints/devices/EnableWan'
+import { getManagementInterface } from '@/endpoints/devices/GetManagementInterface'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -82,6 +91,7 @@ const initSplashPagesSection = () => {
 // 2 - MX Notes
 
 const mxNotes = ref('')
+const mxSerial = ref('')
 const mxPresent = ref(false)
 
 const populateMXNotes = async() => {
@@ -96,6 +106,7 @@ const populateMXNotes = async() => {
     mxPresent.value = true
     const resp = await getDevice(device.serial)
     mxNotes.value = resp['notes']?resp['notes']:''
+    mxSerial.value = device.serial
     console.log('mxNotes [', mxNotes.value ,']')
 }
 
@@ -163,6 +174,26 @@ const updateMxHostname = async() => {
     console.log('resp', resp)
 }
 
+const wan2infoFetched = ref(false)
+const wan2enabled = ref(false)
+
+const fetchWan2Info = async() => {
+    const resp = await getManagementInterface(mxSerial.value)
+    console.log('resp', resp)
+    wan2infoFetched.value = true
+    wan2enabled.value = resp.wan2.wanEnabled === 'enabled'
+}
+
+const toggleWan = async() => {
+    if (wan2enabled.value) {
+        await disableWan(mxSerial.value, 2)
+    } else {
+        await enableWan(mxSerial.value, 2)
+    }
+    await fetchWan2Info()
+}
+
+
 const prevPage = () => {
     router.push(getRoutePath(configStore.prevPage()))
 }
@@ -175,6 +206,7 @@ const setup = async() => {
     await populateSplashPages()
     initSplashPagesSection()
     await populateMXNotes()
+    await fetchWan2Info()
     await populateMxHostname()
     loaded.value = true
 }
@@ -185,6 +217,7 @@ onMounted(() => {
 </script>
 
 <template>
+    <div style="margin-top: 40px;"></div>
     <h2>Misc</h2>
     <div>
         <h3>Splash pages</h3>
@@ -195,42 +228,53 @@ onMounted(() => {
             <v-autocomplete :items="splashPagesOptions" v-model="selectedSplashPage" label="Select SSID" variant="outlined"/>
             <div v-for="splashPage in splashPages" :key="splashPage.ssidNumber">
                 <div v-if="splashPage.ssidNumber == selectedSplashPage">
-                    <h4>SSID {{ splashPage.ssidNumber }}</h4>
-                    <p>Current plash URL: {{ splashPage.splashUrl }}</p>
-                    <div>
-                        <input type="checkbox" v-model="splashPage.useExpectedUrl"/>
-                        <label>Use expected URL</label>
+                    <h4>Currently selected SSID : SSID {{ splashPage.ssidNumber }}</h4>
+                    <p style="margin-top: 10px;">Current splash URL: {{ splashPage.splashUrl }}</p>
+                    <div class="row center" style="margin-top: 10px;">
+                        <p style="margin-right: 15px;">New URL to use:</p>
+                        <InputText v-model="splashPage.splashUrl" placeholder="Enter URL"/>
                     </div>
-                    <input v-model="splashPage.expectedUrl" placeholder="Enter expected URL"/>
                 </div>
             </div>
         </div>
-        <button @click="validateSplash">Save</button>
+        <Button @click="validateSplash">Save</Button>
         <p v-if="savingChanges">Saving changes...</p>
         <p v-if="changesSaved">Changes saved</p>
     </div>
-    <div v-if="mxPresent">
+    <div v-if="mxPresent" style="margin-top: 30px;">
         <h3>MX Notes</h3>
         <div v-if="!loaded">
             <p>Loading...</p>
         </div>
         <div v-if="loaded">
             <v-textarea class="notes-area" v-model="mxNotes" variant="outlined" auto-grow placeholder="Enter notes"/>
-            <button @click="updateMXNotes">Save</button>
+            <Button @click="updateMXNotes">Save</Button>
         </div>
     </div>
-    <div v-if="mxPresent && mxHostnameLoaded">
+    <div style="margin-top: 30px;" v-if="wan2infoFetched">
+        <!-- Ask to enable wan2 or not-->
+        <h3>WAN2</h3>
+        <div v-if="!wan2enabled">
+            <Tag severity="danger" class="tag-style">Disabled</Tag>
+            <Button @click="toggleWan" class="smaller">Enable</Button>
+        </div>
+        <div v-if="wan2enabled">
+            <Tag severity="success" class="tag-style">Enabled</Tag>
+            <Button @click="toggleWan" class="smaller">Disable</Button>
+        </div>
+    </div>
+    <div v-if="mxPresent && mxHostnameLoaded && config.useHostname" style="margin-top: 30px;">
         <h3>Mx Hostname</h3>
         <div>
             <p>Current MX hostname prefix: {{ mxHostname }}</p>
             <p>New MX hostname prefix suggested:</p>
-            <input v-model="newMxHostname" placeholder="Enter MX hostname"/><span>-suffix</span>
-            <button @click="updateMxHostname">Save</button>
+            <InputText v-model="newMxHostname" placeholder="Enter MX hostname"/><span>-suffix</span>
+            <Button @click="updateMxHostname">Save</Button>
         </div>
     </div>
-    <div>
-        <button @click="prevPage">Previous</button>
-        <button @click="nextPage">Next</button>
+    <div style="margin-top: 20px;" class="row center">
+        <Button style="margin-right: 15px;" @click="prevPage">Previous</Button>
+        <Button @click="nextPage">Next</Button>
     </div>
 </template>
 
@@ -238,5 +282,18 @@ onMounted(() => {
 .notes-area {
     width: 100%;
     min-width: 300px;
+}
+
+.smaller {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    width: 80px;
+}
+
+.tag-style {
+    margin-right: 15px;
+    font-size:medium;
+    font-weight:600;
+    width: 80px;
 }
 </style>

@@ -274,7 +274,8 @@ const validate = async() => {
         <h1>Claim Devices</h1>
         <Divider style="width: 250px;"/>
         <div id="claim-devices-form" class="col center">
-            <Textarea id="claim-form" autoResize cols="50" rows="5" v-if="newNetworkId" v-model="newNetworkDevices" placeholder="Enter new network devices serials" @change="correctInput"/>
+            <Textarea id="claim-form" autoResize cols="50" rows="5" v-if="newNetworkId"
+            v-model="newNetworkDevices" placeholder="Enter new network devices serials" @change="correctInput" @input="correctInput"/>
             <!--Button class="margin-padding-all-normal" style="width: 50%;" v-if="newNetworkId" @click="addDevices">Add Devices</Button-->
             <Button class="margin-all-normal constant-width-250 constant-height-40" @click="addDevices"
             :disabled="(!newNetworkId || claiming)">

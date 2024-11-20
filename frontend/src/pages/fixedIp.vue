@@ -14,7 +14,13 @@ import { getRoutePath } from '@/utils/PageRouter'
 import { useBoolStates } from '@/utils/Decorators'
 
 import { useRouter, useRoute } from 'vue-router'
-import { get } from '@vueuse/core'
+
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Checkbox from 'primevue/checkbox'
+import InputText from 'primevue/inputtext'
+import Divider from 'primevue/divider'
+import Button from 'primevue/button'
 
 const router = useRouter()
 const route = useRoute()
@@ -32,6 +38,36 @@ const { devicesList } = storeToRefs(devices)
 
 const savingChanges = ref(false)
 const changesSaved = ref(false)
+
+const editingRows = ref([])
+const originalData = ref({})
+
+const onRowEditSave = async (event: any) => {
+    const { newData, index } = event
+    console.log('[FIXED IP] Saving row edit: ', newData, index)
+    Object.assign(fixedIpAssignments.value[index], newData)
+    console.log('[FIXED IP] New fixed ip assignment: ', fixedIpAssignments.value[index])
+}
+
+const onRowEditCancel = (event: any) => {
+    console.log('[FIXED IP] Cancel row edit: ', event, 'editingRows: ', editingRows.value)
+
+    const { data, index } = event
+
+    Object.assign(data, originalData.value[index])
+    console.log('[FIXED IP] Restored data: ', data)
+
+    // delete the original data
+    delete originalData.value[index]
+}
+
+const onRowEditInit = (event: any) => {
+    console.log('[FIXED IP] Init row edit: ', event, 'editingRows: ', editingRows.value)
+
+    const { data, index } = event
+    originalData.value[index] = JSON.parse(JSON.stringify(data))
+    console.log('[FIXED IP] Original data: ', originalData.value[index])
+}
 
 /**
  * Auto fix ip addresses for each device in the network.
@@ -67,7 +103,7 @@ const fixIp = useBoolStates([],[],async () => {
             fixedIpAssignments.value.push({
                 name: device.associationName,
                 serial: device.serial,
-                useDhcp: configFixedIp[i].useDhcp?.use ? configFixedIp[i].useDhcp : null,
+                useDhcp: configFixedIp[i].useDhcp?.use ? configFixedIp[i].useDhcp : { use: false, vlan: configFixedIp[i].config.vlan },
                 config: configFixedIp[i].config
             })
         }
@@ -136,59 +172,100 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div style="margin-top: 40px;" class="col center">
     <h1>Fixed IP</h1>
-    <div v-if="fixedIpDone">
+    <Divider style="margin-bottom: 20px; width: 250px;" />
+    <div v-if="fixedIpDone" class="col">
       <h2>Fixed IP assignments</h2>
-        <!-- for each equipment, table with column : ip, mask, vlan, gateway, primaryDns, secondaryDns.
-         Values contained in input fields, if a field doesn't exist, fill the input with "None"-->
-        <table class="space-elts">
-            <thead>
-                <tr>
-                    <th> </th>
-                    <th>Equipment</th>
-                    <th>IP</th>
-                    <th>Mask</th>
-                    <th>VLAN</th>
-                    <th>Gateway</th>
-                    <th>Primary DNS</th>
-                    <th>Secondary DNS</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="assignment in fixedIpAssignments">
-                    <td>
-                        <span v-if="assignment.useDhcp?.use">Using DHCP</span>
-                    </td>
-                    <td>
-                        <span>{{ assignment.name }}</span>
-                    </td>
-                    <td>
-                        <input type="text" v-model="assignment.config.ip" :disabled="assignment.useDhcp?.use"/>
-                    </td>
-                    <td>
-                        <input type="text" v-model="assignment.config.mask" :disabled="assignment.useDhcp?.use"/>
-                    </td>
-                    <td>
-                        <input type="text" v-model="assignment.config.vlan"/>
-                    </td>
-                    <td>
-                        <input type="text" v-model="assignment.config.gateway" :disabled="assignment.useDhcp?.use"/>
-                    </td>
-                    <td>
-                        <input type="text" v-model="assignment.config.primaryDns" :disabled="assignment.useDhcp?.use"/>
-                    </td>
-                    <td>
-                        <input type="text" v-model="assignment.config.secondaryDns" :disabled="assignment.useDhcp?.use"/>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <button @click="validate">Validate</button>
-        <p v-if="savingChanges">Saving changes...</p>
-        <p v-if="changesSaved">Changes saved</p>
-        <button @click="goBack">Back</button>
-        <button @click="nextPage">Next</button>
+        <DataTable :value="fixedIpAssignments" tableStyle="min-width: 50rem" editMode="row"
+            @row-edit-save="onRowEditSave" v-model:editingRows="editingRows" dataKey="serial"
+            @row-edit-cancel="onRowEditCancel"
+            @row-edit-init="onRowEditInit"
+            :pt="{
+                table: { style: 'min-width: 70rem' },
+                column: {
+                    bodycell: ({ state }) => ({
+                        style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                    })
+                }
+            }"
+        >
+            <Column field="useDhcp" header="DHCP">
+                <template #body="{ data }">
+                    <span v-if="data.useDhcp?.use">Yes</span>
+                    <span v-else>No</span>
+                </template>
+                <template #editor="{ data, field }">
+                    <Checkbox v-model="data[field].use" binary/>
+                </template>
+            </Column>
+            <Column field="name" header="Equipment"></Column>
+            <Column field="config" header="IP" style="max-width: 150px;">
+                <template #body="{ data} ">
+                    <span v-if="data.useDhcp?.use"></span>
+                    <span v-else>{{ data.config.ip }}</span>
+                </template>
+                <template #editor="{ data, field }">
+                    <InputText class="input-text" v-model="data[field].ip" :disabled="data.useDhcp?.use"/>
+                </template>
+            </Column>
+            <Column field="config" header="Mask" style="max-width: 150px;">
+                <template #body="{ data} ">
+                    <span v-if="data.useDhcp?.use"></span>
+                    <span v-else>{{ data.config.mask }}</span>
+                </template>
+                <template #editor="{ data, field }">
+                    <InputText class="input-text" v-model="data[field].mask" :disabled="data.useDhcp?.use"/>
+                </template>
+            </Column>
+            <Column field="config" header="VLAN" style="max-width: 150px;">
+                <template #body="{ data} ">
+                    <span>{{ data.config.vlan }}</span>
+                </template>
+                <template #editor="{ data, field }">
+                    <InputText style="max-width: 65px;" v-model="data[field].vlan"/>
+                </template>
+            </Column>
+            <Column field="config" header="Gateway" style="max-width: 150px;">
+                <template #body="{ data} ">
+                    <span v-if="data.useDhcp?.use"></span>
+                    <span v-else>{{ data.config.gateway }}</span>
+                </template>
+                <template #editor="{ data, field }">
+                    <InputText class="input-text" v-model="data[field].gateway" :disabled="data.useDhcp?.use"/>
+                </template>
+            </Column>
+            <Column field="config" header="Primary DNS" style="max-width: 200px;">
+                <template #body="{ data} ">
+                    <span v-if="data.useDhcp?.use"></span>
+                    <span v-else>{{ data.config.primaryDns }}</span>
+                </template>
+                <template #editor="{ data, field }">
+                    <InputText class="input-text" v-model="data[field].primaryDns" :disabled="data.useDhcp?.use"/>
+                </template>
+            </Column>
+            <Column field="config" header="Secondary DNS" style="max-width: 200px;">
+                <template #body="{ data} ">
+                    <span v-if="data.useDhcp?.use"></span>
+                    <span v-else>{{ data.config.secondaryDns }}</span>
+                </template>
+                <template #editor="{ data, field }">
+                    <InputText class="input-text" v-model="data[field].secondaryDns" :disabled="data.useDhcp?.use"/>
+                </template>
+            </Column>
+            <Column rowEditor headerStyle="width: 7rem" style="width: 10%;"></Column>
+        </DataTable>
+        <!--Button @click="addFixedIpAssignment" style="align-self: flex-end !important; margin-right: 5% !important;" class="plus-btn">
+            <i class="pi pi-plus"></i>
+        </Button-->
+    </div>
+    <div style="margin-top: 10px; margin-bottom: 20px;"></div>
+    <Button @click="validate">Save on Meraki</Button>
+    <p v-if="savingChanges">Saving changes...</p>
+    <p v-if="changesSaved">Changes saved</p>
+    <div class="row center space-elts">
+        <Button style="margin-right: 15px;" @click="goBack">Back</Button>
+        <Button @click="nextPage">Next</Button>
     </div>
   </div>
 </template>
@@ -204,5 +281,21 @@ onMounted(() => {
 
     .space-elts td {
         padding: 10px;
+    }
+
+    .input-text {
+        max-width: 130px;
+        padding: 4px;
+    }
+
+    .plus-btn {
+        border-radius: 0;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+        background-color: #fff;
+        color: var(--p-button-text-secondary-color);
+        /* no border at the top, 1px solid black for the rest */
+        border-top: none !important;
+        border: 2px solid #e5e7eb;
     }
 </style>

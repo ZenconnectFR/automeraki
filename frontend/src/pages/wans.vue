@@ -261,7 +261,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="make-column">
+    <div class="make-column" style="margin-top: 40px;">
         <h1>WANs</h1>
         <div v-if="loaded" class="make-colum">
             <!-- Dropdown to select which wan template to display, once selected, works with index in the wan1config array-->

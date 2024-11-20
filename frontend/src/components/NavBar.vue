@@ -1,17 +1,20 @@
 <template>
     <Button id="homebtn" @click="backHome">Home</Button>
     <div class="stepper-container">
-        <div v-for="(page, index) in availablePages" :key="index" class="stepper-item">
-            <div class="stepper-label">
-                {{ getPageLabel(page.type) }}
-            </div>
-            <div class="stepper-content">
+        <div v-for="(page, index) in availablePages" :key="index" class="stepper-item col">
+            <div class="stepper-content col">
+                <div class="stepper-label">
+                    {{ getPageLabel(page.type) }}
+                </div>
                 <div :class="['step-circle', getCircleClass(index)]" @click="__DEBUG__ ? goToPage(index) : null"
                  :style="{ cursor: __DEBUG__ ? 'pointer': 'default'}">
-                    {{ index + 1 }}
+                    <span class="nb" v-if="index >= currentPageIndex">{{ index + 1 }}</span>
+                    <span v-else>
+                        <i class="pi pi-check" style="color: #ffffff;"></i>
+                    </span>
                 </div>
-                <div v-if="index < availablePages.length - 1" :class="['step-line', getLineClass(index)]"></div>
             </div>
+            <div v-if="index < availablePages.length - 1" :class="['step-line', getLineClass(index)]"></div>
         </div>
     </div>
 </template>
@@ -32,7 +35,7 @@ const router = useRouter();
 const { configuration, currentPageIndex, currentPageConfig } = storeToRefs(configStore);
 
 const availablePages = computed(() => {
-    return configuration.value?.actions?.filter((action: { type: string; }) => action.type !== 'setup' && action.type !== 'claim') || [];
+    return configuration.value?.actions?.filter((action: { type: string; }) => action.type !== 'setup') || [];
 });
 
 const isCurrentPage = (index: number) => {
@@ -95,14 +98,13 @@ const getLineClass = (index: number) => {
 .stepper-item {
     display: flex;
     align-items: center;
-    flex-direction: column;
+    width: 100px;
 }
 
 .stepper-label {
     font-size: 14px;
     margin-bottom: 8px;
-    align-self: flex-start;
-    text-align: start;
+    justify-content: center;
 }
 
 .stepper-content {
@@ -116,21 +118,23 @@ const getLineClass = (index: number) => {
 }
 
 .step-circle {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background-color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #000;
+    color: #000000;
     font-size: 14px;
     font-weight: bold;
-    border: 1px solid #000000;
+    border: 2px solid #bbbbbb;
 }
 
 .step-circle-done {
-    background-color: #87c9ff;
+    background-color: var(--p-indigo-500);
+    color: #ffffff;
+    border: 1px solid var(--p-indigo-500);
 }
 
 .step-circle-active {
@@ -139,12 +143,17 @@ const getLineClass = (index: number) => {
 }
 
 .step-line {
-    width: 50px;
+    width: 60px;
     height: 2px;
     background-color: #bbbbbb;
+    transform: translate(50px, -20px);
 }
 
 .step-line-done {
-    background-color: #9aacff;
+    background-color: var(--p-indigo-500);
+}
+
+.nb {
+    margin-bottom: 2px;
 }
 </style>

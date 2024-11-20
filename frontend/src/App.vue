@@ -40,7 +40,7 @@ router.afterEach((to, from) => {
   // show navbar if: 
   // - user not in home page
   // - user not in voice-and-spoke with query param orgWide=true
-  if (to.path !== '/' && !(to.path === '/voice-and-spoke' && to.query.orgWide === 'true') && to.path !== '/claim') {
+  if (to.path !== '/' && !(to.path === '/voice-and-spoke' && to.query.orgWide === 'true')) {
     showNavBar.value = true
   } else {
     showNavBar.value = false

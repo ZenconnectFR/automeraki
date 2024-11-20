@@ -24,7 +24,7 @@
                     "type": {
                         "type": "string",
                         "description": "The type name of the action to perform.",
-                        "enum": ["naming", "fixedIp", "vlan", "firewall", "ports", "wans", "vpn", "tags", "misc", "eof"]
+                        "enum": ["claim", "naming", "fixedIp", "vlan", "firewall", "ports", "wans", "vpn", "tags", "misc", "eof"]
                     },
                     "data": {
                         "type": "object",
@@ -33,6 +33,24 @@
                 },
                 "required": ["type", "data"],
                 "allOf": [
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "claim"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                    }
+                                }
+                            }
+                        }
+                    },
                     {
                         "if": {
                             "properties": {

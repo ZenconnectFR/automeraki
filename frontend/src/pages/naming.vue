@@ -61,6 +61,12 @@ const toggleSaveAddressHelp = (event) => {
     saveAddressHelpRef.value.toggle(event);
 }
 
+const idHelpRef = ref()
+
+const toggleIdHelp = (event) => {
+    idHelpRef.value.toggle(event);
+}
+
 const onRowEditSaveTags = (event: any, table: any) => {
     console.log('[TAGGING] Row edit saved:', event);
     const { newData, index } = event;
@@ -83,8 +89,10 @@ const onRowEditSave = (event: any, table: any) => {
             const initiatorDevice = { ...table[initiatorDeviceIndex] };
             const edgeAffectedDevice = { ...table[edgeAffectedDeviceIndex] };
 
+            // switch the ids, names and tags
             [initiatorDevice.associationId, edgeAffectedDevice.associationId] = [edgeAffectedDevice.associationId, initiatorDevice.associationId];
             [initiatorDevice.associationName, edgeAffectedDevice.associationName] = [edgeAffectedDevice.associationName, initiatorDevice.associationName];
+            [initiatorDevice.tags, edgeAffectedDevice.tags] = [edgeAffectedDevice.tags, initiatorDevice.tags];
 
             Object.assign(table[initiatorDeviceIndex], initiatorDevice);
             Object.assign(table[edgeAffectedDeviceIndex], edgeAffectedDevice);
@@ -92,6 +100,9 @@ const onRowEditSave = (event: any, table: any) => {
             Object.assign(data, initiatorDevice);
             Object.assign(newData, edgeAffectedDevice);
         }
+    } else {
+        // else, just update the data
+        Object.assign(data, newData);
     }
 
     // re-order the table by associationId
@@ -366,7 +377,7 @@ const renameDevices = () => {
         device.type = association.type;
 
         // finally, change the name of the device according to the format string
-        device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', '');
+        device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', device.associationName);
     }
 
 }
@@ -496,9 +507,9 @@ const updateNames = (src: any[], table: any[]) => {
 const changeNames = useBoolStates([renaming],[], async() => {
     console.log('[NAMING] changeNames: tables values: ', routersTable.value, switchesTable.value, apsTable.value, othersTable.value);
 
-    updateNames(routers.value, routersTable.value);
-    updateNames(switches.value, switchesTable.value);
-    updateNames(aps.value, apsTable.value);
+    // updateNames(routers.value, routersTable.value);
+    // updateNames(switches.value, switchesTable.value);
+    // updateNames(aps.value, apsTable.value);
 
     console.log('[NAMING] changeNames: devicesList after renaming: ', devicesList.value);
     console.log('[NAMING] changeNames: device lists: ', routers.value, switches.value, aps.value, others.value);
@@ -633,26 +644,30 @@ onMounted(() => {
                         }
                     }"
                 >
-                    <Column field="model" header="Model" style="width: 15%;"></Column>
+                    <Column field="model" header="Model" style="width: 20%;"></Column>
                     <Column field="serial" header="Serial" style="min-width: 25%;"></Column>
                     <Column field="name" header="Name" style="max-width: 10%;">
                         <template #editor="{ data, field }">
                             <InputText v-model="data[field]" fluid/>
                         </template>
                     </Column>
-                    <Column field="associationName" header="Association Name" style="width: 22%;">
+                    <!--Column field="associationName" header="Association Name" style="width: 22%;">
                         <template #editor="{ data, field }">
                             <InputText v-model="data[field]" fluid/>
                         </template>
-                    </Column>
-                    <Column field="associationId" header="ID" style="width: 10%;">
+                    </Column-->
+                    <Column field="associationId" style="width: 10%;">
                         <template #editor="{ data, field }">
                             <Select v-model="data[field]" :options="routersTable"
                                 optionValue="id" optionLabel="id" fluid @change="console.log('[NAMING]: Data when changing the thingy: ', data); data.associationName = data.associationId">
-                                <!--template #option="slotProps">
-                                    <Tag :value="slotProps.option.id" :severity="slotProps.option.used? 'success' : 'warning'">{{ slotProps.option.id }}</Tag>
-                                </template-->
                             </Select>
+                        </template>
+                        <template #header>
+                            <span style="font-weight:600">ID</span>
+                            <i class="pi pi-exclamation-circle" style="margin-left: 5px; cursor: pointer; color: var(--p-yellow-500);" @click="toggleIdHelp"></i>
+                            <Popover ref="idHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                                <p>This field may require modifications.<br>Make sure to assign the right ID to each type of equipment depending on their model.</p>
+                            </Popover>
                         </template>
                     </Column>
                     <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
@@ -674,26 +689,30 @@ onMounted(() => {
                         }
                     }"
                 >
-                    <Column field="model" header="Model" style="width: 15%;"></Column>
+                    <Column field="model" header="Model" style="width: 20%;"></Column>
                     <Column field="serial" header="Serial" style="min-width: 15%;"></Column>
                     <Column field="name" header="Name">
                         <template #editor="{ data, field }">
                             <InputText v-model="data[field]" fluid/>
                         </template>
                     </Column>
-                    <Column field="associationName" header="Association Name" style="width: 25%;">
+                    <!-- Column field="associationName" header="Association Name" style="width: 25%;">
                         <template #editor="{ data, field }">
                             <InputText v-model="data[field]" fluid/>
                         </template>
-                    </Column>
-                    <Column field="associationId" header="ID" style="width: 10%;">
+                    </Column-->
+                    <Column field="associationId" style="width: 10%;">
                         <template #editor="{ data, field }">
                             <Select v-model="data[field]" :options="switchesTable"
                                 optionValue="id" optionLabel="id" fluid @change="console.log('[NAMING]: Data when changing the thingy: ', data); data.associationName = data.associationId">
-                                <!--template #option="slotProps">
-                                    <Tag :value="slotProps.option.id" :severity="slotProps.option.used? 'success' : 'warning'">{{ slotProps.option.id }}</Tag>
-                                </template-->
                             </Select>
+                        </template>
+                        <template #header>
+                            <span style="font-weight:600">ID</span>
+                            <i class="pi pi-exclamation-circle" style="margin-left: 5px; cursor: pointer; color: var(--p-yellow-500);" @click="toggleIdHelp"></i>
+                            <Popover ref="idHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                                <p>This field may require modifications.<br>Make sure to assign the right ID to each type of equipment depending on their model.</p>
+                            </Popover>
                         </template>
                     </Column>
                     <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
@@ -715,26 +734,30 @@ onMounted(() => {
                         }
                     }"
                 >
-                    <Column field="model" header="Model" style="width: 15%;"></Column>
+                    <Column field="model" header="Model" style="width: 20%;"></Column>
                     <Column field="serial" header="Serial" style="min-width: 15%;"></Column>
                     <Column field="name" header="Name">
                         <template #editor="{ data, field }">
                             <InputText v-model="data[field]" fluid/>
                         </template>
                     </Column>
-                    <Column field="associationName" header="Association Name" style="width: 25%;">
+                    <!-- Column field="associationName" header="Association Name" style="width: 25%;">
                         <template #editor="{ data, field }">
                             <InputText v-model="data[field]" fluid/>
                         </template>
-                    </Column>
-                    <Column field="associationId" header="ID" style="width: 10%;">
+                    </Column-->
+                    <Column field="associationId" style="width: 10%;">
                         <template #editor="{ data, field }">
                             <Select v-model="data[field]" :options="apsTable"
                                 optionValue="id" optionLabel="id" fluid @change="console.log('[NAMING]: Data when changing the thingy: ', data); data.associationName = data.associationId">
-                                <!--template #option="slotProps">
-                                    <Tag :value="slotProps.option.id" :severity="slotProps.option.used? 'success' : 'warning'">{{ slotProps.option.id }}</Tag>
-                                </template-->
                             </Select>
+                        </template>
+                        <template #header>
+                            <span style="font-weight:600">ID</span>
+                            <i class="pi pi-exclamation-circle" style="margin-left: 5px; cursor: pointer; color: var(--p-yellow-500);" @click="toggleIdHelp"></i>
+                            <Popover ref="idHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                                <p>This field may require modifications.<br>Make sure to assign the right ID to each type of equipment depending on their model.</p>
+                            </Popover>
                         </template>
                     </Column>
                     <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
@@ -742,19 +765,6 @@ onMounted(() => {
             </div>
             <div class="col center" style="margin-top: 40px;">
                 <h2>Tagging</h2>
-                <!-- For each device, show its list of tags, and allow the user edit them -->
-                <!--div class="make-row" v-for="(device, index) in devicesList" :key="index">
-                    <div class="make-row" v-if="device.tags.length > 0">
-                        <p class="margin-padding">{{ device.model }}</p>
-                        <p class="margin-padding">{{ device.serial }}</p>
-                        <p class="margin-padding">{{ device.associationId }}</p>
-                        <div v-for="(tag, tagIndex) in device.tags" :key="tagIndex" class="make-row">
-                            <InputText class="margin-padding" v-model="device.tags[tagIndex]"/>
-                            <Button class="margin-padding" @click="device.tags.splice(tagIndex, 1)">Remove</Button>
-                        </div>
-                        <Button class="margin-padding" @click="device.tags.push('')">Add tag</Button>
-                    </div>
-                </div-->
                 <DataTable :value="aps" tableStyle="min-width: 50rem" editMode="row"
                     @row-edit-save="(event) => onRowEditSaveTags(event, aps)" v-model:editingRows="editingRows" dataKey="serial"
                     @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"

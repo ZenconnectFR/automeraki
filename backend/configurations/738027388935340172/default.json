@@ -5,6 +5,10 @@
     "preFilledName": "test",
     "actions": [
         {
+            "type": "claim",
+            "data": {}
+        },
+        {
             "type": "naming",
             "data": {
                 "name": "{networkName}-{associationName}",
@@ -30,12 +34,6 @@
                     {
                         "name": "AP1",
                         "id" : "AP1",
-                        "type": "ap",
-                        "switchPorts" : [ 0 ]
-                    },
-                    {
-                        "name": "AP2",
-                        "id" : "AP2",
                         "type": "ap",
                         "switchPorts" : [ 0 ]
                     },
@@ -229,10 +227,6 @@
             }
         },
         {
-            "type": "firewall",
-            "data": {}
-        },
-        {
             "type": "ports",
             "data": {
                 "ports": [
@@ -344,63 +338,6 @@
             }
         },
         {
-            "type": "wans",
-            "data": {
-                "wan1": [
-                    {
-                        "name": "Orange",
-                        "auto": false,
-                        "associatedTags" : [
-                            "WAN1-ORANGE"
-                        ],
-                        "wanIp": "",
-                        "mask": "255.255.255.252",
-                        "gateway": "",
-                        "primaryDns": "194.2.0.20",
-                        "secondaryDns": "8.8.8.8"
-                    },
-                    {
-                        "name": "Starlink",
-                        "auto": false,
-                        "associatedTags" : [
-                            "WAN1-STARLINK"
-                        ],
-                        "wanIp": "192.168.1.199",
-                        "mask": "255.255.255.0",
-                        "gateway": "192.168.1.1",
-                        "primaryDns": "8.8.8.8",
-                        "secondaryDns": "8.8.4.4"
-                    }
-                ],
-                "wan2" : [
-                    {
-                        "name": "Bouygues",
-                        "auto": false,
-                        "associatedTags" : [
-                            "WAN2-BOUYGUES"
-                        ],
-                        "wanIp": "",
-                        "mask": "255.255.255.248",
-                        "gateway": "",
-                        "primaryDns": "194.158.122.10",
-                        "secondaryDns": "8.8.8.8"
-                    },
-                    {
-                        "name": "Cradlepoint",
-                        "auto": true,
-                        "associatedTags" : [
-                            "cradle", "WAN2-5G"
-                        ],
-                        "wanIp": "",
-                        "mask": "",
-                        "gateway": "",
-                        "primaryDns": "",
-                        "secondaryDns": ""
-                    }
-                ]
-            }
-        },
-        {
             "type": "vpn",
             "data": {
                 "vpnSubnets": [
@@ -490,7 +427,8 @@
                         "number": 0
                     }
                 ],
-                "mxHostname": "{networkName}-"
+                "mxHostname": "{networkName}-wired",
+                "useHostname": true
             }
         },
         {

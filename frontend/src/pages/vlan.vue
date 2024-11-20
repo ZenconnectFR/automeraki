@@ -19,6 +19,13 @@ import { maskIpWithSubnet, modifyIpWithoutChangingMask } from '@/utils/ipType'
 
 import { useRouter, useRoute } from 'vue-router'
 
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Drawer from 'primevue/drawer'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Divider from 'primevue/divider'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -542,7 +549,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div>
+    <div style="margin-top: 40px;">
         <h1>VLAN</h1>
         <!-- Show list of vlans from the config file, auto complete mac with the right equipement (filter name for the last group of letters) -->
         <!-- The autoconfigured vlans will be displayed below and each info can be edited (thus we use an input to display them)-->
@@ -550,6 +557,7 @@ onMounted(() => {
             <!-- On top right, add a congregate of the vlans appliance IPs: once the vlans are configured, a new set of 4 ip parts will be generated.
              that set will contain each part of the appliance IPs that are common to all vlans. If some parts differ, it'll be filled with ... and unable to be edited.
              When one of these part is edited, all the vlan appliance IPs will be updated with the new part. -->
+            <Drawer />
             <div class="make-column" id="commonIps">
                 <p>Common appliance IPs</p>
                 <div v-for="(group, index) in commonIpsGroups" :key="index">
@@ -626,10 +634,10 @@ onMounted(() => {
                 <button @click="makeNewVlan">Add new VLAN</button>
             </div-->
             <p v-if="savingChanges">Saving changes...</p>
-            <button @click="confirm">Save changes</button>
-            <div class="margin-all-normal make-row">
-                <button @click="goBack">Back</button>
-                <button @click="validate">Next</button>
+            <Button style="margin-bottom: 20px;" @click="confirm">Save on Meraki</Button>
+            <div class="row center">
+                <Button style="margin-right: 15px;" @click="goBack">Back</Button>
+                <Button @click="validate">Next</Button>
             </div>
         </div>
     </div>

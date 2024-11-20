@@ -252,6 +252,16 @@ def get_mx_settings(network_id: str):
     return mx_settings
 
 
+# ---------
+
+# get device management interface
+@app.get("/devices/{serial}/managementInterface")
+def get_management_interface(serial: str):
+    management_interface = dashboard.devices.getDeviceManagementInterface(serial)
+
+    return management_interface
+
+
 
 
 

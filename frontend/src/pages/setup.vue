@@ -330,8 +330,10 @@ const configureNetwork = async () => {
     
     devices.setDevicesList(devicesList)
 
-    configuration.setCurrentPageConfig(templateData.actions[0].data)
-    configuration.setCurrentPageIndex(0)
+    configuration.setCurrentPageConfig(templateData.actions.find((action: { type: string }) => action.type === 'naming').data)
+    configuration.setCurrentPageIndex(templateData.actions.findIndex((action: { type: string }) => action.type === 'naming'))
+
+    ids.setOrgId(orgId.value)
 
     // update state store to move to the next step
     router.push({ path: '/naming', replace: true })

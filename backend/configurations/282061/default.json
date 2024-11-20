@@ -444,13 +444,6 @@
                                     "voiceVlan": 115
                                 },
                                 {
-                                    "id": "2",
-                                    "vlan": "12",
-                                    "name": "Téléphonie",
-                                    "type": "access",
-                                    "voiceVlan": 115
-                                },
-                                {
                                     "id": "19",
                                     "vlan": "11",
                                     "name": "Bureautique",
@@ -473,12 +466,6 @@
                                     "vlan": "11",
                                     "name": "Bureautique",
                                     "type": "access"
-                                },
-                                {
-                                    "id": "35",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
                                 },
                                 {
                                     "id": "37",
@@ -536,24 +523,6 @@
                             },
                             "ports": [
                                 {
-                                    "id": "20",
-                                    "vlan": "11",
-                                    "name": "Bureautique",
-                                    "type": "access"
-                                },
-                                {
-                                    "id": "22",
-                                    "vlan": "11",
-                                    "name": "Bureautique",
-                                    "type": "access"
-                                },
-                                {
-                                    "id": "24",
-                                    "vlan": "11",
-                                    "name": "Bureautique",
-                                    "type": "access"
-                                },
-                                {
                                     "id": "45",
                                     "vlan": "11",
                                     "name": "Bureautique",
@@ -562,7 +531,7 @@
                                 {
                                     "id": "47",
                                     "vlan": "11",
-                                    "name": "Onduleur",
+                                    "name": "Bureautique",
                                     "type": "access"
                                 },
                                 {
@@ -580,7 +549,7 @@
                         "config": {
                             "default": {
                                 "vlan": "12",
-                                "name": "Compt, Kiosk, ORB, DMB, KDS, XMB",
+                                "name": "Serveur Merim",
                                 "type": "access"
                             },
                             "ports": [
@@ -603,37 +572,67 @@
                                     "type": "access"
                                 },
                                 {
-                                    "id": "23",
+                                    "id": "8",
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "10",
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "12",
                                     "vlan": "11",
                                     "name": "Bureautique",
                                     "type": "access"
                                 },
                                 {
                                     "id": "14",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
                                 },
                                 {
                                     "id": "16",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
                                 },
                                 {
                                     "id": "18",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
                                 },
                                 {
                                     "id": "20",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
                                 },
                                 {
                                     "id": "22",
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "24",
+                                    "vlan": "11",
+                                    "name": "Bureautique",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "47",
+                                    "vlan": "11",
+                                    "name": "Onduleur",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "38",
                                     "vlan": "14",
                                     "name": "Bornes Wifi",
                                     "type": "trunk"
@@ -657,92 +656,13 @@
                                     "type": "trunk"
                                 },
                                 {
-                                    "id": "23",
-                                    "vlan": "11",
-                                    "name": "Imprimante Sato",
-                                    "type": "access"
+                                    "id": "46",
+                                    "vlan": "14",
+                                    "name": "Bornes Wifi",
+                                    "type": "trunk"
                                 },
                                 {
                                     "id": "48",
-                                    "vlan": "11",
-                                    "name": "Uplink",
-                                    "type": "trunk"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "switchName": "S3",
-                        "nbPorts" : 24,
-                        "config": {
-                            "default": {
-                                "vlan": "12",
-                                "name": "Compt, Kiosk, ORB, DMB, KDS, XMB",
-                                "type": "access"
-                            },
-                            "ports": [
-                                {
-                                    "id": "2",
-                                    "vlan": "11",
-                                    "name": "Bureautique",
-                                    "type": "access"
-                                },
-                                {
-                                    "id": "4",
-                                    "vlan": "11",
-                                    "name": "Bureautique",
-                                    "type": "access"
-                                },
-                                {
-                                    "id": "6",
-                                    "vlan": "11",
-                                    "name": "Bureautique",
-                                    "type": "access"
-                                },
-                                {
-                                    "id": "23",
-                                    "vlan": "11",
-                                    "name": "Bureautique",
-                                    "type": "access"
-                                },
-                                {
-                                    "id": "14",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
-                                },
-                                {
-                                    "id": "16",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
-                                },
-                                {
-                                    "id": "18",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
-                                },
-                                {
-                                    "id": "20",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
-                                },
-                                {
-                                    "id": "22",
-                                    "vlan": "14",
-                                    "name": "Bornes Wifi",
-                                    "type": "trunk"
-                                },
-                                {
-                                    "id": "23",
-                                    "vlan": "11",
-                                    "name": "Imprimante Sato",
-                                    "type": "access"
-                                },
-                                {
-                                    "id": "24",
                                     "vlan": "11",
                                     "name": "Uplink",
                                     "type": "trunk"
@@ -862,11 +782,11 @@
                             "useDefaultRoute": false
                         },
                         {
-                            "hubId": "L_645703596574260227",
+                            "hubId": "N_645703596574316843",
                             "useDefaultRoute": false
                         },
                         {
-                            "hubId": "N_645703596574316843",
+                            "hubId": "L_645703596574260227",
                             "useDefaultRoute": false
                         }
                     ],

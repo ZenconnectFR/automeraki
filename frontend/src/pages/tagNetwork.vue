@@ -96,7 +96,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="tag-network">
+    <div class="tag-network" style="margin-top: 40px;">
         <h1>Tag Network</h1>
 
         <h2>Selected Tags</h2>
@@ -119,7 +119,7 @@ onMounted(() => {
         <p v-if="savingChanges">Saving changes...</p>
         <p v-if="changesSaved">Changes saved</p>
         <button @click="saveTags">Save Tags</button>
-        <div class="col">
+        <div class="row center">
             <button @click="prevPage">Back</button>
             <button @click="nextPage">Next</button>
         </div>

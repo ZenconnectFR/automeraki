@@ -18,6 +18,9 @@ import Dropdown from '@/components/Dropdown.vue'
 
 import { useRouter, useRoute } from 'vue-router'
 
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -305,12 +308,14 @@ onMounted(() => {
          vlan is shown in a dropdown with the options being the values in vlans from the device store
          type is also a dropdown and the options are either access or trunk
          The whole thing is in a table so that everything is separated right-->
-            <button @click="confirm">Confirm</button>
+            <Button class="add-margin" @click="confirm">Save on Meraki</Button>
             <p v-if="savingChanges">Saving changes...</p>
             <p v-if="changesSaved">Ports auto-configured</p>
-            <button @click="back">Back</button>
-            <button @click="nextPage">Next</button>
-            <button @click="scrollTo('stpRef')">Scroll to STP</button>
+            <div class="row center">
+                <Button class="add-margin" @click="back">Back</Button>
+                <Button class="add-margin" @click="nextPage">Next</Button>
+            </div>
+            <Button class="add-margin" @click="scrollTo('stpRef')">Scroll to STP</Button>
         <template v-for="switchPorts in portsAutoConfigured">
             <h3>{{ switchPorts.name }}</h3>
             <table class="space-row-col">
@@ -349,7 +354,7 @@ onMounted(() => {
             <h2>STP Configuration</h2>
             <div v-for="(stpConfig, index) in stpPayload">
                 <h3>STP Priority</h3>
-                <input type="number" v-model="stpConfig.stpPriority"/>
+                <InputText class="add-margin" type="number" v-model="stpConfig.stpPriority"/>
                 <h3>Switches</h3>
                 <template v-for="switchDevice in (devicesList.filter((device) => device.type === 'switch'))">
                     <!-- show all switches with a checkbox next to them. If the switch is in the stpConfig.switches array, the checkbox is checked, otherwise it is not-->
@@ -358,15 +363,15 @@ onMounted(() => {
                         @change="() => { moveSwitch(switchDevice, index) }"/>
                     <label>{{ switchDevice.associationId }}</label>            
                 </template>
-                <button @click="stpPayload.splice(index, 1)">Remove</button>
+                <Button class="add-margin" @click="stpPayload.splice(index, 1)">Remove</Button>
             </div>
-            <button @click="stpPayload.push({ stpPriority: 0, switches: [] })">Add STP rule</button>
+            <Button class="add-margin" @click="stpPayload.push({ stpPriority: 0, switches: [] })">Add STP rule</Button>
         </section>
         <section>
             <h2>MTU Size</h2>
-            <input type="number" v-model="config.mtuSize"/>
+            <InputText class="add-margin" type="number" v-model="config.mtuSize"/>
         </section>
-        <button @click="scrollTo('topRef')">Scroll to top</button>
+        <Button class="add-margin" @click="scrollTo('topRef')">Scroll to top</Button>
     </template>
 </template>
 
