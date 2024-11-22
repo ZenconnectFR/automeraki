@@ -34,4 +34,5 @@ export const useDevicesStore = defineStore('devices', () => {
         setVlans,
         addVlan
     }
-});
+}, { persist: true }
+);

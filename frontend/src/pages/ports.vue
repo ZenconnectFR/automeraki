@@ -14,12 +14,17 @@ import { getVlans } from '@/endpoints/networks/GetVlans'
 import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
 
-import Dropdown from '@/components/Dropdown.vue'
-
 import { useRouter, useRoute } from 'vue-router'
 
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import MultiSelect from 'primevue/multiselect'
+import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
+
+const toast = useToast()
 
 const router = useRouter()
 const route = useRoute()
@@ -82,7 +87,7 @@ const filterPorts = (model: string, ports: any[]) => {
 
 const configurePorts = async () => {
     // load switches
-    switches.value = devicesList.value.filter((device: { type?: string }) => device.type === 'switch')
+    switches.value = devicesList.value.filter((device: { type: string }) => device.type === 'switch')
 
     console.log('Switches: ', switches.value)
 
@@ -180,23 +185,20 @@ const configurePorts = async () => {
     // map the configuration.value.stp to the switch serials : configuration.value.stp[n].expectedEquipment === devicesList[n].shortName
 
     for (const stpConfig of config.stp) {
-        let switches = []
+        let switchesStp = []
 
         // special case: expected equipment names are in an array in stpConfig.switches (ex: ['S1', 'S2'])
         for (const expectedEquipment of stpConfig.switches) {
             for (const device of devicesList.value) {
                 if (device.associationId === expectedEquipment) {
-                    switches.push({
-                        serial: device.serial,
-                        name: device.associationId
-                    })
+                    switchesStp.push(device.serial)
                 }
             }
         }
 
         stpPayload.value.push({
             stpPriority: stpConfig.stpPriority,
-            switches: switches
+            switches: switchesStp
         })
     }
 
@@ -234,33 +236,34 @@ const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
     console.log('MTU size updated : ', mtnRes)
 
     // also change stp settings
+    /*
     let stpPayloadReal = stpPayload.value.map((stpConfig: { stpPriority: number, switches: any[] }) => {
         return {
             stpPriority: stpConfig.stpPriority,
             switches: stpConfig.switches.map((switchDe: { serial: string }) => switchDe.serial)
         }
     })
+    */
 
-    console.log('Setting STP : ', stpPayloadReal)
-    const stpRes = await updateSTPSettings(newNetworkId.value, stpPayloadReal)
+    console.log('Setting STP : ', stpPayload.value)
+    const stpRes = await updateSTPSettings(newNetworkId.value, stpPayload.value)
     console.log('STP settings updated : ', stpRes)
+
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Configuration saved on Meraki', life: 5000 })
 });
 
-const moveSwitch = (switchDevice: any, index: number) => {
-    let stpConfig = stpPayload.value[index]
+const moveSwitch = (switches: any[], index: number) => {
+    const selectedSwitches = stpPayload.value[index].switches
 
-    if (stpConfig.switches.find((switchDe: { serial: any }) => switchDe.serial === switchDevice.serial)) {
-        stpConfig.switches = stpConfig.switches.filter((switchDe: { serial: any }) => switchDe.serial !== switchDevice.serial)
-    } else {
-        stpConfig.switches.push({
-            serial: switchDevice.serial,
-            name: switchDevice.associationId
-        })
-        // remove from other stpConfigs
-        for (let i = 0; i < stpPayload.value.length; i++) {
-            if (i !== index) {
-                stpPayload.value[i].switches = stpPayload.value[i].switches.filter((switchDe: { serial: any }) => switchDe.serial !== switchDevice.serial)
-            }
+    for (let i = 0; i < stpPayload.value.length; i++) {
+        if (i !== index) {
+            const otherSwitches = stpPayload.value[i].switches
+
+            const otherSwitchesFiltered = otherSwitches.filter((otherSwitch: any) => {
+                return !selectedSwitches.includes(otherSwitch)
+            })
+
+            stpPayload.value[i].switches = otherSwitchesFiltered
         }
     }
 }
@@ -299,7 +302,8 @@ onMounted(() => {
 
 <template>
     <section ref="topRef"></section>
-    <div>
+    <Toast position="top-right" />
+    <div style="margin-top: 40px;">
         <h1>Ports</h1>
     </div>
     <template v-if="portsAutoConfigDone">
@@ -308,71 +312,47 @@ onMounted(() => {
          vlan is shown in a dropdown with the options being the values in vlans from the device store
          type is also a dropdown and the options are either access or trunk
          The whole thing is in a table so that everything is separated right-->
-            <Button class="add-margin" @click="confirm">Save on Meraki</Button>
-            <p v-if="savingChanges">Saving changes...</p>
-            <p v-if="changesSaved">Ports auto-configured</p>
-            <div class="row center">
-                <Button class="add-margin" @click="back">Back</Button>
-                <Button class="add-margin" @click="nextPage">Next</Button>
+            <Button class="constant-width-150 constant-height-40" @click="confirm" :disabled="savingChanges">
+                <v-progress-circular v-if="savingChanges" indeterminate width="3" color="white"></v-progress-circular>
+                <span v-else>Save on Meraki</span>
+            </Button>
+            <div class="row center" style="margin-top: 20px;">
+                <Button style="margin-right: 15px;" @click="back">Back</Button>
+                <Button @click="nextPage">Next</Button>
             </div>
-            <Button class="add-margin" @click="scrollTo('stpRef')">Scroll to STP</Button>
         <template v-for="switchPorts in portsAutoConfigured">
-            <h3>{{ switchPorts.name }}</h3>
-            <table class="space-row-col">
-                <thead>
-                    <tr>
-                        <th>Port</th>
-                        <th>Name</th>
-                        <th>VLAN</th>
-                        <th>Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template v-for="port in switchPorts.ports">
-                        <tr>
-                            <td>{{ port.id }}</td>
-                            <!--td><input type="text" v-model="port.name"/></td>
-                            <td>
-                                <Dropdown class="add-margin" :options="vlanOptions"
-                                    :modelValue="port.vlan"
-                                    :onSelect="(option) => port.vlan = option"/>
-                            </td>
-                            <td>
-                                <Dropdown class="add-margin" :options="typeOptions"
-                                    :modelValue="port.type"
-                                    :onSelect="(option) => port.type = option" />
-                            </td-->
-                            <td>{{ port.name }}</td>
-                            <td>{{ port.vlan }}</td>
-                            <td>{{ port.type }}</td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
+            <h3 style="margin-top: 40px;">{{ switchPorts.name }}</h3>
+            <DataTable :value="switchPorts.ports" style="width: 1000px;">
+                <Column field="id" header="Port ID"></Column>
+                <Column field="name" header="Port Name" style="width: 30%"></Column>
+                <Column field="vlan" header="VLAN"></Column>
+                <Column field="type" header="Type"></Column>
+                <Column field="voiceVlan" header="Voice VLAN" style="width: 15%;"></Column>
+            </DataTable>
         </template>
-        <section class="stp-section" ref="stpRef">
+        <section class="stp-section" ref="stpRef" style="margin-top: 30px;">
             <h2>STP Configuration</h2>
             <div v-for="(stpConfig, index) in stpPayload">
                 <h3>STP Priority</h3>
                 <InputText class="add-margin" type="number" v-model="stpConfig.stpPriority"/>
                 <h3>Switches</h3>
-                <template v-for="switchDevice in (devicesList.filter((device) => device.type === 'switch'))">
-                    <!-- show all switches with a checkbox next to them. If the switch is in the stpConfig.switches array, the checkbox is checked, otherwise it is not-->
-                    <!-- if the user checks the checkbox, the switch is added to the stpConfig.switches array, if the user unchecks the checkbox, the switch is removed from the stpConfig.switches array-->
-                    <input type="checkbox" :checked="stpConfig.switches.find((switchDe: { serial: any }) => switchDe.serial === switchDevice.serial)"
-                        @change="() => { moveSwitch(switchDevice, index) }"/>
-                    <label>{{ switchDevice.associationId }}</label>            
-                </template>
+
+                <!-- multiselect to choose which switches to bind to this stpConfig, on modification. Selected switches are exlusive for each stpConfig.
+                 The onChange callback enforces this rule-->
+
+                <MultiSelect class="add-margin" v-model="stpConfig.switches" :options="switches" optionLabel="associationId" optionValue="serial"
+                    @onChange="moveSwitch(switches, index)" dataKey="serial" display="chip" style="min-width: 250px;"/> 
+
                 <Button class="add-margin" @click="stpPayload.splice(index, 1)">Remove</Button>
             </div>
             <Button class="add-margin" @click="stpPayload.push({ stpPriority: 0, switches: [] })">Add STP rule</Button>
         </section>
-        <section>
+        <section style="margin-bottom: 60px;">
             <h2>MTU Size</h2>
             <InputText class="add-margin" type="number" v-model="config.mtuSize"/>
         </section>
-        <Button class="add-margin" @click="scrollTo('topRef')">Scroll to top</Button>
     </template>
+    <v-progress-circular v-else indeterminate width="3" color="primary"></v-progress-circular>
 </template>
 
 <style scoped>

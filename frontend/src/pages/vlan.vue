@@ -26,6 +26,10 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Divider from 'primevue/divider'
 import Popover from 'primevue/popover';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
 
 const router = useRouter()
 const route = useRoute()
@@ -479,6 +483,8 @@ const confirm = useBoolStates([savingChanges],[],async () => {
     const response =  await configurePerPortVlan(perPortVlan.value, orgId.value, newNetworkId.value)
 
     console.log('[VLAN] Response: ', response)
+
+    toast.add({severity:'success', summary:'Success', detail:'VLAN configuration saved successfully'});
 });
 
 const makeNewVlan = () => {
@@ -561,6 +567,8 @@ onMounted(() => {
 
 <template>
     <div style="margin-top: 40px; margin-bottom: 60px">
+        <Toast position="top-right" />
+
         <Button icon="pi pi-chevron-left" @click="moreOptions = true" label="More" class="vpn-btn top-right-btn"/>
 
         <Drawer v-model:visible="moreOptions" header="Extra features" position="right" style="width: 500px;">
@@ -654,16 +662,16 @@ onMounted(() => {
 
             <div class="col center" style="margin-top: 20px;" v-for="(vlan, index) in vlanAutoConfigured" :key="index">
                 <Divider style="margin-top: 20px; width:300px" />
-                <div class="row center">
-                    <h3 style="margin: 10px;">{{ vlan.payload[0].name }}</h3>
-                    <Divider layout="vertical" />
-                    <h3 style="margin: 10px;">Id - {{ vlan.id }}</h3>
-                    <Divider layout="vertical" />
-                    <h3 style="margin: 10px;">Appliance IP - {{ vlan.payload[0].applianceIp }}</h3>
-                </div>
-                <div class="row center">
-                    <h3 style="margin: 10px;">Subnet - </h3>
-                    <InputText v-model="vlan.payload[0].subnet" placeholder="Subnet" style="margin: 10px;"/>
+                <h3 style="margin: 10px;">{{ vlan.id }} | {{ vlan.payload[0].name }}</h3>
+                <div style="align-items: flex-end;">
+                    <div class="row" style="justify-content: flex-end;">
+                        <h3 style="margin: 10px">Appliance IP - </h3>
+                        <InputText v-model="vlan.payload[0].applianceIp" placeholder="Appliance IP" style="margin: 10px;"/>
+                    </div>
+                    <div class="row" style="justify-content: flex-end;">
+                        <h3 style="margin: 10px;">Subnet - </h3>
+                        <InputText v-model="vlan.payload[0].subnet" placeholder="Subnet" style="margin: 10px;"/>
+                    </div>
                 </div>
                 <div class="col center" v-if="vlan.payload[1].fixedIpAssignments?.length > 0">
                     <Divider style="width:100px" />
@@ -696,6 +704,14 @@ onMounted(() => {
                     <h3 style="margin: 10px;">No fixed IP assignments</h3>
                 </div>
             </div>
+        </div>
+        <Button class="constant-width-150 constant-height-40" @click="confirm" style="margin-top: 30px;" :disabled="savingChanges">
+            <v-progress-circular v-if="savingChanges" indeterminate color="white" width="3"></v-progress-circular>
+            <p v-else>Save on Meraki</p>
+        </Button>
+        <div class="row center" style="margin-top: 20px;">
+            <Button style="margin-right: 15px;" @click="goBack">Back</Button>
+            <Button @click="validate">Next</Button>
         </div>
     </div>
 </template>

@@ -18,4 +18,5 @@ export const useIdsStore = defineStore('ids', () => {
         setOrgId,
         setNetworkId
     }
-})
+}, { persist: true }
+)

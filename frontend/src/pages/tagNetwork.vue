@@ -13,6 +13,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
 
+import Button from 'primevue/button'
+import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
+
+const toast = useToast()
+
 const router = useRouter()
 const route = useRoute()
 
@@ -79,6 +85,7 @@ const saveTags = useBoolStates([savingChanges],[changesSaved],async () => {
     const resp = await updateNetwork(newNetworkId.value, { tags: selectedTags.value })
 
     console.log('Tags saved : ', resp)
+    toast.add({ severity: 'success', summary: 'Tags saved', detail: 'Tags saved successfully' })
 });
 
 const nextPage = () => {
@@ -97,6 +104,7 @@ onMounted(() => {
 
 <template>
     <div class="tag-network" style="margin-top: 40px;">
+        <Toast position="top-right" />
         <h1>Tag Network</h1>
 
         <h2>Selected Tags</h2>
@@ -116,12 +124,13 @@ onMounted(() => {
             </div>
         </div>
 
-        <p v-if="savingChanges">Saving changes...</p>
-        <p v-if="changesSaved">Changes saved</p>
-        <button @click="saveTags">Save Tags</button>
+        <Button class="constant-width-150 constant-height-40" @click="saveTags" style="margin-bottom: 20px;" :disabled="savingChanges">
+            <v-progress-circular v-if="savingChanges" indeterminate color="white" width="3"></v-progress-circular>
+            <span v-else>Save on Meraki</span>
+        </Button>
         <div class="row center">
-            <button @click="prevPage">Back</button>
-            <button @click="nextPage">Next</button>
+            <Button style="margin-right: 15px;" @click="prevPage">Back</Button>
+            <Button @click="nextPage">Next</Button>
         </div>
     </div>
 </template>
@@ -175,6 +184,7 @@ onMounted(() => {
         margin-bottom: 20px;
         width: 100%;
         min-width: 100%;
+        background-color: white;
     }
 
     .tag {
@@ -192,18 +202,6 @@ onMounted(() => {
 
     h1, h2 {
         margin-bottom: 10px;
-    }
-
-    button {
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-top: 20px;
-        margin-right: 10px;
-        margin-left: 10px;
     }
 
     button:hover {

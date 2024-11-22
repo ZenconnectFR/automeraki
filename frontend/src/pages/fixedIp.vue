@@ -21,6 +21,10 @@ import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
 import Divider from 'primevue/divider'
 import Button from 'primevue/button'
+import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
+
+const toast = useToast()
 
 const router = useRouter()
 const route = useRoute()
@@ -155,6 +159,8 @@ const validate = useBoolStates([savingChanges],[],async () => {
     const response = await fixIpAssignments(fixedIpAssignments.value, orgId.value)
 
     console.log('[FIXED IP] Fix ip response: ', response)
+
+    toast.add({ severity: 'success', summary: 'Fixed IP', detail: 'Fixed IP addresses saved successfully', life: 3000 })
 }, changesSaved);
 
 const goBack = () => {
@@ -173,6 +179,7 @@ onMounted(() => {
 
 <template>
   <div style="margin-top: 40px;" class="col center">
+    <Toast position="top-right" />
     <h1>Fixed IP</h1>
     <Divider style="margin-bottom: 20px; width: 250px;" />
     <div v-if="fixedIpDone" class="col">
@@ -260,9 +267,10 @@ onMounted(() => {
         </Button-->
     </div>
     <div style="margin-top: 10px; margin-bottom: 20px;"></div>
-    <Button @click="validate">Save on Meraki</Button>
-    <p v-if="savingChanges">Saving changes...</p>
-    <p v-if="changesSaved">Changes saved</p>
+    <Button class="constant-width-150 constant-height-40" @click="validate" :disabled="savingChanges">
+        <span v-if="!savingChanges">Save on Meraki</span>
+        <v-progress-circular v-else indeterminate color="white" width="3"></v-progress-circular>
+    </Button>
     <div class="row center space-elts">
         <Button style="margin-right: 15px;" @click="goBack">Back</Button>
         <Button @click="nextPage">Next</Button>

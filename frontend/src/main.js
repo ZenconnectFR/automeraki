@@ -12,6 +12,7 @@ import '@mdi/font/css/materialdesignicons.css'
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';  
 import { definePreset } from '@primevue/themes';
+import piniaPluginPersistedState from 'pinia-plugin-persistedstate';
 
 import ToastService from 'primevue/toastservice';
 
@@ -67,6 +68,7 @@ export default Router
 
 
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedState)
 const app = createApp(App)
 const vuetify = createVuetify({
     components,

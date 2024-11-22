@@ -26,14 +26,16 @@ import Drawer from 'primevue/drawer';
 import Divider from 'primevue/divider';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
-import Toast from 'primevue/toast';
-import { useToast } from 'primevue/usetoast';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Popover from 'primevue/popover';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
 const router = useRouter()
 const route = useRoute()
+
+const allLoaded = ref(false)
 
 const toast = useToast()
 
@@ -162,7 +164,7 @@ const fillVpnSubnets = () => {
 }
 
 // immediately determine the available voice vlan and site-to-site vpn subnets
-const setup = useBoolStates([loading], [loaded], async () => {
+const setup = useBoolStates([loading], [loaded, allLoaded], async () => {
     fillVpnSubnets();
 
     console.log('[VPN] orgId when setting up: ', orgId.value)
@@ -301,6 +303,7 @@ const setup = useBoolStates([loading], [loaded], async () => {
 });
 
 const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
+    allLoaded.value = false
     console.log('Saving VPN config: ', vpnSiteToSite.value)
     // save the vpn config
 
@@ -426,6 +429,8 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
             subnet.mustEdit = false
         }
     }
+
+    toast.add({severity: 'success', summary: 'VPN Configuration saved!', life: 3000})
 });
 
 const goBack = () => {
@@ -460,6 +465,8 @@ onMounted(() => {
         <h1>VPN Configuration</h1>
     </div>
 
+    <Toast position="top-right" />
+
     <Divider style="width: 250px" />
 
     <Button icon="pi pi-chevron-left" @click="moreOptions = true" label="More" class="vpn-btn top-right-btn"/>
@@ -472,7 +479,6 @@ onMounted(() => {
             <form @submit.prevent="copyNToCliboard($event, freeSubnets[name])">
                 <h3>{{ name }}</h3>
                 <Button type="submit">Copy</Button>
-                <Toast position="bottom-center"/>
                 <input type="number" name="nToCopy" value="20" class="custom-input" />
                 <span>subnets.</span>
             </form>
@@ -480,103 +486,108 @@ onMounted(() => {
     </Drawer>
 
     <Button v-if="orgWide" id="homebtn" @click="backSetup">Back</Button>
-    <div class="col center">
-        <h2>Available subnets</h2>
-        <!-- show the next available subnet for each subnet name -->
-        <div style="margin-top: 20px;" v-for="(name, index) in Object.keys(freeSubnets)" :key="index">
-            <h2>{{ name }}</h2>
-            <div class="make-row">
-                <ul>
-                    <li v-for="(subnet, index) in getVisibleItems(name)" :key="index" style="margin-bottom: 10px;">
-                        <span>{{ subnet }}</span>
-                        <i style="margin-left: 15px; cursor: pointer;" class="pi pi-copy" @click="copyToClipboard(subnet)"/>
-                        <Toast position="bottom-center"/>
-                        <span v-if="copiedText == subnet">Copied!</span>
-                    </li>
-                </ul>
-                <Button @click="toggleVisibility(name)" class="smaller-btn">{{ getBtnLabel(name) }}</Button>
-                <Button @click="toggleVisibility(name); toggleVisibility(name)"
-                    v-if="visibleCounts[name] && visibleCounts[name] > 1 && visibleCounts[name] < freeSubnets[name].length"
-                    class="smaller-btn"
+
+    <div v-if="allLoaded">
+        <div class="col center">
+            <h2>Available subnets</h2>
+            <!-- show the next available subnet for each subnet name -->
+            <div style="margin-top: 20px;" v-for="(name, index) in Object.keys(freeSubnets)" :key="index">
+                <h2>{{ name }}</h2>
+                <div class="make-row">
+                    <ul>
+                        <li v-for="(subnet, index) in getVisibleItems(name)" :key="index" style="margin-bottom: 10px;">
+                            <span>{{ subnet }}</span>
+                            <i style="margin-left: 15px; cursor: pointer;" class="pi pi-copy" @click="copyToClipboard(subnet)"/>
+                            <span v-if="copiedText == subnet">Copied!</span>
+                        </li>
+                    </ul>
+                    <Button @click="toggleVisibility(name)" class="smaller-btn">{{ getBtnLabel(name) }}</Button>
+                    <Button @click="toggleVisibility(name); toggleVisibility(name)"
+                        v-if="visibleCounts[name] && visibleCounts[name] > 1 && visibleCounts[name] < freeSubnets[name].length"
+                        class="smaller-btn"
+                    >
+                        Show less
+                    </Button>
+                </div>
+            </div>
+            <p class="red" v-if="vpnStatusesError">{{ vpnStatusesError }}</p>
+            <p v-if="loading">Loading...</p>
+            <p v-if="loaded && Object.entries(freeSubnets).length === 0">No free subnets available</p>
+
+            <!-- Site to Site vpn options -->
+            <!-- Show the list of hubs with the ability to add or remove them
+            Show the list of subnets with the ability to modify their nat translation -->
+            <Divider style="width: 250px; margin-top: 30px;" />
+            <div v-if="loaded && !orgWide" style="margin-top: 10px;">
+                <h2>Site to Site VPN</h2>
+                <h3>Hubs used</h3>
+                <div v-for="hub in vpnSiteToSite.hubs" :key="hub.id">
+                    <p>{{ hub.name }}</p>
+                </div>
+                <h3 style="margin-top: 15px;">Subnets</h3>
+                <!--div v-for="subnet in vpnSiteToSite.subnets" :key="subnet">
+                    <p style="margin-bottom: 10px;">{{ subnet.vlanName }}</p>
+                    <label for="modify">Modify</label>
+                    <input id="modify" type="checkbox" v-model="subnet.modify" @click="subnet.localSubnet = subnet.modify?subnet.localSubnet:subnet.originalLocalSubnet"/>
+                    <input v-if="subnet.modify" type="text" v-model="subnet.localSubnet"/>
+                    <span v-else>{{ subnet.localSubnet }}</span>
+                    use vpn: <input type="checkbox" v-model="subnet.useVpn" />
+                    
+                    <p v-if="subnet.translation" style="max-width: 400px;">This VLAN subnet should use translation, pick a free subnet for it at the top and enter it in Meraki</p>
+
+                    <p v-if="subnet.modify" class="red">
+                        Warning: Changing the subnet will change the vlan subnet and appliance IP ! <br>
+                        Make sure that there are no conflicts with fixed Ips, DHCP ranges, firewall rules, etc.
+                    </p>
+                </div-->
+                <DataTable :value="vpnSiteToSite.subnets" :rows="10" :rowsPerPageOptions="[5, 10, 20]" editMode="row"
+                    @row-edit-save="(event) => onRowEditSave(event)" v-model:editingRows="editingRows" dataKey="vlanId"
+                    :pt="{
+                        table: { style: 'min-width: 50rem' },
+                        column: {
+                            bodycell: ({ state }) => ({
+                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                            })
+                        }
+                    }"
                 >
-                    Show less
-                </Button>
+                    <Column field="vlanName" header="VLAN Name"></Column>
+                    <Column field="localSubnet" header="Local Subnet">
+                        <template #editor="{ data, field }">
+                            <InputText v-if="!data.translation" v-model="data[field]" />
+                            <span v-else>{{ data[field] }}</span>
+                        </template>
+                        <template #body="{ data }">
+                            <span>{{ data.localSubnet }}</span>
+                            <i v-if="data.mustEdit" class="pi pi-exclamation-circle" style="margin-left: 10px; cursor: pointer; color: var(--p-yellow-500);" @click="toggleMustEditHelp"></i>
+                            <Popover ref="mustEditHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                                <p>This vlan subnet must be edited to use the VPN<br>Assign an available subnet to this vlan and save your changes<br>Note: This message will not disappear after saving.</p>
+                            </Popover>
+                        </template>
+                    </Column>
+                    <Column field="useVpn" header="Use VPN">
+                        <template #body="{ data }">
+                            <span v-if="!data.translation">{{ data.useVpn ? 'Yes' : 'No' }}</span>
+                            <i v-else class="pi pi-exclamation-triangle" style="cursor: pointer; color: var(--p-red-500);" @click="toggleTranslationHelp"></i>
+                            <Popover ref="translationHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                                <p>This vlan uses translation !<br>You must enable it and enter the next free subnet directly in Meraki Dashboard<br>as the API does not support VNAT translations.</p>
+                            </Popover>
+                        </template>
+                    </Column>
+                    <Column :row-editor="true" headerStyle="width: 7rem"></Column>
+                </DataTable>
             </div>
         </div>
-        <p class="red" v-if="vpnStatusesError">{{ vpnStatusesError }}</p>
-        <p v-if="loading">Loading...</p>
-        <p v-if="loaded && Object.entries(freeSubnets).length === 0">No free subnets available</p>
-
-        <!-- Site to Site vpn options -->
-        <!-- Show the list of hubs with the ability to add or remove them
-        Show the list of subnets with the ability to modify their nat translation -->
-        <Divider style="width: 250px; margin-top: 30px;" />
-        <div v-if="loaded && !orgWide" style="margin-top: 10px;">
-            <h2>Site to Site VPN</h2>
-            <h3>Hubs used</h3>
-            <div v-for="hub in vpnSiteToSite.hubs" :key="hub.id">
-                <p>{{ hub.name }}</p>
+        <div v-if="!orgWide" style="margin-top: 30px; margin-bottom: 50px;" class="col center">
+            <Button @click="saveVpnConfig">Save to Meraki</Button>
+            <div class="row center" style="margin-top: 15px;">
+                <Button style="margin-right: 15px;" @click="goBack">Back</Button>
+                <Button @click="nextPage">Next</Button>
             </div>
-            <h3 style="margin-top: 15px;">Subnets</h3>
-            <!--div v-for="subnet in vpnSiteToSite.subnets" :key="subnet">
-                <p style="margin-bottom: 10px;">{{ subnet.vlanName }}</p>
-                <label for="modify">Modify</label>
-                <input id="modify" type="checkbox" v-model="subnet.modify" @click="subnet.localSubnet = subnet.modify?subnet.localSubnet:subnet.originalLocalSubnet"/>
-                <input v-if="subnet.modify" type="text" v-model="subnet.localSubnet"/>
-                <span v-else>{{ subnet.localSubnet }}</span>
-                use vpn: <input type="checkbox" v-model="subnet.useVpn" />
-                
-                <p v-if="subnet.translation" style="max-width: 400px;">This VLAN subnet should use translation, pick a free subnet for it at the top and enter it in Meraki</p>
-
-                <p v-if="subnet.modify" class="red">
-                    Warning: Changing the subnet will change the vlan subnet and appliance IP ! <br>
-                    Make sure that there are no conflicts with fixed Ips, DHCP ranges, firewall rules, etc.
-                </p>
-            </div-->
-            <DataTable :value="vpnSiteToSite.subnets" :rows="10" :rowsPerPageOptions="[5, 10, 20]" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event)" v-model:editingRows="editingRows" dataKey="vlanId"
-                :pt="{
-                    table: { style: 'min-width: 50rem' },
-                    column: {
-                        bodycell: ({ state }) => ({
-                            style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                        })
-                    }
-                }"
-            >
-                <Column field="vlanName" header="VLAN Name"></Column>
-                <Column field="localSubnet" header="Local Subnet">
-                    <template #editor="{ data, field }">
-                        <InputText v-if="!data.translation" v-model="data[field]" />
-                        <span v-else>{{ data[field] }}</span>
-                    </template>
-                    <template #body="{ data }">
-                        <span>{{ data.localSubnet }}</span>
-                        <i v-if="data.mustEdit" class="pi pi-exclamation-circle" style="margin-left: 10px; cursor: pointer; color: var(--p-yellow-500);" @click="toggleMustEditHelp"></i>
-                        <Popover ref="mustEditHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
-                            <p>This vlan subnet must be edited to use the VPN<br>Assign an available subnet to this vlan and save your changes<br>Note: This message will not disappear after saving.</p>
-                        </Popover>
-                    </template>
-                </Column>
-                <Column field="useVpn" header="Use VPN">
-                    <template #body="{ data }">
-                        <span v-if="!data.translation">{{ data.useVpn ? 'Yes' : 'No' }}</span>
-                        <i v-else class="pi pi-exclamation-triangle" style="cursor: pointer; color: var(--p-red-500);" @click="toggleTranslationHelp"></i>
-                        <Popover ref="translationHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
-                            <p>This vlan uses translation !<br>You must enable it and enter the next free subnet directly in Meraki Dashboard<br>as the API does not support VNAT translations.</p>
-                        </Popover>
-                    </template>
-                </Column>
-                <Column :row-editor="true" headerStyle="width: 7rem"></Column>
-            </DataTable>
         </div>
     </div>
-    <div v-if="!orgWide" style="margin-top: 30px; margin-bottom: 50px;" class="col center">
-        <Button @click="saveVpnConfig">Save to Meraki</Button>
-        <div class="row center" style="margin-top: 15px;">
-            <Button style="margin-right: 15px;" @click="goBack">Back</Button>
-            <Button @click="nextPage">Next</Button>
-        </div>
+    <div v-else>
+        <v-progress-circular indeterminate></v-progress-circular>
     </div>
 </template>
 

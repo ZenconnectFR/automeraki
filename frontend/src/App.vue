@@ -7,6 +7,8 @@ import { RouterView, useRouter } from 'vue-router'
 import { useErrorStore } from '@/stores/error'
 import NavBar from './components/NavBar.vue';
 
+import ScrollTop from 'primevue/scrolltop';
+
 const error = useErrorStore()
 
 const removeErr = (index: number) => {
@@ -65,6 +67,7 @@ router.afterEach((to, from) => {
     <div v-if="!showNavBar" class="make-space">
     </div>
     <RouterView />
+    <ScrollTop />
   </div>
 </template>
 

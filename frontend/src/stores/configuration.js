@@ -32,4 +32,6 @@ export const useConfigurationStore = defineStore('configuration', () => {
         nextPage,
         prevPage
     }
-});
+},
+    { persist: true }
+);

@@ -24,6 +24,10 @@ import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
 import Popover from 'primevue/popover';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
 
 const router = useRouter()
 const route = useRoute()
@@ -522,6 +526,8 @@ const changeNames = useBoolStates([renaming],[], async() => {
         await updateTags(device.serial, device.tags);
     }
 
+    toast.add({ severity: 'success', summary: 'Names saved', detail: 'The names have been successfully saved', life: 3000 });
+
 }, namesSaved);
 
 const moveUp = (index: number, devices: any[]) => {
@@ -625,6 +631,7 @@ onMounted(() => {
 
 <template>
     <div id="naming-page">
+        <Toast position="top-right"></Toast>
         <h1>Names</h1>
         <Divider style="width: 250px;" />
         <div v-if="devicesLoaded" id="naming-form" class="make-column">
@@ -632,7 +639,7 @@ onMounted(() => {
                 <div class="make-row">
                     <h2>Routers</h2>
                 </div>
-                <DataTable :value="routers" tableStyle="min-width: 50rem" editMode="row"
+                <DataTable :value="routers" tableStyle="min-width: 50rem; border-radius: 8px;" editMode="row"
                     @row-edit-save="(event) => onRowEditSave(event, routers)" v-model:editingRows="editingRows" dataKey="serial"
                     @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
                     :pt="{
@@ -810,15 +817,14 @@ onMounted(() => {
             <Divider style="width: 250px;" />
             <div style="margin-top: 20px;"></div>
             <!--Button class="margin-padding" @click="changeNames">Save</Button-->
-            <Button class="margin-padding" @click="changeNames"
+            <Button class="constant-width-150 constant-height-40" @click="changeNames"
             :disabled="(renaming)">
             <v-progress-circular v-if="renaming" indeterminate color="#fff" width="3"></v-progress-circular>
-            <span v-else>Save changes</span>
-            <p v-if="renaming">Renaming devices...</p>
+            <span v-else>Save on Meraki</span>
             </Button>
-            <div class="make-row margin-padding">
-                <Button class="margin-padding" @click="goBack">Back</Button>
-                <Button class="margin-padding" @click="validate">Next</Button>
+            <div class="make-row" style="margin-top: 20px; margin-bottom: 60px">
+                <Button style="margin-right: 15px;" @click="goBack">Back</Button>
+                <Button @click="validate">Next</Button>
             </div>
         </div>
     </div>

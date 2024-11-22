@@ -12,6 +12,8 @@ import { getRoutePath } from '@/utils/PageRouter'
 
 import { useBoolStates } from '@/utils/Decorators'
 
+import Card from 'primevue/card'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -35,12 +37,18 @@ onMounted(() => {
 </script>
 
 <template>
-    <div>
+    <div style="margin-top: 60px;">
         <h1>Comments</h1>
-        <div v-for="comment in comments" :key="comment">
-            <h3>{{ comment.title }}</h3>
-            <p v-for="line in comment.content" :key="line"> - {{ line }}</p>
-        </div>
+        <Card v-for="comment in comments" style="margin-bottom: 30px;">
+            <template #title>
+                <h2>{{ comment.title }}</h2>
+            </template>
+            <template #content>
+                <p v-for="line in comment.content">{{ line }}</p>
+            </template>
+        </Card>
+
+
         <button @click="router.push(getRoutePath(configStore.prevPage()))">Back</button>
         <button @click="router.push('/rickroll')">Finish</button>
     </div>

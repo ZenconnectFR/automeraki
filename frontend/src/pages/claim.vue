@@ -19,6 +19,10 @@ import { getRoutePath } from '@/utils/PageRouter'
 import Textarea from 'primevue/textarea'
 import Divider from 'primevue/divider'
 import Button from 'primevue/button'
+import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
+
+const toast = useToast()
 
 const router = useRouter()
 const route = useRoute()
@@ -166,7 +170,7 @@ const addDevices = async () => {
 
     // If toClaim is empty, we can skip the claimDevices call and show a message
     if (toClaim.value.length === 0) {
-        noDevicesToAdd.value = true
+        toast.add({ severity: 'info', summary: 'No new devices to add to the network', life: 3000 })
         return
     }
 
@@ -195,15 +199,15 @@ const addDevices = async () => {
         devices.addDevices(fullFinalDevices.value)
 
         await changeAddresses(fullFinalDevices.value) // immediately change the addresses of the devices
-        devicesAdded.value = true
+        toast.add({ severity: 'success', summary: 'Devices added to network', life: 3000 })
 
         await retrieveInventory(parsedDevices.value) // update the inventory
     } else {
         if (response && response.error === 'Devices already claimed') {
-            alreadyInCurrentNetwork.value = true
+            toast.add({ severity: 'info', summary: 'Devices already in network', life: 3000 })
         } else {
-            usedByAnotherOrg.value = true
             console.error('[CLAIM] Error adding devices to network, most likely the devices are already used by another organization')
+            toast.add({ severity: 'error', summary: 'Error adding devices to network', life: 3000, detail: 'Most likely the devices are already used by another organization' })
         }
     }
     claiming.value = false
@@ -262,9 +266,9 @@ const removeAlreadyInNetwork = () => {
 
 const validate = async() => {
     // 
-    configStore.setCurrentPageIndex(0) // init, will increment in further steps
-    configStore.setCurrentPageConfig(configuration.value.actions[0].data)
-    router.push(getRoutePath(configuration.value.actions[0].type))
+    configStore.setCurrentPageIndex(1)
+    configStore.setCurrentPageConfig(configuration.value.actions[1].data)
+    router.push(getRoutePath(configuration.value.actions[1].type))
 }
 
 </script>
@@ -283,7 +287,7 @@ const validate = async() => {
             <span v-else>Add Devices</span>
         </Button>
         </div>
-        <p v-if="claiming">Claiming devices...</p>
+        <!-- p v-if="claiming">Claiming devices...</p-->
         <template v-if="showMoveNetwork">
             <h2> WARNING: The following devices are already in a network : </h2>
             <ul>
@@ -295,14 +299,7 @@ const validate = async() => {
             <!--button class="margin-padding-all-normal" @click="moveDevices">I understand, move them to the new network</button>
             <button class="margin-padding-all-normal" @click="showMoveNetwork = false; confirmMoveNetwork = true; removeAlreadyInNetwork() ;addDevices()">Continue without those devices</button-->
         </template>
-        <template v-if="usedByAnotherOrg">
-            <p>Impossible to claim some devices, they most likely belong to another organization inventory</p>
-        </template>
-        <template v-if="alreadyInCurrentNetwork">
-            <p>Some devices are already in the network</p>
-        </template>
-        <p v-if="devicesAdded">Devices added to network</p>
-        <p v-if="noDevicesToAdd">No new devices to add to the new network</p>
+        <Toast position="top-right" />
         <Button class="margin-padding-all-normal" @click="validate">Next</Button>
     </div>
 </template>
