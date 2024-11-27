@@ -160,7 +160,6 @@ def blink_device(serial: str):
         blink = dashboard.devices.blinkDeviceLeds(serial)
     except Exception as e:
         return {"error": str(e)}
-
     return blink
 
 
@@ -260,6 +259,16 @@ def get_management_interface(serial: str):
     management_interface = dashboard.devices.getDeviceManagementInterface(serial)
 
     return management_interface
+
+
+# ---------
+
+# get a network's ssids
+@app.get("/networks/{network_id}/ssids")
+def get_ssids(network_id: str):
+    ssids = dashboard.wireless.getNetworkWirelessSsids(network_id)
+
+    return ssids
 
 
 
@@ -366,7 +375,7 @@ def change_address(network_address: DeviceAddress):
     serial = network_address.serial
 
     # change the address
-    updated_device = dashboard.devices.updateDevice(serial, address=address)
+    updated_device = dashboard.devices.updateDevice(serial, address=address, moveMapMarker=True)
 
     return updated_device
 

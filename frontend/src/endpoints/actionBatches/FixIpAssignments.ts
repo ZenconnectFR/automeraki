@@ -17,7 +17,7 @@ const createBatchBody = (config: any[]) => {
     let actions = [] as any[]
     for (const device of config) {
         let body: ManagementInterfaceBody;
-        if (device.useDhcp) {
+        if (device.useDhcp.use) {
             body = {
                 wan1: {
                     wanEnabled: "not configured",
@@ -50,6 +50,7 @@ const createBatchBody = (config: any[]) => {
 
 export async function fixIpAssignments(config: any[], orgId: string) {
     const actions = createBatchBody(config);
+    console.log(actions)    
     const res = await handleActionBatches(actions, orgId);
     return res
 }

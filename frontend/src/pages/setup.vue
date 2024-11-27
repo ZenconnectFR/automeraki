@@ -11,6 +11,7 @@ import { getTemplateData } from '@/endpoints/templates/GetTemplateData'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 import { storeToRefs } from 'pinia'
 
 import { useBoolStates } from '@/utils/Decorators'
@@ -43,6 +44,7 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configuration = useConfigurationStore()
+const nextStates = useNextStatesStore()
 
 // values from store
 const orgId = storeToRefs(ids.orgId)
@@ -94,6 +96,7 @@ const moreOptions = ref(false)
 // help buttons refs
 const vpnHelp = ref();
 const editNetHelp = ref();
+const blinkHelpRef = ref();
 
 
 // help button toggles
@@ -105,6 +108,9 @@ const toggleEditNetHelp = (event) => {
     editNetHelp.value.toggle(event)
 }
 
+const toggleBlinkHelp = (event) => {
+    blinkHelpRef.value.toggle(event)
+}
 
 const typeFinder = (model: string) => {
     if (model.includes('MX')) {
@@ -242,6 +248,10 @@ const continueWithTemplate = async () => {
     cloningNetwork.value = true
 
     console.log('[SETUP] Cloning network:', templateData.networkToClone, newNetworkNameInput.value, orgId.value)
+
+    // init next states store with n = actions.length
+    nextStates.initStates(templateData.actions.length)
+
     await cloneNetworkAction(templateData.networkToClone, templateData)
 
     // debug: just wait for 2s, put back cloningNetwork to false, wait 1s and mush router to /claim
@@ -320,6 +330,11 @@ const configureNetwork = async () => {
 
     ids.setOrgId(orgId.value)
 
+    // init next states store with n = actions.length
+    nextStates.initStates(templateData.actions.length)
+    // since this is a debug function, we can just set all states to true
+    nextStates.setAllTrue()
+
     // update state store to move to the next step
     router.push({ path: '/naming', replace: true })
 }
@@ -373,6 +388,14 @@ const goToEditNames = async () => {
     router.push('/edit-network')
 }
 
+const goToBlink = async () => {
+    // Go to the blink device page, store the orgId and networkId in the store
+    ids.setOrgId(orgId.value)
+    ids.setNetworkId(networkId.value)
+
+    router.push('/blink')
+}
+
 // Setup function to run on page load
 const setup = async () => {
     // Get organizations from the API
@@ -421,6 +444,10 @@ const setup = async () => {
     devices.setAddress('')
 
     configuration.setConfiguration({})
+    configuration.setCurrentPageConfig({})
+    configuration.setCurrentPageIndex(0)
+
+    nextStates.initStates(0)
 };
 
 // Run setup function on page load
@@ -453,7 +480,7 @@ onMounted(()  => {
             <span class="pi pi-question-circle" @click="toggleEditNetHelp" style="align-self: flex-end;"></span>
             <h3>Edit network</h3>
             <Popover ref="editNetHelp" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
-                <p>Edit the name of all the devices in a network at once</p>
+                <p>Edit different aspects of a network:<br>- All devices names at one<br>- All devices addresses</p>
             </Popover>
             <Select v-model="selectedNetwork" :options="networkOptions" optionLabel="name" @change="setNetworkOption"
                 checkmark :highlightOnSelect="false" filter placeholder="Select a Network" class="dropdown"
@@ -461,6 +488,20 @@ onMounted(()  => {
 
             <Button @click="goToEditNames" label="Edit network devices names" class="margin-all-normal" :disabled="!templatesLoaded"/>
         </div>
+
+        <Divider />
+        <div class="col" style="justify-content: center; align-items: center;">
+            <span class="pi pi-question-circle" @click="toggleBlinkHelp" style="align-self: flex-end;"></span>
+            <h3>Blink Devices</h3>
+            <Popover ref="blinkHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                <p>Blink a device to identify it</p>
+            </Popover>
+            <Select v-model="selectedNetwork" :options="networkOptions" optionLabel="name" @change="setNetworkOption"
+                checkmark :highlightOnSelect="false" filter placeholder="Select a Network" class="dropdown"
+                :disabled="!networksLoaded"/>
+            <Button @click="goToBlink" label="Blink a device" class="margin-all-normal" :disabled="!templatesLoaded"/>
+        </div>
+
     </Drawer>
 
     <Drawer v-model:visible="visibleRight" header="Edit network" position="right" style="width: 400px;">
@@ -498,21 +539,21 @@ onMounted(()  => {
         <br>
 
         <InputText v-model="newNetworkNameInput" placeholder="New network name" @input="newNameEntered=true"
-            class="bigger-input" :disabled="organizationsNotLoaded && !templatesLoaded"/>
+            class="bigger-input" v-if="!organizationsNotLoaded && templatesLoaded"/>
 
         <Message severity="error" size="small" variant="simple" v-if="!newNameEntered">Please enter a new network name</Message>
 
         <br>
 
         <InputText v-model="newNetworkAddress" placeholder="New network address" @input="newAddressEntered=true"
-            class="bigger-input" :disabled="organizationsNotLoaded && !templatesLoaded"/>
+            class="bigger-input" v-if="!organizationsNotLoaded && templatesLoaded"/>
 
         <Message severity="error" size="small" variant="simple" v-if="!newAddressEntered">Please enter a new network address</Message>
 
         <br>
 
         <Button class="margin-all-normal constant-width-250 constant-height-40" @click="continueWithTemplate"
-            :disabled="(organizationsNotLoaded && !templatesLoaded) || cloningNetwork">
+            v-if="!organizationsNotLoaded && templatesLoaded" :disabled="cloningNetwork">
             <v-progress-circular v-if="cloningNetwork" indeterminate color="#fff" width="3"></v-progress-circular>
             <span v-else>Continue with this template</span>
         </Button>

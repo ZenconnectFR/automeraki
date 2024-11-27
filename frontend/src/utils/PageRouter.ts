@@ -1,3 +1,4 @@
+import { blinkDevice } from "@/endpoints/devices/BlinkDevice"
 import EditNetwork from "@/pages/editNetwork.vue"
 
 export const routeTable = {
@@ -52,6 +53,10 @@ export const routeTable = {
     eof: {
         label: "End",
         path: "/complete"
+    },
+    blinkDevice: {
+        label: "Blink Device",
+        path: "/blink-device"
     }
 }
 

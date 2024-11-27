@@ -8,6 +8,7 @@ import { parseDevices } from '@/utils/Misc'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 import { storeToRefs } from 'pinia'
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress'
 
@@ -31,11 +32,13 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const nextStates = useNextStatesStore()
 
 
 // info from the stores
 const { newNetworkId, orgId } = storeToRefs(ids)
-const { configuration } = storeToRefs(configStore)
+const { configuration, currentPageIndex } = storeToRefs(configStore)
+let thisState = nextStates.getState(currentPageIndex.value)
 
 const newNetworkDevices = ref('') // Input field for new network devices serials
 const confirmMoveNetwork = ref(false) // Confirm the move network warning
@@ -211,6 +214,9 @@ const addDevices = async () => {
         }
     }
     claiming.value = false
+
+    thisState = true;
+    nextStates.setStateTrue(configStore.currentPageIndex)
 }
 
 /**
@@ -300,7 +306,7 @@ const validate = async() => {
             <button class="margin-padding-all-normal" @click="showMoveNetwork = false; confirmMoveNetwork = true; removeAlreadyInNetwork() ;addDevices()">Continue without those devices</button-->
         </template>
         <Toast position="top-right" />
-        <Button class="margin-padding-all-normal" @click="validate">Next</Button>
+        <Button :disabled="!thisState" class="margin-padding-all-normal" @click="validate">Next</Button>
     </div>
 </template>
 

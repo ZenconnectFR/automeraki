@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 import { storeToRefs } from 'pinia'
 
 import { updateNetwork } from '@/endpoints/networks/UpdateNetwork'
@@ -25,10 +26,12 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const nextStates = useNextStatesStore()
 
 const { newNetworkId } = storeToRefs(ids)
-const { currentPageConfig } = storeToRefs(configStore)
+const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
+let thisState = nextStates.getState(currentPageIndex.value)
 
 const availableTags = ref([] as any[])
 const filteredTags = ref([] as any[])
@@ -86,6 +89,9 @@ const saveTags = useBoolStates([savingChanges],[changesSaved],async () => {
 
     console.log('Tags saved : ', resp)
     toast.add({ severity: 'success', summary: 'Tags saved', detail: 'Tags saved successfully' })
+
+    thisState = true
+    nextStates.setStateTrue(currentPageIndex.value)
 });
 
 const nextPage = () => {
@@ -130,7 +136,7 @@ onMounted(() => {
         </Button>
         <div class="row center">
             <Button style="margin-right: 15px;" @click="prevPage">Back</Button>
-            <Button @click="nextPage">Next</Button>
+            <Button :disabled="!thisState" @click="nextPage">Next</Button>
         </div>
     </div>
 </template>

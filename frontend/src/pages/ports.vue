@@ -3,6 +3,7 @@ import { ref, onMounted, Ref } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 import { storeToRefs } from 'pinia'
 
 import { getPorts } from '@/endpoints/devices/GetPorts'
@@ -32,9 +33,11 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const nextStates = useNextStatesStore()
 
-const { currentPageConfig } = storeToRefs(configStore)
+const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
+let thisState = nextStates.getState(currentPageIndex.value)
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
@@ -250,6 +253,9 @@ const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
     console.log('STP settings updated : ', stpRes)
 
     toast.add({ severity: 'success', summary: 'Success', detail: 'Configuration saved on Meraki', life: 5000 })
+
+    thisState = true;
+    nextStates.setStateTrue(currentPageIndex.value)
 });
 
 const moveSwitch = (switches: any[], index: number) => {
@@ -318,7 +324,7 @@ onMounted(() => {
             </Button>
             <div class="row center" style="margin-top: 20px;">
                 <Button style="margin-right: 15px;" @click="back">Back</Button>
-                <Button @click="nextPage">Next</Button>
+                <Button :disabled="!thisState" @click="nextPage">Next</Button>
             </div>
         <template v-for="switchPorts in portsAutoConfigured">
             <h3 style="margin-top: 40px;">{{ switchPorts.name }}</h3>

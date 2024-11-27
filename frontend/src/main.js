@@ -35,6 +35,7 @@ import Misc from './pages/misc.vue';
 import Complete from './pages/complete.vue';
 import Rickroll from './pages/rickroll.vue';
 import EditNetwork from './pages/editNetwork.vue'
+import blinkDevices from './pages/blinkDevices.vue'
 
 import 'primeicons/primeicons.css'
 
@@ -56,7 +57,8 @@ const routes = [
     { path: '/complete', component: Complete },
     { path: '/next', component: Next },
     { path: '/rickroll', component: Rickroll },
-    { path: '/edit-network', component: EditNetwork }
+    { path: '/edit-network', component: EditNetwork },
+    { path: '/blink', component: blinkDevices }
 ]
 
 const Router = createRouter({

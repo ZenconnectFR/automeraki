@@ -4,6 +4,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 
 import { storeToRefs } from 'pinia'
 
@@ -42,9 +43,11 @@ const toast = useToast()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const nextStatesStore = useNextStatesStore()
 
-const { currentPageConfig } = storeToRefs(configStore)
+const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
+let thisState = nextStatesStore.getState(currentPageIndex.value)
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 // orgId.value = '282061'
@@ -206,6 +209,13 @@ const setup = useBoolStates([loading], [loaded, allLoaded], async () => {
         }
     }
 
+    // format ranges to match the syntax. [{start: "cidr", end: "cidr"}] => ["cidr-cidr"]
+    // add the field "parsedRanges" to each vpnSubnet in vpnSubnets
+    for (const vpnSubnet of vpnSubnetsConfig) {
+        vpnSubnets.value[vpnSubnet.name]["parsedRanges"]= vpnSubnet.ranges.map((range: { start: string, end: string }) => `${range.start}-${range.end}`)
+    }
+
+
     console.log('VPN Subnets: ', vpnSubnets.value)
     console.log('Subnet names: ', subnetNames)
 
@@ -216,7 +226,7 @@ const setup = useBoolStates([loading], [loaded, allLoaded], async () => {
         
         // for test: find 4 next free subnets
         while (true) {
-            const freeSubnet = findNextFreeSubnet(vpnSubnet.subnets, vpnSubnet.ranges, vpnSubnet.excepts)
+            const freeSubnet = findNextFreeSubnet(vpnSubnet.subnets, vpnSubnet.parsedRanges, vpnSubnet.excepts)
             if (freeSubnet == null) {
                 break
             }
@@ -354,43 +364,7 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
                 console.error('Vlan not found for subnet: ', subnet)
                 return
             }
-        }
-
-        // update the vpnNatSubnet of vlans that have translation enabled
-        /*
-        if (subnet.translation) {
-            console.log('Updating translation for subnet: ', subnet)
-            const vlan = vlans.find((vlan: { subnet: string }) => vlan.subnet == subnet.originalLocalSubnet)
-            if (vlan) {
-                // update the vpnNatSubnet
-                const updateResponse = await updateNetworkVlan(newNetworkId.value,[
-                    {
-                        id: vlan.id,
-                        payload: [
-                            {
-                                vpnNat: {
-                                    enabled: true,
-                                },
-                                vpnNatSubnet: subnet.translationValue
-                            }
-                        ]
-                    }
-                ])
-
-                console.log('Update response: ', updateResponse)
-                if (updateResponse.error) {
-                    console.error('Error updating vlan: ', updateResponse.error)
-                    return
-                }
-            } else {
-                console.error('Vlan not found for subnet: ', subnet)
-                return
-            }
-            vlans = await getVlans(newNetworkId.value)
-            console.log('vlans updated: ', vlans)
-        }
-        */
-        
+        }    
     }
 
     // update the site to site vpn config
@@ -414,6 +388,9 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
 
     await updateSiteToSiteVpn(newNetworkId.value, siteToSitePayload)
 
+    thisState = true
+    nextStatesStore.setStateTrue(currentPageIndex.value)
+
     // reset available subnets and empty vpnSubnets
     freeSubnets.value = {}
     for (const vpnSubnet of vpnSubnetsConfig) {
@@ -431,6 +408,9 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
     }
 
     toast.add({severity: 'success', summary: 'VPN Configuration saved!', life: 3000})
+
+    thisState = true
+    nextStatesStore.setStateTrue(currentPageIndex.value)
 });
 
 const goBack = () => {
@@ -582,7 +562,7 @@ onMounted(() => {
             <Button @click="saveVpnConfig">Save to Meraki</Button>
             <div class="row center" style="margin-top: 15px;">
                 <Button style="margin-right: 15px;" @click="goBack">Back</Button>
-                <Button @click="nextPage">Next</Button>
+                <Button :disabled="!thisState" @click="nextPage">Next</Button>
             </div>
         </div>
     </div>

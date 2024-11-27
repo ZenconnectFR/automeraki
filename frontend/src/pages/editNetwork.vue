@@ -15,13 +15,31 @@ import { useBoolStates } from '@/utils/Decorators';
 
 import Dropdown from '@/components/Dropdown.vue';
 import { getNetwork } from '@/endpoints/networks/GetNetwork';
+import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress';
 
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Popover from 'primevue/popover';
+import Card from 'primevue/card';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 const __DEBUG__ = import.meta.env.VITE_APP_DEBUG === 'true';
 
 const router = useRouter();
 
+const toast = useToast();
+
 const ids = useIdsStore();
 const devices = useDevicesStore();
+
+const devicesList = ref([]);
+const address = ref('');
+
+const saveAddressHelpRef = ref()
+
+const toggleSaveAddressHelp = (event) => {
+    saveAddressHelpRef.value.toggle(event)
+}
 
 const { orgId, networkId } = storeToRefs(ids);
 
@@ -53,14 +71,6 @@ interface Option {
     name: string;
     value: any;
 }
-
-const escapeHtml = (text: string) => {
-  return text.replace(/&/g, '&amp;')
-             .replace(/</g, '&lt;')
-             .replace(/>/g, '&gt;')
-             .replace(/"/g, '&quot;')
-             .replace(/'/g, '&#039;');
-};
 
 const confirmChanges = async () => {
     console.log('[EDIT NETWORK] Confirming changes')
@@ -98,7 +108,7 @@ const highlightMatch = computed(() => {
         return devicesNames.value.map((device: { name: string }) => device.name)
     } else {
         let regex = new RegExp(regexToReplaceString.value, 'g')
-        return devicesNames.value.map((device: { name: string }) => device.name.replace(regex, `<span class="highlightred">${regexToReplaceString.value}</span>`))
+        return devicesNames.value.map((device: { name: string }) => device.name.replace(regex, (match) => `<span style="background-color: #fc828c;">${match}</span>`))
     }
 });
 
@@ -107,7 +117,7 @@ const highlightReplacement = computed(() => {
         return devicesNames.value.map((device: { name: string }) => device.name)
     } else {
         let regex = new RegExp(regexToReplaceString.value, 'g')
-        return devicesNames.value.map((device: { name: string }) => device.name.replace(regex, `<span class="highlightgreen">${replacementString.value}</span>`))
+        return devicesNames.value.map((device: { name: string }) => device.name.replace(regex, (match) => `<span style="background-color: #7dff9b;">${replacementString.value}</span>`))
     }
 });
 
@@ -121,29 +131,9 @@ const getDevicesNames = async () => {
         }
     })
     devicesNamesLoaded.value = true
-}
 
-
-// if selectedOrgOption is modified, set the orgId in the store
-const setOrganizationOption = async () => {
-    console.log('[SETUP] Selected org option in set org:', selectedOrgOption.value)
-    if (orgId.value === selectedOrgOption.value.value) {
-        return
-    }
-
-    orgId.value = selectedOrgOption.value.value
-    ids.setOrgId(selectedOrgOption.value.value)
-
-    useBoolStates([loadingNetworks], [networksLoaded], async () => {
-        networks.value = await getNetworks(orgId.value)
-        if (networks.value === undefined) {
-            networks.value = []
-            console.error('[SETUP] No networks found for org:', orgId.value)
-        } else {
-            console.log('[SETUP] Networks loaded:', networks.value)
-            populateNetworkOptions()
-        }
-    })();
+    devices.setDevicesList(fetchedDevices)
+    devicesList.value = fetchedDevices
 }
 
 // Populate network options array
@@ -159,13 +149,17 @@ const populateNetworkOptions = () => {
     console.log('[SETUP] Network options loaded:', networkOptions.value)
 }
 
-// Set the selected network
-const setNetworkOption = async(option: Option | { value: string; name: string }) => {
-    selectedNetwork.value = option
-    networkId.value = option.value
-    console.log('[SETUP] Selected network:', selectedNetwork.value)
-    newNetworkSelected.value = true
-    await getDevicesNames()
+const savingAddresses = ref(false)
+
+const changeAddress = async () => {
+    savingAddresses.value = true
+    // change every device address to the new address
+    for (const device of devicesList.value) {
+        await changeDeviceAddress(device.serial, address.value);
+        //console.log('[NAMING] changeAddress response: ', resp);
+    }
+    savingAddresses.value = false
+    toast.add({ severity: 'success', summary: 'Address saved', detail: 'Address saved successfully', life: 3000 }); 
 }
 
 const setup = async () => {
@@ -192,7 +186,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="container">
+    <div class="container" style="margin-bottom: 60px;">
+        <Toast position="top-right" />
         <div class="row">
             <div class="col-12">
                 <h1>Edit Network</h1>
@@ -204,36 +199,57 @@ onMounted(() => {
                 <div class="row">
                     <div class="row marg">
                         <span class="marg">Text to replace:</span>
-                        <input class="bigger-input" v-model="regexToReplaceString" type="text"/>
+                        <InputText class="bigger-input" v-model="regexToReplaceString" type="text"/>
                     </div>
                     <div class="row">
                         <span class="marg">Replacement :</span>
-                        <input class="bigger-input" v-model="replacementString" type="text"/>
+                        <InputText class="bigger-input" v-model="replacementString" type="text"/>
                     </div>
                 </div>
                 <hr />
                 <div v-if="devicesNamesLoaded" class="col">
-                    <div class="row">
-                        <div class="col-12">
+                    <div class="row center">
+                        <div class="col center" style="margin-right: 10px; width: 250px;">
+                            <h2>Devices names</h2>
                             <ul>
-                                <li v-for="(highlighted, index) in highlightMatch" :key="index" v-html="highlighted"></li>
+                                <Card v-for="(device, index) in highlightMatch" :key="index" v-html="device" class="bigger-card"></Card>
                             </ul>
                         </div>
-                        <span class="margin-sides-big">-></span>
-                        <div class="col-12">
+                        <i class="pi pi-arrow-right" style="margin-right: 10px;"></i>
+                        <div class="col center" style="width: 250px">
+                            <h2>New devices names</h2>
                             <ul>
-                                <li v-for="(highlighted, index) in highlightReplacement" :key="index" v-html="highlighted"></li>
+                                <Card v-for="(device, index) in highlightReplacement" :key="index" v-html="device" class="bigger-card"></Card>
                             </ul>
                         </div>
                     </div>
                     <div class="col">
-                        <div v-if="changingDeviceName" class="col-12">
-                            <p>Changing device names...</p>
-                        </div>
-                        <div class="col-12">
-                            <button @click="confirmChanges">Confirm changes</button>
+                        <div class="col-12" style="margin-top: 30px;">
+                            <Button @click="confirmChanges" :disabled="changingDeviceName" class="constant-width-150 constant-height-40">
+                                <v-progress-circular v-if="changingDeviceName" indeterminate color="white" width="3"></v-progress-circular>
+                                <span v-else>Rename</span>
+                            </Button>
                         </div>
                     </div>
+                    <div class="col center" style="margin-top: 40px; margin-bottom: 10px">
+                        <div class="col" style="width: 230px;">
+                            <span class="pi pi-question-circle" @click="toggleSaveAddressHelp" style="align-self: flex-end; transform: translateY(20px); cursor: pointer;"></span>
+                            <h2 style="align-self: center;">Change address</h2>
+                        </div>
+                        <InputText v-model="address" placeholder="Enter an address" style="margin-bottom: 20px; width: 350px;"/>
+                        <Button @click="changeAddress" class="constant-width-150 constant-height-40" :disabled="savingAddresses">
+                            <v-progress-circular v-if="savingAddresses" indeterminate color="white" width="3"></v-progress-circular>
+                            <span v-else>Save address</span>
+                        </Button>
+
+                        <Popover ref="saveAddressHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                            <p>Use this field in case you made a mistake setting the network address in the setup.<br>
+                                This field is only saved when using the dedicated button.</p>   
+                        </Popover>
+                    </div>
+                </div>
+                <div v-else class="row center" style="margin-top: 30px">
+                    <v-progress-circular indeterminate></v-progress-circular>
                 </div>
             </div>
         </div>
@@ -282,9 +298,8 @@ onMounted(() => {
 }
 
 .highlightred {
-  background-color: #fc828c;
-  padding: 2px 4px;
-  border-radius: 4px;
+    background-color: #fc828c;
+    color: white;
 }
 
 .highlightgreen {
@@ -320,6 +335,17 @@ li {
 
 .backbtn {
     margin-bottom: 20px;
+}
+
+.bigger-card {
+    min-height: 40px;
+    min-width: 150px;
+    margin: 20px;
+    padding: 10px;
+    border-radius: 6px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 
 </style>

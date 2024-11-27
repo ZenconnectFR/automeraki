@@ -10,6 +10,7 @@ import { getRoutePath } from '@/utils/PageRouter'
 
 import { useDevicesStore } from '@/stores/devices';
 import { useConfigurationStore } from '@/stores/configuration';
+import { useNextStatesStore } from '@/stores/nextStates';
 
 import { useBoolStates } from '@/utils/Decorators';
 
@@ -35,9 +36,12 @@ const route = useRoute()
 const devices = useDevicesStore()
 const { network, devicesList} = storeToRefs(devices)
 const configStore = useConfigurationStore()
+const nextStatesStore = useNextStatesStore()
 
-const { currentPageConfig } = storeToRefs(configStore)
+const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value;
+let thisState = nextStatesStore.getState(currentPageIndex.value);
+console.log('[NAMING] thisState: ', thisState);
 
 // UI states
 const renaming = ref(false)
@@ -58,6 +62,7 @@ const othersTable = ref([])
 const address = ref('')
 
 const editingRows = ref([])
+const editingRows2 = ref([])
 
 const saveAddressHelpRef = ref()
 
@@ -97,6 +102,7 @@ const onRowEditSave = (event: any, table: any) => {
             [initiatorDevice.associationId, edgeAffectedDevice.associationId] = [edgeAffectedDevice.associationId, initiatorDevice.associationId];
             [initiatorDevice.associationName, edgeAffectedDevice.associationName] = [edgeAffectedDevice.associationName, initiatorDevice.associationName];
             [initiatorDevice.tags, edgeAffectedDevice.tags] = [edgeAffectedDevice.tags, initiatorDevice.tags];
+            [initiatorDevice.name, edgeAffectedDevice.name] = [edgeAffectedDevice.name, initiatorDevice.name];
 
             Object.assign(table[initiatorDeviceIndex], initiatorDevice);
             Object.assign(table[edgeAffectedDeviceIndex], edgeAffectedDevice);
@@ -386,38 +392,6 @@ const renameDevices = () => {
 
 }
 
-// reorder switches to fit the config according to ports number (associationTable[n].switchPorts)
-const reorderSwitches = async () => {
-    for (const switchDevice of switchesTable.value.filter((device: { type: string; }) => device.type === 'switch')) {
-        // find the first switch in the associationTable that has the same number of ports as the switchDevice
-        // the property switchPorts is an array of integers representing the possible number of ports for the switch, ordered by preference
-        // we find the first association in the associationTable that has the same number of ports as the switchDevice and move the switchDevice to the corresponding position
-        const switchPorts = switchDevice.switchPorts;
-        const association = config.associationTable.find((a: { type: string; switchPorts: any; }) => a.type === 'switch' && a.switchPorts.includes(switchPorts));
-        if (!association) {
-            console.error('Error reordering switches: no association found for switch with serial: ', switchDevice.serial);
-            continue;
-        }
-
-        // find the index of the association in the associationTable
-        const index = config.associationTable.indexOf(association);
-
-        // find the index of the switchDevice in the devicesList
-        const deviceIndex = switchesTable.value.indexOf(switchDevice);
-
-        // if the indexes are different, exange the devices in the table
-        if (index !== deviceIndex) {
-            let temp = switchesTable.value[index].associationId;
-            switchesTable.value[index].associationId = switchDevice.associationId;
-            switchDevice.associationId = temp;
-
-            temp = switchesTable.value[index].name;
-            switchesTable.value[index].name = switchDevice.name;
-            switchDevice.name = temp;
-        }
-    }
-}
-
 const clearDeviceTags = (devices : any[]) => {
     for (const device of devices) {
         device.tags = [];
@@ -498,16 +472,6 @@ const autoUpdateTags = async () => {
     });    
 }
 
-const updateNames = (src: any[], table: any[]) => {
-    let index = 0;
-    for (const device of src) {
-        // update the name of the device: config.name with the association name taken from the table at the same index
-        device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', table[index].name);
-        index++;
-        console.log('[NAMING] updated name: ', device.name, 'for device serial: ', device.serial, 'with associationId: ', device.associationId);
-    }
-}
-
 const changeNames = useBoolStates([renaming],[], async() => {
     console.log('[NAMING] changeNames: tables values: ', routersTable.value, switchesTable.value, apsTable.value, othersTable.value);
 
@@ -528,71 +492,21 @@ const changeNames = useBoolStates([renaming],[], async() => {
 
     toast.add({ severity: 'success', summary: 'Names saved', detail: 'The names have been successfully saved', life: 3000 });
 
+    thisState = true;
+    nextStatesStore.setStateTrue(currentPageIndex.value);
+
 }, namesSaved);
-
-const moveUp = (index: number, devices: any[]) => {
-    // swap the device at index with the device at index - 1
-    devices.splice(index - 1, 0, devices.splice(index, 1)[0]);
-
-    // update the association id, association name and name of the devices
-    let temp = devices[index].associationId;
-    devices[index].associationId = devices[index - 1].associationId;
-    devices[index - 1].associationId = temp;
-
-    temp = devices[index].associationName;
-    devices[index].associationName = devices[index - 1].associationName;
-    devices[index - 1].associationName = temp;
-
-    temp = devices[index].name;
-    devices[index].name = devices[index - 1].name;
-    devices[index - 1].name = temp;
-
-    // if type is ap, reorder the aps by ascending associationId
-    if (devices === aps.value) {
-        aps.value.sort((a, b) => a.associationId.localeCompare(b.associationId));
-    }
-}
-
-const moveDown = (index: number, devices: any[]) => {
-    // swap the device at index with the device at index + 1
-    devices.splice(index + 1, 0, devices.splice(index, 1)[0]);
-
-    // update the association id, association name and name of the devices
-    let temp = devices[index].associationId;
-    devices[index].associationId = devices[index + 1].associationId;
-    devices[index + 1].associationId = temp;
-
-    temp = devices[index].associationName;
-    devices[index].associationName = devices[index + 1].associationName;
-    devices[index + 1].associationName = temp;
-
-    temp = devices[index].name;
-    devices[index].name = devices[index + 1].name;
-    devices[index + 1].name = temp;
-
-    // if type is ap, reorder the aps by ascending associationId
-    if (devices === aps.value) {
-        aps.value.sort((a, b) => a.associationId.localeCompare(b.associationId));
-    }
-}
-
-const changeAddress = async () => {
-    // change every device address to the new address
-    for (const device of devicesList.value) {
-        await changeDeviceAddress(device.serial, address.value);
-        //console.log('[NAMING] changeAddress response: ', resp);
-    }
-}
-
-const blink = (serial: string) => {
-    blinkDevice(serial);
-}
 
 const goBack = () => {
     router.push('/claim');
 }
 
 const setup = async() => {
+
+    // add a "serialtag" field to each device, the field is "[serial]tag"
+    devicesList.value.forEach((device: { serial: any; }) => {
+        device["serialtag"] = `[${device.serial}]tag`;
+    });
 
     console.log('[NAMING] config: ', config);
     buildTables(config.associationTable);
@@ -773,7 +687,7 @@ onMounted(() => {
             <div class="col center" style="margin-top: 40px;">
                 <h2>Tagging</h2>
                 <DataTable :value="aps" tableStyle="min-width: 50rem" editMode="row"
-                    @row-edit-save="(event) => onRowEditSaveTags(event, aps)" v-model:editingRows="editingRows" dataKey="serial"
+                    @row-edit-save="(event) => onRowEditSaveTags(event, aps)" v-model:editingRows="editingRows2" dataKey="serialtag"
                     @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
                     :pt="{
                         table: { style: 'min-width: 50rem' },
@@ -802,18 +716,6 @@ onMounted(() => {
                     <Column :row-editor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
                 </DataTable>
             </div>
-            <div style="margin-top: 40px; margin-bottom: 10px">
-                <h2>Address</h2>
-                <InputText v-model="address" placeholder="Enter an address" style="margin-right: 20px;"/>
-                <Button @click="changeAddress" style="margin-right: 15px;">Save</Button>
-
-                <span class="pi pi-question-circle" @click="toggleSaveAddressHelp" style="align-self: flex-end;"></span>
-
-                <Popover ref="saveAddressHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
-                    <p>Use this field in case you made a mistake setting the network address in the setup.<br>
-                        This field is only saved when using the dedicated button.</p>
-                </Popover>
-            </div>
             <Divider style="width: 250px;" />
             <div style="margin-top: 20px;"></div>
             <!--Button class="margin-padding" @click="changeNames">Save</Button-->
@@ -824,7 +726,7 @@ onMounted(() => {
             </Button>
             <div class="make-row" style="margin-top: 20px; margin-bottom: 60px">
                 <Button style="margin-right: 15px;" @click="goBack">Back</Button>
-                <Button @click="validate">Next</Button>
+                <Button :disabled="!thisState" @click="validate">Next</Button>
             </div>
         </div>
     </div>

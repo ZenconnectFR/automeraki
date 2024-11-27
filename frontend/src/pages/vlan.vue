@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 import { storeToRefs } from 'pinia'
 
 import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan'
@@ -28,6 +29,7 @@ import Divider from 'primevue/divider'
 import Popover from 'primevue/popover';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import Tag from 'primevue/tag';
 
 const toast = useToast();
 
@@ -37,9 +39,11 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const nextStates = useNextStatesStore()
 
-const { currentPageConfig } = storeToRefs(configStore)
+const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
+let thisState = nextStates.getState(currentPageIndex.value)
 
 console.log('Configuration: ', config)
 
@@ -54,6 +58,12 @@ const perPortVlan = ref([])
 const moreOptions = ref(false)
 
 let autoMac = createMac()
+
+const commonIpHelpRef = ref()
+
+const toggleCommonIpHelp = (event) => {
+    commonIpHelpRef.value.toggle(event);
+}
 
 // groups of common ips: ip are "common" if they have at least two parts in common
 // each group is of the form : { vlans: [vlan1, vlan2, ...], commonParts: { part1: value1 | null, part2: value2 | null, ... } }
@@ -485,65 +495,10 @@ const confirm = useBoolStates([savingChanges],[],async () => {
     console.log('[VLAN] Response: ', response)
 
     toast.add({severity:'success', summary:'Success', detail:'VLAN configuration saved successfully'});
+
+    thisState = true;
+    nextStates.setStateTrue(currentPageIndex.value)
 });
-
-const makeNewVlan = () => {
-    const newId = vlanAutoConfigured.value.length + 1
-    vlanAutoConfigured.value.push(
-        {
-            id: newId,
-            payload: [
-                {
-                    name: 'New VLAN',
-                    applianceIp: '',
-                    subnet: ''
-                },
-                {
-                    fixedIpAssignments: [],
-                    reservedIpRanges: [],
-                    dhcpOptions: []
-                }
-            ]
-        }
-    )
-    makeNewIpAssignment(newId)
-}
-
-const makeNewIpAssignment = (vlanId: number) => {
-    for (const vlan of vlanAutoConfigured.value) {
-        if (vlan.id === vlanId) {
-            vlan.payload[1].fixedIpAssignments.push({
-                ip: '',
-                name: '',
-                mac: ''
-            })
-        }
-    }
-}
-
-const deleteVlan = (vlanId: number) => {
-    for (let i = 0; i < vlanAutoConfigured.value.length; i++) {
-        if (vlanAutoConfigured.value[i].id === vlanId) {
-            vlanAutoConfigured.value.splice(i, 1)
-        }
-    }
-}
-
-const deleteFixedIp = (vlanId: number, mac: string) => {
-    console.log('[VLAN] Deleting fixed ip: ', vlanId, mac)
-    for (const vlan of vlanAutoConfigured.value) {
-        if (vlan.id === vlanId) {
-            console.log('[VLAN] Found vlan: ', vlan)
-            for (let i = 0; i < vlan.payload[1].fixedIpAssignments.length; i++) {
-                // if the fixedIpAssignments has the mac in its body, delete it
-                if (vlan.payload[1].fixedIpAssignments[i].mac === mac) {
-                    console.log('[VLAN] Found fixed ip: ', vlan.payload[1].fixedIpAssignments[i])
-                    vlan.payload[1].fixedIpAssignments.splice(i, 1)
-                }
-            }
-        }
-    }
-}
 
 
 const validate = () => {
@@ -575,16 +530,26 @@ onMounted(() => {
 
             <Divider />
             
-            <div class="make-column" id="commonIps">
-                <p>Common appliance IPs</p>
+            <div class="col center" id="commonIps">
+                <span class="pi pi-question-circle center" @click="toggleCommonIpHelp" style="align-self: flex-end; cursor: pointer;"></span>
+                <h2 >Common appliance IPs</h2>
+                <Popover ref="commonIpHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
+                    <p>Edit the appliance IP and subnet of all the vlans with common ip parts at the same time</p>
+                </Popover>
                 <div v-for="(group, index) in commonIpsGroups" :key="index">
-                    <div class="align-items-horizontally">
-                        <span class="lateral-margin-small">Vlans</span>
-                        <span class="lateral-margin-small" v-for="(vlan, index) in group.vlans" :key="index">{{ vlan }} </span>
-                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part1" :disabled="group.commonParts.part1 === null" placeholder="x" @input="updateCommonIp(group)"/>
-                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part2" :disabled="group.commonParts.part2 === null" placeholder="x" @input="updateCommonIp(group)"/>
-                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part3" :disabled="group.commonParts.part3 === null" placeholder="x" @input="updateCommonIp(group)"/>
-                        <input class="margin-all-normal enboxed short" v-model="group.commonParts.part4" :disabled="group.commonParts.part4 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                    <div class="col center">
+                        <div class="row center">
+                            <span class="lateral-margin-small">Vlans</span>
+                            <Tag v-for="(vlan, index) in group.vlans" :key="index" class="lateral-margin-small">
+                                {{ vlan }}
+                            </Tag>
+                        </div>
+                        <div class="row center">
+                            <input class="margin-all-normal enboxed short" v-model="group.commonParts.part1" :disabled="group.commonParts.part1 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                            <input class="margin-all-normal enboxed short" v-model="group.commonParts.part2" :disabled="group.commonParts.part2 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                            <input class="margin-all-normal enboxed short" v-model="group.commonParts.part3" :disabled="group.commonParts.part3 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                            <input class="margin-all-normal enboxed short" v-model="group.commonParts.part4" :disabled="group.commonParts.part4 === null" placeholder="x" @input="updateCommonIp(group)"/>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -711,7 +676,7 @@ onMounted(() => {
         </Button>
         <div class="row center" style="margin-top: 20px;">
             <Button style="margin-right: 15px;" @click="goBack">Back</Button>
-            <Button @click="validate">Next</Button>
+            <Button :disabled="!thisState" @click="validate">Next</Button>
         </div>
     </div>
 </template>

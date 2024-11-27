@@ -4,6 +4,7 @@ import { ref, onMounted, Text } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 
 import { storeToRefs } from 'pinia'
 
@@ -14,6 +15,7 @@ import { updateNotes } from '@/endpoints/devices/UpdateNotes'
 import { getMxSettings } from '@/endpoints/networks/GetMxSettings'
 import { updateMxSettings } from '@/endpoints/networks/UpdateMxSettings'
 import { getNetwork } from '@/endpoints/networks/GetNetwork'
+import { getNetworkSsids } from '@/endpoints/networks/GetNetworkSsids'
 
 import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
@@ -41,12 +43,14 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const nextStates = useNextStatesStore()
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
 
-const { currentPageConfig } = storeToRefs(configStore)
+const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
+let thisState = nextStates.getState(currentPageIndex.value)
 
 const loaded = ref(false)
 const allLoaded = ref(false)
@@ -63,6 +67,15 @@ const populateSplashPages = async() => {
     const response = await getSplashPage(newNetworkId.value)
     console.log('response', response)
     splashPagesSettings.value = response
+
+    const ssidResp = await getNetworkSsids(newNetworkId.value)
+    console.log('ssidResp', ssidResp)
+    for (const ssid of ssidResp) {
+        const foundIndex = splashPagesSettings.value.findIndex((sp: any) => sp.ssidNumber === ssid.number)
+        if (foundIndex >= 0) {
+            splashPagesSettings.value[foundIndex]['ssidName'] = ssid.name
+        }
+    }
 }
 
 const splashPages = ref([] as any[])
@@ -81,14 +94,14 @@ const initSplashPagesSection = () => {
         } else {
             splashPage['expectedUrl'] = ''
         }
-        splashPage['useExpectedUrl'] = false
+        splashPage['useExpectedUrl'] = true
         splashPages.value.push(splashPage)
     }
 
     // populate options for the dropdown
     for (const splashPage of splashPages.value) {
         splashPagesOptions.value.push({
-            title: `SSID ${splashPage.ssidNumber}`,
+            title: `SSID ${splashPage.ssidNumber} - ${splashPage.ssidName}`,
             value: splashPage.ssidNumber
         })
     }
@@ -238,6 +251,8 @@ const setup = async() => {
 
 onMounted(() => {
     setup()
+    nextStates.setStateTrue(currentPageIndex.value)
+    thisState = true
 })
 </script>
 
@@ -261,7 +276,7 @@ onMounted(() => {
                         <p style="margin-top: 10px;">Current splash URL: {{ splashPage.splashUrl }}</p>
                         <div class="row center" style="margin-top: 10px; margin-bottom: 20px;">
                             <p style="margin-right: 15px;">New URL to use:</p>
-                            <InputText v-model="splashPage.splashUrl" placeholder="Enter URL"/>
+                            <InputText v-model="splashPage.expectedUrl" placeholder="Enter URL"/>
                         </div>
                     </div>
                 </div>
@@ -310,7 +325,7 @@ onMounted(() => {
         </div>
         <div style="margin-top: 20px; margin-bottom: 60px;" class="row center">
             <Button style="margin-right: 15px;" @click="prevPage">Previous</Button>
-            <Button @click="nextPage">Next</Button>
+            <Button :disabled="!thisState" @click="nextPage">Next</Button>
         </div>
     </div>
     <div v-else>
