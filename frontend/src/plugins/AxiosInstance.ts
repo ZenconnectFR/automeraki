@@ -1,9 +1,10 @@
 import Axios from 'axios';
 
 const axiosInstance = Axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: '',
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true' 
     // Authorization: `Bearer ${meta.env.VUE_APP_API_KEY}`,
   },
 });

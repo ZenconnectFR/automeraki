@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Any
@@ -30,11 +32,7 @@ app.add_middleware(
 
 # ------------------ GET ------------------
 
-# Test route
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
+app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
 # ---------
 
@@ -959,3 +957,9 @@ def get_template(org_id: str, template_id: str):
 
 # Create a new template
 # TODO: create a new template (we'll see when we get to it)
+
+
+# Serve frontend for all other routes
+@app.get("/{full_path:path}")
+async def serve_frontend():
+    return FileResponse("dist/index.html")
