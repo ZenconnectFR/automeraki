@@ -138,7 +138,10 @@ app.use(vuetify)
 app.use(ToastService)
 app.use(PrimeVue, {
     theme: {
-        preset: MyPreset
+        preset: MyPreset,
+        options: {
+            darkModeSelector: false || 'none',
+        }
     }
 });
 app.mount('#app')

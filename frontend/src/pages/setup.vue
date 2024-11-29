@@ -472,7 +472,7 @@ onMounted(()  => {
                 <p>Consult the next available networks for the Spoke mode VPN in this organization</p>
             </Popover>
 
-            <Button @click="goToVpn" label="Voice and Spoke" class="margin-all-normal" :disabled="!templatesLoaded"/>
+            <Button @click="goToVpn" label="Check free VPN" class="margin-all-normal" :disabled="!templatesLoaded"/>
         </div>
 
         <Divider />
@@ -486,7 +486,7 @@ onMounted(()  => {
                 checkmark :highlightOnSelect="false" filter placeholder="Select a Network" class="dropdown"
                 :disabled="!networksLoaded"/>
 
-            <Button @click="goToEditNames" label="Edit network devices names" class="margin-all-normal" :disabled="!templatesLoaded"/>
+            <Button @click="goToEditNames" label="Edit network" class="margin-all-normal" :disabled="!templatesLoaded"/>
         </div>
 
         <Divider />
@@ -499,7 +499,7 @@ onMounted(()  => {
             <Select v-model="selectedNetwork" :options="networkOptions" optionLabel="name" @change="setNetworkOption"
                 checkmark :highlightOnSelect="false" filter placeholder="Select a Network" class="dropdown"
                 :disabled="!networksLoaded"/>
-            <Button @click="goToBlink" label="Blink a device" class="margin-all-normal" :disabled="!templatesLoaded"/>
+            <Button @click="goToBlink" label="Blink network devices" class="margin-all-normal" :disabled="!templatesLoaded"/>
         </div>
 
     </Drawer>
@@ -526,17 +526,24 @@ onMounted(()  => {
 
         <v-progress-circular v-if="organizationsNotLoaded" indeterminate color="primary"></v-progress-circular>
 
+
+        <h3 style="margin-top: 20px; margin-bottom: 10px;" v-if="!organizationsNotLoaded" >Select an Organization</h3>
+
         <Select v-model="selectedOrgOption" :options="organizations" optionLabel="name" @change="setOrganizationOption"
             checkmark :highlightOnSelect="false" filter placeholder="Select an Organization" class="dropdown"
             v-if="!organizationsNotLoaded"/>
+
+        <h3 style="margin-top: 20px; margin-bottom: 10px;" v-if="!organizationsNotLoaded">Select a Template</h3>
 
         <Select v-model="selectedTemplate" :options="templates" optionLabel="name" @change="setTemplateOption"
             checkmark :highlightOnSelect="false" filter placeholder="Select a Template" :disabled="!templatesLoaded" class="dropdown"
             v-if="!organizationsNotLoaded"/>
 
-        <p v-if="templateNetwork">Network to clone: {{ templateNetwork }}</p>
+        <p v-if="templateNetwork" style="margin-top: 10px;">Network to clone: {{ templateNetwork }}</p>
 
         <br>
+
+        <h3 style="margin-bottom: 10px;" v-if="!organizationsNotLoaded">New network name</h3>
 
         <InputText v-model="newNetworkNameInput" placeholder="New network name" @input="newNameEntered=true"
             class="bigger-input" v-if="!organizationsNotLoaded && templatesLoaded"/>
@@ -544,6 +551,8 @@ onMounted(()  => {
         <Message severity="error" size="small" variant="simple" v-if="!newNameEntered">Please enter a new network name</Message>
 
         <br>
+
+        <h3 style="margin-bottom: 10px;" v-if="!organizationsNotLoaded">New network address</h3>
 
         <InputText v-model="newNetworkAddress" placeholder="New network address" @input="newAddressEntered=true"
             class="bigger-input" v-if="!organizationsNotLoaded && templatesLoaded"/>

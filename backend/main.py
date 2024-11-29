@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from typing import Optional, Any
 import meraki
 import os
@@ -12,6 +14,15 @@ load_dotenv()
 
 # Get the API key from the environment
 api_key = os.getenv("API_KEY")
+
+if os.getenv("DEBUG") == "True":
+    print("Debug mode is on")
+    # create and set the env variable VITE_APP_DEBUG to True
+    os.environ["VITE_APP_DEBUG"] = "true"
+else:
+    print("Debug mode is off")
+    # create and set the env variable VITE_APP_DEBUG to False
+    os.environ["VITE_APP_DEBUG"] = "false"
 
 # Initialize the Dashboard API
 dashboard = meraki.DashboardAPI(api_key, output_log=False, wait_on_rate_limit=True)
@@ -30,11 +41,14 @@ app.add_middleware(
 
 # ------------------ GET ------------------
 
+app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
+
 # Test route
+'''
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-
+'''
 
 # ---------
 
@@ -959,3 +973,16 @@ def get_template(org_id: str, template_id: str):
 
 # Create a new template
 # TODO: create a new template (we'll see when we get to it)
+
+
+
+
+
+
+# MARK: - SERVE FRONTEND
+
+# Serve frontend for all other routes
+@app.get("/{full_path:path}")
+async def serve_frontend():
+    return FileResponse("dist/index.html")
+

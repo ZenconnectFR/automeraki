@@ -138,10 +138,6 @@
             }
         },
         {
-            "type": "firewall",
-            "data": {}
-        },
-        {
             "type": "vlan",
             "data": {
                 "vlans": [

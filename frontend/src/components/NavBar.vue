@@ -6,9 +6,10 @@
                 <div class="stepper-label">
                     {{ getPageLabel(page.type) }}
                 </div>
-                <div :class="['step-circle', getCircleClass(index)]" @click="__DEBUG__ ? goToPage(index) : null"
-                 :style="{ cursor: __DEBUG__ ? 'pointer': 'default'}">
-                    <span class="nb" v-if="index >= currentPageIndex">{{ index + 1 }}</span>
+                <div :class="['step-circle', getCircleClass(index)]" @click="(__DEBUG__ || (lastIndexTrue >= index - 1)) ? goToPage(index) : null"
+                    :style="{ cursor: (__DEBUG__ || (lastIndexTrue >= index - 1))? 'pointer': 'default'}"
+                >
+                    <span class="nb" v-if="lastIndexTrue < index">{{ index + 1 }}</span>
                     <span v-else>
                         <i class="pi pi-check" style="color: #ffffff;"></i>
                     </span>
@@ -20,22 +21,41 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useConfigurationStore } from '@/stores/configuration';
+import { useNextStatesStore } from '@/stores/nextStates';
 import { getRoutePath, getPageLabel } from '@/utils/PageRouter';
 
 import Button from 'primevue/button';
 
 const __DEBUG__ = import.meta.env.VITE_APP_DEBUG === 'true';
 const configStore = useConfigurationStore();
+const nextStatesStore = useNextStatesStore();
 const router = useRouter();
 
 const { configuration, currentPageIndex, currentPageConfig } = storeToRefs(configStore);
+const { nextStates } = storeToRefs(nextStatesStore);
+
+watch(nextStates, (value) => {
+    console.log('nextStates', value);
+});
 
 const availablePages = computed(() => {
     return configuration.value?.actions?.filter((action: { type: string; }) => action.type !== 'setup') || [];
+});
+
+const isClickable = computed(() => {
+    return __DEBUG__ || (nextStates.value.lastIndexOf(true) > currentPageIndex.value);
+});
+
+const isChecked = computed(() => {
+    return currentPageIndex.value <= nextStates.value.lastIndexOf(true);
+});
+
+const lastIndexTrue = computed(() => {
+    return nextStates.value.lastIndexOf(true);
 });
 
 const isCurrentPage = (index: number) => {
@@ -50,6 +70,8 @@ const goToPage = (index: number) => {
     console.log('currentPageIndex', currentPageIndex.value);
     console.log('currentPageConfig', currentPageConfig.value);
     router.push(getRoutePath(availablePages.value[index].type));
+
+    console.log('nextStates', nextStates.value);
 };
 
 const backHome = () => {
@@ -59,9 +81,12 @@ const backHome = () => {
 };
 
 const getCircleClass = (index: number) => {
-    if (currentPageIndex.value === index) {
+
+    if (currentPageIndex.value === index && index <= nextStates.value.lastIndexOf(true)) {
+        return 'step-circle-active step-circle-done';
+    } else if (currentPageIndex.value === index) {
         return 'step-circle-active';
-    } else if (index < currentPageIndex.value) {
+    } else if (index <= nextStates.value.lastIndexOf(true)) {
         return 'step-circle-done';
     } else {
         return 'step-circle';
@@ -69,7 +94,7 @@ const getCircleClass = (index: number) => {
 };
 
 const getLineClass = (index: number) => {
-    if (index < currentPageIndex.value) {
+    if (index < nextStates.value.lastIndexOf(true)) {
         return 'step-line-done';
     } else {
         return 'step-line';
@@ -132,14 +157,13 @@ const getLineClass = (index: number) => {
 }
 
 .step-circle-done {
-    background-color: var(--p-indigo-500);
-    color: #ffffff;
+    background-color: var(--p-indigo-500) !important;
+    color: #ffffff !important;
     border: 1px solid var(--p-indigo-500);
 }
 
 .step-circle-active {
-    border-color: #ffffff;
-    border: 2px solid #000000;
+    border: 2px solid #000000 !important;
 }
 
 .step-line {
