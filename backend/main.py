@@ -32,7 +32,7 @@ app = FastAPI()
 # Allow CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["chrome-extension://fgdgdphbledbaobgnoipggfohfaknjem", "http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -285,7 +285,14 @@ def get_ssids(network_id: str):
     return ssids
 
 
+# ---------
 
+# get a networks L7 firewall applications
+@app.get("/networks/{network_id}/applications")
+def get_applications(network_id: str):
+    applications = dashboard.appliance.getNetworkApplianceFirewallL7FirewallRulesApplicationCategories(network_id)
+
+    return applications
 
 
 

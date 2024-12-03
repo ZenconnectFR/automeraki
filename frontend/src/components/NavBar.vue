@@ -6,8 +6,8 @@
                 <div class="stepper-label">
                     {{ getPageLabel(page.type) }}
                 </div>
-                <div :class="['step-circle', getCircleClass(index)]" @click="(__DEBUG__ || (lastIndexTrue >= index - 1)) ? goToPage(index) : null"
-                    :style="{ cursor: (__DEBUG__ || (lastIndexTrue >= index - 1))? 'pointer': 'default'}"
+                <div :class="['step-circle', getCircleClass(index)]" @click="(/*__DEBUG__ || */(lastIndexTrue >= index - 1)) ? goToPage(index) : null"
+                    :style="{ cursor: (/*__DEBUG__ || */(lastIndexTrue >= index - 1))? 'pointer': 'default'}"
                 >
                     <span class="nb" v-if="lastIndexTrue < index">{{ index + 1 }}</span>
                     <span v-else>
@@ -30,7 +30,7 @@ import { getRoutePath, getPageLabel } from '@/utils/PageRouter';
 
 import Button from 'primevue/button';
 
-const __DEBUG__ = import.meta.env.VITE_APP_DEBUG === 'true';
+// const __DEBUG__ = import.meta.env.VITE_APP_DEBUG === 'true';
 const configStore = useConfigurationStore();
 const nextStatesStore = useNextStatesStore();
 const router = useRouter();
@@ -47,7 +47,7 @@ const availablePages = computed(() => {
 });
 
 const isClickable = computed(() => {
-    return __DEBUG__ || (nextStates.value.lastIndexOf(true) > currentPageIndex.value);
+    return /*__DEBUG__ || */(nextStates.value.lastIndexOf(true) > currentPageIndex.value);
 });
 
 const isChecked = computed(() => {

@@ -1,20 +1,7 @@
 {
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ],
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["src/*"]
-        },
-        "lib": ["es2021", "dom"],
-
-        "resolveJsonModule": true,
-
-        "esModuleInterop": true
-    }
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.app.json" }
+  ]
 }

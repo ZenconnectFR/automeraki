@@ -4,17 +4,12 @@ import { ref } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { RouterView, useRouter } from 'vue-router'
 
-import { useErrorStore } from '@/stores/error'
 import NavBar from './components/NavBar.vue';
 
 import ScrollTop from 'primevue/scrolltop';
 
-const error = useErrorStore()
-
-const removeErr = (index: number) => {
-  console.log('removing error')
-  error.removeError(index)
-}
+let debug = import.meta.env.MODE;
+console.log('debug', debug)
 
 // state control to wait for orgId to be set
 const ready = ref(false)
@@ -23,7 +18,7 @@ const ready = ref(false)
 const ids = useIdsStore()
 
 // Check if the orgId is in the root div of the app
-const orgId = document.getElementById('app').getAttribute('data-org-id')
+const orgId = document.getElementById('app')?.getAttribute('data-org-id')
 if (orgId && orgId !== '-1') {
   // set the orgId in the store
   ids.$patch({ orgId: orgId })
@@ -54,15 +49,6 @@ router.afterEach((to, from) => {
 
 <template>
   <div id="welcome">
-    <div>
-      <v-container class="alerts-container">
-        <div v-for="(err, index) in error.errors" :key="index" type="error" class="alert-popup" @click:close="removeErr(index)">
-          <v-alert color="error" closable>
-            {{ err }}
-          </v-alert>
-        </div>
-      </v-container>
-    </div>
     <NavBar v-if="showNavBar"/>
     <div v-if="!showNavBar" class="make-space">
     </div>

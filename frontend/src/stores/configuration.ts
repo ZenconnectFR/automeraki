@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { useStorage } from '@vueuse/core';
 
 export const useConfigurationStore = defineStore('configuration', () => {
-    const configuration = ref(null); // full config
-    const currentPageConfig = ref(null); // current page config data
-    const currentPageIndex = ref(0); // current page index in configuration.actions
-    const setConfiguration = (config) => configuration.value = config;
-    const setCurrentPageConfig = (config) => currentPageConfig.value = config;
-    const setCurrentPageIndex = (page) => currentPageIndex.value = page;
+    const configuration = useStorage('configuration', {actions: []} as any, localStorage, {mergeDefaults: true}) // full config
+    const currentPageConfig = useStorage('currentPageConfig', {type: '', "data": {}} as any, localStorage, {mergeDefaults: true}); // current page config data
+    const currentPageIndex = useStorage('currentPageIndex', 0); // current page index in configuration.actions
+    const setConfiguration = (config: any) => configuration.value = config;
+    const setCurrentPageConfig = (config: any) => currentPageConfig.value = config;
+    const setCurrentPageIndex = (page: number) => currentPageIndex.value = page;
 
     const nextPage = () => {
         setCurrentPageIndex(currentPageIndex.value + 1);
@@ -32,6 +32,4 @@ export const useConfigurationStore = defineStore('configuration', () => {
         nextPage,
         prevPage
     }
-},
-    { persist: true }
-);
+});

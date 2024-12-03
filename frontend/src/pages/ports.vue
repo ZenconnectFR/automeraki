@@ -24,6 +24,7 @@ import Column from 'primevue/column'
 import MultiSelect from 'primevue/multiselect'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
+import Tag from 'primevue/tag'
 
 const toast = useToast()
 
@@ -61,18 +62,32 @@ const stpPayload = ref([] as any[])
 const stpRef = ref(<HTMLElement | null>(null))
 const topRef = ref(<HTMLElement | null>(null))
 
+const editingRows = ref([])
+
 interface Option {
     name: string;
     value: any;
 }
 
-function scrollTo(refName: string) {
-    if (refName === 'stpRef') {
-        stpRef.value?.scrollIntoView({ behavior: 'smooth' })
-    } else if (refName === 'topRef') {
-        topRef.value?.scrollIntoView({ behavior: 'smooth' })
+const onRowEditSave = (event) => {
+    console.log('Row edit save')
+    const { index, newData } = event
+    stpPayload.value[index] = newData
+
+    // if the elements in newData.switches exist in other elements of stpPayload, remove them
+    for (let i = 0; i < stpPayload.value.length; i++) {
+        if (i !== index) {
+            const otherSwitches = stpPayload.value[i].switches
+
+            const otherSwitchesFiltered = otherSwitches.filter((otherSwitch: any) => {
+                return !newData.switches.includes(otherSwitch)
+            })
+
+            stpPayload.value[i].switches = otherSwitchesFiltered
+        }
     }
 }
+
 
 // filter out the extra ports on some switches
 // Ex: MS120 models return the extra 2 or 4 ports on the side of the switch when calling the getPorts endpoint, we don't want those
@@ -338,20 +353,59 @@ onMounted(() => {
         </template>
         <section class="stp-section" ref="stpRef" style="margin-top: 30px;">
             <h2>STP Configuration</h2>
-            <div v-for="(stpConfig, index) in stpPayload">
+            <!-- div v-for="(stpConfig, index) in stpPayload">
                 <h3>STP Priority</h3>
                 <InputText class="add-margin" type="number" v-model="stpConfig.stpPriority"/>
                 <h3>Switches</h3>
-
-                <!-- multiselect to choose which switches to bind to this stpConfig, on modification. Selected switches are exlusive for each stpConfig.
-                 The onChange callback enforces this rule-->
 
                 <MultiSelect class="add-margin" v-model="stpConfig.switches" :options="switches" optionLabel="associationId" optionValue="serial"
                     @onChange="moveSwitch(switches, index)" dataKey="serial" display="chip" style="min-width: 250px;"/> 
 
                 <Button class="add-margin" @click="stpPayload.splice(index, 1)">Remove</Button>
-            </div>
-            <Button class="add-margin" @click="stpPayload.push({ stpPriority: 0, switches: [] })">Add STP rule</Button>
+            </div -->
+            <DataTable :value="stpPayload" style="width: 1000px;" editMode="row"
+                @row-edit-save="onRowEditSave"
+                v-model:editingRows="editingRows" dataKey="stpPriority"
+                :pt="{
+                        table: { style: 'min-width: 50rem' },
+                        column: {
+                            bodycell: ({ state }) => ({
+                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
+                            })
+                        }
+                    }"
+                >
+                <Column field="stpPriority" header="STP Priority">
+                    <template #body="{ data }">
+                        <span>{{ data.stpPriority }}</span>
+                    </template>
+                    <template #editor="{ data }">
+                        <InputText type="number" v-model="data.stpPriority"/>
+                    </template>
+                </Column>
+                <Column field="switches" header="Switches" style="width: 50%">
+                    <template #body="{ data }">
+                        <div style="display: flex; flex-wrap: wrap; flex-direction: row;">
+                            <div v-for="switchSerial in data.switches">
+                                <Tag severity="secondary" style="margin: 5px;">
+                                    {{ switches.find(switchDev => switchDev.serial === switchSerial).associationId }}
+                                </Tag>
+                            </div>
+                        </div>
+                    </template>
+                    <template #editor="{ data }">
+                        <MultiSelect v-model="data.switches" :options="switches" optionLabel="associationId" optionValue="serial"
+                            @onChange="moveSwitch(switches, data)" dataKey="serial" display="chip" style="min-width: 250px;"/>
+                    </template>
+                </Column>
+                <Column :row-editor="true" style="width: 12%"></Column>
+                <Column style="width: 10%">
+                    <template #body="{ data }">
+                        <Button @click="stpPayload.splice(stpPayload.indexOf(data), 1)">Remove</Button>
+                    </template>
+                </Column>
+            </DataTable>
+            <Button class="add-margin" @click="stpPayload.push({ stpPriority: stpPayload[stpPayload.length - 1]?.stpPriority + 1 | 0, switches: [] })">Add STP rule</Button>
         </section>
         <section style="margin-bottom: 60px;">
             <h2>MTU Size</h2>

@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useNextStatesStore } from '@/stores/nextStates'
 import { storeToRefs } from 'pinia'
 
 import { useRoute, useRouter } from 'vue-router'
@@ -12,6 +13,7 @@ import { getFirewallRules } from '@/endpoints/networks/GetFirewallRules'
 import { getPolicyObjects } from '@/endpoints/organizations/GetPolicyObjects'
 import { updateFirewallRules } from '@/endpoints/actionBatches/UpdateFirewallRules'
 import { getVlans } from '@/endpoints/networks/GetVlans'
+import { getApplications } from '@/endpoints/networks/GetApplications'
 
 import { getRoutePath } from '@/utils/PageRouter'
 import { useBoolStates } from '@/utils/Decorators'
@@ -23,30 +25,29 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
+import InputNumber from 'primevue/inputnumber'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import Popover from 'primevue/popover'
 import TieredMenu from 'primevue/tieredmenu'
 
-const editingRowsL3in = ref([])
-const editingRowsL3out = ref([])
-const editingRowsCellFail = ref([])
-const editingRowsCellIn = ref([])
-const editingRowsL7 = ref([])
-const editingRowsPortForwarding = ref([])
+const editingRowsL3in = ref([] as any[])
+const editingRowsL3out = ref([] as any[])
+const editingRowsCellFail = ref([] as any[])
+const editingRowsCellIn = ref([] as any[])
+const editingRowsL7 = ref([] as any[])
+const editingRowsPortForwarding = ref([] as any[])
 
-const addedSrcItems = ref([])
-const addedDestItems = ref([])
+const addedSrcItems = ref([] as any[])
+const addedDestItems = ref([] as any[])
 
-const portRegex = new RegExp('^([0-9]{1,5}(, ?[0-9]{1,5})*)|([Aa][Nn][Yy])$')  
-
+const portRegex = new RegExp('^([0-9]{1,5}(, ?[0-9]{1,5})*)|([Aa][Nn][Yy])$')
 
 const onRowEditSave = (event: any, affectedRuleset: any) => {
     console.log('Row edit save event: ', event)
 
     // update data: affect the event newData to the right item in the affectedRuleset
-    let index = affectedRuleset.findIndex(rule => rule.id === event.newData.id)
+    let index = affectedRuleset.findIndex((rule: { id: any }) => rule.id === event.newData.id)
     Object.assign(affectedRuleset[index], event.newData)
 
     // clear the added and removed lists
@@ -72,25 +73,60 @@ const onRowEditSave = (event: any, affectedRuleset: any) => {
 const onRowEditCancel = (event: any, affectedRuleset: any) => {
     console.log('Row edit cancel. Affected ruleset: ', affectedRuleset, ' addedSrcItems: ', addedSrcItems.value, ' removedSrcCidrs: ', removedSrcCidrs.value)
     // remove any added items from the rule, both src and dest
-    let index = affectedRuleset.findIndex(rule => rule.id === event.data.id)
+    let index = affectedRuleset.findIndex((rule: { id: any }) => rule.id === event.data.id)
+
+    console.log('Index: ', index, ' Rule: ', affectedRuleset[index])
+
+    // for each item in addedSrcItems, if it is also in removedSrcCidrs, remove it from both lists
+    for (const addedItem of addedSrcItems.value) {
+        let removedIndex = removedSrcCidrs.value.findIndex(removedItem => removedItem.cidr === addedItem.cidr)
+        if (removedIndex !== -1) {
+            console.log('Found item in both lists: ', addedItem)
+            removedSrcCidrs.value.splice(removedIndex, 1)
+            let addedIndex = addedSrcItems.value.findIndex(addedItem => addedItem.cidr === addedItem.cidr)
+            addedSrcItems.value.splice(addedIndex, 1)
+        }
+    }
+
+    // same for dest items
+    for (const addedItem of addedDestItems.value) {
+        let removedIndex = removedDestCidrs.value.findIndex(removedItem => removedItem.cidr === addedItem.cidr)
+        if (removedIndex !== -1) {
+            console.log('Found item in both lists: ', addedItem)
+            removedDestCidrs.value.splice(removedIndex, 1)
+            let addedIndex = addedDestItems.value.findIndex(addedItem => addedItem.cidr === addedItem.cidr)
+            addedDestItems.value.splice(addedIndex, 1)
+        }
+    }
+
+    // remove duplicate items from the added and removed lists
+    addedSrcItems.value = addedSrcItems.value.filter((item, index, self) => self.findIndex(t => t.cidr === item.cidr) === index)
+    addedDestItems.value = addedDestItems.value.filter((item, index, self) => self.findIndex(t => t.cidr === item.cidr) === index)
+
+    removedSrcCidrs.value = removedSrcCidrs.value.filter((item, index, self) => self.findIndex(t => t.cidr === item.cidr) === index)
+    removedDestCidrs.value = removedDestCidrs.value.filter((item, index, self) => self.findIndex(t => t.cidr === item.cidr) === index)
 
     // remove the added items from the rule
     for (const item of addedSrcItems.value) {
+        console.log('From addedSrcItems, removing: ', item)
         let itemIndex = affectedRuleset[index].srcCidr.findIndex((cidr: any) => cidr.cidr == item.cidr)
         affectedRuleset[index].srcCidr.splice(itemIndex, 1)
     }
 
     for (const item of addedDestItems.value) {
+        console.log('From addedDestItems, removing: ', item)
         let itemIndex = affectedRuleset[index].destCidr.findIndex((cidr: any) => cidr.cidr == item.cidr)
         affectedRuleset[index].destCidr.splice(itemIndex, 1)
     }
 
     // restore the removed items for both src and dest
     for (const item of removedSrcCidrs.value) {
+        console.log('From removedSrcCidrs, restoring: ', item)
         affectedRuleset[index].srcCidr.push(item)
     }
 
     for (const item of removedDestCidrs.value) {
+        console.log('From removedDestCidrs, restoring: ', item)
         affectedRuleset[index].destCidr.push(item)
     }
 
@@ -123,33 +159,35 @@ const onRowEditCancel = (event: any, affectedRuleset: any) => {
 
     // reset the input field
     newCidrInput.value = ''
-
 }
 
 const selectedRule = ref()
 const selectedRuleType = ref("src")
 const cidrEditable = ref(false)
+const groupEditable = ref(false)
+const vlanEditable = ref(false)
 
 const vlanMenu = ref([
     {
         label: 'Add a vlan',
         items: []
     }
-])
+] as any[])
 const objectsMenu = ref([
     {
         label: 'Add a Policy Object',
         items: []
     }
-])
+] as any[])
 
 const menuPopoverRef = ref()
 
 // Menu popover show function. sets the rule that's being edited and if the cidr is editable
 // the rule param is actually the list of either src or dest cidrs
-const showMenuPopover = (event: any, rule: any, cidrEdit: boolean, columnType: string) => {
+const showMenuPopover = (event: any, rule: any, cidrEdit: boolean, groupeEdit: boolean, columnType: string) => {
     selectedRule.value = rule
     cidrEditable.value = cidrEdit
+    groupEditable.value = groupeEdit
 
     vlanMenu.value[0].items = []
     objectsMenu.value[0].items = []
@@ -203,14 +241,14 @@ const addVlanToRule = (vlan: any) => {
         {
             type: 'vlan',
             cidr: `${vlan.id}`,
-            originalStr: `VLAN(${vlan.id})`
+            originalStr: `VLAN(${vlan.id}).*`
         }
     );
 
     let newItem = {
         type: 'vlan',
         cidr: `${vlan.id}`,
-        originalStr: `VLAN(${vlan.id})`
+        originalStr: `VLAN(${vlan.id}).*`
     }
 
     if (selectedRuleType.value === 'src') {
@@ -286,8 +324,8 @@ const addGroupToRule = (group: any) => {
 
 const newCidrInput = ref('')
 
-const removedSrcCidrs = ref([])
-const removedDestCidrs = ref([])
+const removedSrcCidrs = ref([] as any[])
+const removedDestCidrs = ref([] as any[])
 
 const addCidrToRule = () => {
 
@@ -391,14 +429,15 @@ const deleteItem = (data: any, index: number, columnType: string) => {
 const newIpInput = ref('')
 const addIpPopoverRef = ref()
 
-const addIpData = ref([])
+const addIpData = ref([] as string[])
 
-const addedIps = ref([])
-const removedIps = ref([])
+const addedIps = ref([] as string[])
+const removedIps = ref([] as string[])
 
 const showAddIpPopover = (event: any, data: any) => {
     newIpInput.value = ''
     addIpData.value = data
+    console.log('Showing add ip popover: with addIpData: ', JSON.parse(JSON.stringify(data)))
     addIpPopoverRef.value.show(event)
 }
 
@@ -429,6 +468,14 @@ const deleteIpItem = (data: any, index: number) => {
     data.splice(index, 1)
 }
 
+const deleteRow = (ruleset: any, index: number) => {
+    console.log('Deleting row: ', ruleset, index)
+    ruleset.splice(index, 1)
+
+    // reindex the rules
+    ruleset.forEach((rule: any, index: number) => rule.id = index)
+}
+
 const toast = useToast()
 
 const router = useRouter()
@@ -437,22 +484,24 @@ const route = useRoute()
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const nextStates = useNextStatesStore()
 
 const { newNetworkId, orgId } = storeToRefs(ids)
-const { currentPageConfig } = storeToRefs(configStore)
+const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
+let thisState = nextStates.getState(currentPageIndex.value)
 
 const firewallRules = ref({} as { [key: string]: any })
 
-const l3inbound = ref([])
-const l3outbound = ref([])
-const cellularFailover = ref([])
-const cellularInbound = ref([])
-const firewalledServices = ref([])
-const l7rules = ref([])
-const portForwardingRules = ref([])
-const oneToOneNatRules = ref([])
-const oneToManyNatRules = ref([])
+const l3inbound = ref([] as { id: number, [key: string]: any }[])
+const l3outbound = ref([] as { id: number, [key: string]: any }[])
+const cellularFailover = ref([] as { id: number, [key: string]: any }[])
+const cellularInbound = ref([] as { id: number, [key: string]: any }[])
+const firewalledServices = ref([] as { id: number, [key: string]: any }[])
+const l7rules = ref([] as { id: number, [key: string]: any }[])
+const portForwardingRules = ref([] as { id: number, [key: string]: any }[])
+const oneToOneNatRules = ref([] as { id: number, [key: string]: any }[])
+const oneToManyNatRules = ref([] as { id: number, [key: string]: any }[])
 
 const loadingConf = ref(false)
 const confLoaded = ref(false)
@@ -536,19 +585,68 @@ const retrieveFirewallRules = useBoolStates([loadingConf],[confLoaded],async () 
     l3outbound.value.forEach((rule, index) => rule['id'] = index)
     cellularFailover.value.forEach((rule, index) => rule['id'] = index)
     cellularInbound.value.forEach((rule, index) => rule['id'] = index)
+    firewalledServices.value.forEach((rule, index) => rule['id'] = index)
+    l7rules.value.forEach((rule, index) => rule['id'] = index)
+    portForwardingRules.value.forEach((rule, index) => rule['id'] = index)
+    oneToOneNatRules.value.forEach((rule, index) => rule['id'] = index)
+    oneToManyNatRules.value.forEach((rule, index) => rule['id'] = index)
 
     // Upper case the protocol fields except for 'Any'
-    l3inbound.value.forEach(rule => rule.protocol = rule.protocol === 'Any' ? rule.protocol : rule.protocol.toUpperCase())
-    l3outbound.value.forEach(rule => rule.protocol = rule.protocol === 'Any' ? rule.protocol : rule.protocol.toUpperCase())
-    cellularFailover.value.forEach(rule => rule.protocol = rule.protocol === 'Any' ? rule.protocol : rule.protocol.toUpperCase())
-    cellularInbound.value.forEach(rule => rule.protocol = rule.protocol === 'Any' ? rule.protocol : rule.protocol.toUpperCase())
+    l3inbound.value.forEach(rule => rule.protocol = rule.protocol.toLowerCase() === 'any' ? 'Any' : rule.protocol.toUpperCase())
+    l3outbound.value.forEach(rule => rule.protocol = rule.protocol.toLowerCase() === 'any' ? 'Any' : rule.protocol.toUpperCase())
+    cellularFailover.value.forEach(rule => rule.protocol = rule.protocol.toLowerCase() === 'any' ? 'Any' : rule.protocol.toUpperCase())
+    cellularInbound.value.forEach(rule => rule.protocol = rule.protocol.toLowerCase() === 'any' ? 'Any' : rule.protocol.toUpperCase())
     
     // same for port forwarding rules but it can't be 'Any' so always upper case
     portForwardingRules.value.forEach(rule => rule.protocol = rule.protocol.toUpperCase())
 
-    // console.log('firewalledServices: ', firewalledServices.value)
+    console.log("L7 before modifications", JSON.parse(JSON.stringify(l7rules.value)))
+    
+    // modify the l7rules to always have both a 'value' and 'objValue' field
+    // if the type field is 'application' or 'applicationCategory', move the value field to objValue and add an empty value field
+    // else, add an empty objValue field and keep the value field
+    // objValue contains { name: str, value: str }
+    l7rules.value.forEach(rule => {
+        if (rule.type === 'application' || rule.type === 'applicationCategory') {
+            rule["objValue"] = { name: rule.value.name, id: rule.value.id }
+            rule.value = ''
+        } else {
+            rule["objValue"] = { name: '', value: '' }
+        }
+    })
 
+    // add the categoryId field to the l7rules, if the type is 'host', 'port' or 'ipRange', the categoryId is the type value, else, it's the id of the category which we need to find as the value object contains the app id and not the category it belongs to
+    l7rules.value.forEach(rule => {
+        if (rule.type === 'host' || rule.type === 'port' || rule.type === 'ipRange') {
+            console.log('Rule type: ', rule.type)
+            rule["categoryId"] = rule.type
+        } else {
+            let category = applications.value.find((category: { items: any[] }) => category.items.some((app: any) => app.id === rule.objValue.id))
+            // if not found, it's a category itself
+            console.log('Category: ', category)
+            if (!category) {
+                console.log('Category not found, using the rule object value id: ', rule.objValue.id)
+                rule["categoryId"] = rule.objValue.id
+            } else {
+                console.log('Category found: ', category)
+                rule["categoryId"] = category.categoryId
+            }
+        }
+    })
 
+    // if the type is applicationCategory, prepend 'All ' to the value name
+    l7rules.value.forEach(rule => {
+        if (rule.type === 'applicationCategory') {
+            rule.objValue.name = `All ${rule.objValue.name}`
+        }
+    })
+
+    console.log('Modified l7 rules: ', JSON.parse(JSON.stringify(l7rules.value)))
+
+    // Add an "allowedIps" field to all firewalled services
+    firewalledServices.value.forEach(rule => rule["allowedIps"] = [])
+
+    // parse the cidrs
     parseCidrs(l3inbound.value)
     parseCidrs(l3outbound.value)
     parseCidrs(cellularFailover.value)
@@ -558,6 +656,30 @@ const retrieveFirewallRules = useBoolStates([loadingConf],[confLoaded],async () 
 });
 
 const saving = ref(false)
+
+const parseL7rules = (newRulesObject: any) => {
+    // parse the l7rules to fit the API format
+    newRulesObject['l7FirewallRules'].rules.forEach((rule: any) => {
+        if (rule.categoryId === 'host' || rule.categoryId === 'port' || rule.categoryId === 'ipRange') {
+            rule.type = rule.categoryId
+            rule.value = `${rule.value}`
+        } else {
+            // distinguish between application and applicationCategory
+            let foundToBeCategory = applications.value.find((app: { categoryId: any }) => app.categoryId == rule.objValue.id) ? true : false
+            if (foundToBeCategory) {
+                rule.type = 'applicationCategory'
+            } else {
+                rule.type = 'application'
+            }
+            rule.value = rule.objValue
+        }
+
+        // clear other useless fields
+        delete rule.categoryId
+        delete rule.objValue
+        delete rule.id
+    })
+}
 
 const confirmChanges = useBoolStates([confLoaded], [confLoaded], async () => {
 
@@ -580,8 +702,19 @@ const confirmChanges = useBoolStates([confLoaded], [confLoaded], async () => {
     newFirewallRules['cellularFailoverRules'].rules = newFirewallRules['cellularFailoverRules'].rules.filter((rule: any) => rule.comment !== 'Default rule')
     newFirewallRules['inboundCellularFirewallRules'].rules = newFirewallRules['inboundCellularFirewallRules'].rules.filter((rule: any) => rule.comment !== 'Default rule')
 
+    // parse the l7rules to fit the API format
+    parseL7rules(newFirewallRules)
+
+    // for each firewalled service, if the access is not "restricted", remove the allowedIps field
+    newFirewallRules['wanApplianceServices'].forEach((rule: any) => {
+        if (rule.access !== 'restricted') {
+            delete rule.allowedIps
+        }
+    })
+
     // save the changes
     console.log('Saving changes: ', newFirewallRules)
+
     const resp = await updateFirewallRules(newNetworkId.value, newFirewallRules)
     
     console.log('Response: ', resp)
@@ -597,6 +730,9 @@ const confirmChanges = useBoolStates([confLoaded], [confLoaded], async () => {
 
     saving.value = false
     toast.add({ severity: 'success', summary: 'Success', detail: 'Firewall rules updated successfully', life: 5000 })
+
+    thisState = true;
+    nextStates.setStateTrue(currentPageIndex.value)
 });
 
 const retrieveVlans = async () => {
@@ -609,9 +745,94 @@ const retrieveVlans = async () => {
     vlans.value = vlansResp
 }
 
+const applications = ref([] as any[])
+
+const retrieveApplications = async () => {
+    const applicationsResp = await getApplications(newNetworkId.value)
+    if (applicationsResp.error) {
+        console.error('Error fetching applications: ', applicationsResp.error)
+        return
+    }
+    console.log('Applications: ', applicationsResp)
+
+    let newApplications = [{
+        name: 'HTTP Hostname',
+        value: 'host',
+        categoryId: 'host',
+        items: [] as any[]
+    }, {
+        name: 'Port',
+        value: 'port',
+        categoryId: 'port',
+        items: [] as any[]
+    }, {
+        name: 'Remote IP Range and optionnal port',
+        value: 'ipRange',
+        categoryId: 'ipRange',
+        items: [] as any[]
+    }] as any[]
+
+    for (const category of applicationsResp.applicationCategories) {
+        let firstApp = {
+            name: `All ${category.name}`,
+            id: category.id,
+        }
+
+        let newCategory = {
+            name: category.name,
+            value: 'application',
+            categoryId: category.id,
+            items: [firstApp]
+        }
+
+        for (const app of category.applications) {
+            newCategory.items.push(app)
+        }
+
+        newApplications.push(newCategory)
+    }
+
+    applications.value = newApplications
+
+    console.log('Applications: ', applications.value)
+}
+
+const back = () => {
+    router.push(getRoutePath(configStore.prevPage()))
+}
+
+const nextPage = () => {
+    router.push(getRoutePath(configStore.nextPage()))
+}
+
+const addBasicRule = (ruleset: any) => {
+    ruleset.push({
+        policy: 'allow',
+        comment: 'New rule',
+        protocol: 'Any',
+        srcCidr: [{ type: 'cidr', cidr: 'Any', originalStr: 'any' }],
+        srcPort: 'Any',
+        destCidr: [{ type: 'cidr', cidr: 'Any', originalStr: 'any' }],
+        destPort: 'Any',
+        id: ruleset.length
+    })
+}
+
+const addL7Rule = () => {
+    l7rules.value.push({
+        policy: 'deny',
+        type: 'host',
+        value: 'example.com',
+        categoryId: 'host',
+        objValue: { name: '', value: '' },
+        id: l7rules.value.length
+    })
+}
+
 onMounted(() => {
     retrieveVlans()
     retrievePolicyObjects()
+    retrieveApplications()
     retrieveFirewallRules()
 })
 </script>
@@ -620,8 +841,7 @@ onMounted(() => {
     <div style="width: 75%; margin-top: 40px;">
         <Toast position="top-right" />
         <h1>Firewall Rules</h1>
-        <div v-if="loadingConf">Loading...</div>
-        <div v-else>
+        <div v-if="!loadingConf">
             <div class="col center">
                 <h2>L3 Inbound Rules</h2>
 
@@ -629,12 +849,7 @@ onMounted(() => {
                 @row-edit-save="(event) => onRowEditSave(event, l3inbound)" v-model:editingRows="editingRowsL3in" dataKey="id"
                 @row-edit-cancel="(event) => onRowEditCancel(event, l3inbound)"
                 :pt="{
-                        table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                class: [{ '!py-0': state['d_editing'] }]
-                            })
-                        }
+                        table: { style: 'min-width: 50rem' }
                     }"
                 >
                     <Column field="policy" header="Policy" style="width: 8%;">
@@ -711,7 +926,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], false, false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -772,7 +987,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], false, false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -802,8 +1017,21 @@ onMounted(() => {
                             </div>
                         </template>
                     </Column>
-                    <Column :rowEditor="true" style="width: 8%"></Column>
+                    <Column :rowEditor="true" style="width: 9%"></Column>
+
+                    <Column style="width: 0px">
+                        <template #body="{ data }">
+                            <Button @click="deleteRow(l3inbound, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
+                                v-if="data.comment !== 'Default rule'"
+                            ></Button>
+                        </template>
+                        <template #editor="{ data, field}" style="width: 0px;"></template>
+                    </Column>
+
                 </DataTable>
+                <Button @click="addBasicRule(l3inbound)" class="add-rule-btn">
+                    <i class="pi pi-plus"></i>
+                </Button>
             </div>
 
             <div class="col center" style="margin-top: 40px;">
@@ -813,12 +1041,7 @@ onMounted(() => {
                 @row-edit-save="(event) => onRowEditSave(event, l3outbound)" v-model:editingRows="editingRowsL3out" dataKey="id"
                 @row-edit-cancel="(event) => onRowEditCancel(event, l3outbound)"
                 :pt="{
-                        table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                class: [{ '!py-0': state['d_editing'] }]
-                            })
-                        }
+                        table: { style: 'min-width: 50rem' }
                     }"
                 >
                     <Column field="policy" header="Policy" style="width: 8%;">
@@ -895,7 +1118,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], true, true, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -956,7 +1179,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], true, true, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -987,8 +1210,19 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column :rowEditor="true" style="width: 8%"></Column>
+                    <Column :rowEditor="true" style="width: 9%"></Column>
+                    <Column style="width: 0px">
+                        <template #body="{ data }">
+                            <Button @click="deleteRow(l3outbound, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
+                                v-if="data.comment !== 'Default rule'"
+                            ></Button>
+                        </template>
+                        <template #editor></template>
+                    </Column>
                 </DataTable>
+                <Button @click="addBasicRule(l3outbound)" class="add-rule-btn">
+                    <i class="pi pi-plus"></i>
+                </Button>
             </div>
             <div class="col center" style="margin-top: 40px;">
                 <h2>Cellular Failover Rules</h2>
@@ -998,15 +1232,10 @@ onMounted(() => {
                 -->
 
                 <DataTable :value="cellularFailover" style="width: 100%;" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event, l3outbound)" v-model:editingRows="editingRowsCellFail" dataKey="id"
-                @row-edit-cancel="(event) => onRowEditCancel(event, l3outbound)"
+                @row-edit-save="(event) => onRowEditSave(event, cellularFailover)" v-model:editingRows="editingRowsCellFail" dataKey="id"
+                @row-edit-cancel="(event) => onRowEditCancel(event, cellularFailover)"
                 :pt="{
-                        table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                class: [{ '!py-0': state['d_editing'] }]
-                            })
-                        }
+                        table: { style: 'min-width: 50rem' }
                     }"
                 >
                     <Column field="policy" header="Policy" style="width: 8%;">
@@ -1083,7 +1312,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], true, true, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -1144,7 +1373,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], true, true, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -1175,22 +1404,29 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column :rowEditor="true" style="width: 8%"></Column>
+                    <Column :rowEditor="true" style="width: 9%"></Column>
+
+                    <Column style="width: 0px">
+                        <template #body="{ data }">
+                            <Button @click="deleteRow(cellularFailover, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
+                                v-if="data.comment !== 'Default rule'"
+                            ></Button>
+                        </template>
+                        <template #editor></template>
+                    </Column>
                 </DataTable>
+                <Button @click="addBasicRule(cellularFailover)" class="add-rule-btn">
+                    <i class="pi pi-plus"></i>
+                </Button>
             </div>
             <div class="col center" style="margin-top: 40px;">
                 <h2>Cellular Inbound Rules</h2>
                 <!-- MARK: -Cellular Inbound -->
                 <DataTable :value="cellularInbound" style="width: 100%;" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event, l3outbound)" v-model:editingRows="editingRowsCellIn" dataKey="id"
-                @row-edit-cancel="(event) => onRowEditCancel(event, l3outbound)"
+                @row-edit-save="(event) => onRowEditSave(event, cellularInbound)" v-model:editingRows="editingRowsCellIn" dataKey="id"
+                @row-edit-cancel="(event) => onRowEditCancel(event, cellularInbound)"
                 :pt="{
-                        table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                class: [{ '!py-0': state['d_editing'] }]
-                            })
-                        }
+                        table: { style: 'min-width: 50rem' }
                     }"
                 >
                     <Column field="policy" header="Policy" style="width: 8%;">
@@ -1267,7 +1503,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], false, false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -1328,7 +1564,7 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    <Button @click="showMenuPopover($event, data[field], false, false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
                                         style="justify-self: flex-end; margin-left: 15px;"
                                     ></Button>
                                 </div>
@@ -1359,9 +1595,24 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column :rowEditor="true" style="width: 8%"></Column>
+                    <Column :rowEditor="true" style="width: 9%"></Column>
+
+                    <Column style="width: 0px">
+                        <template #body="{ data }">
+                            <Button @click="deleteRow(cellularInbound, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
+                                v-if="data.comment !== 'Default rule'"
+                            ></Button>
+                        </template>
+                        <template #editor></template>
+                    </Column>
+
                 </DataTable>
+                <Button @click="addBasicRule(cellularInbound)" class="add-rule-btn">
+                    <i class="pi pi-plus"></i>
+                </Button>
             </div>
+
+
             <div class="col center" style="margin-top: 40px;">
                 <h2>Firewalled Services</h2>
                 <DataTable :value="firewalledServices" style="width: 100%;">
@@ -1373,22 +1624,98 @@ onMounted(() => {
                     </Column>
                     <Column field="allowedIps" header="Allowed IPs">
                         <template #body="{ data }">
-                            <Textarea :disabled="data.access !== 'restricted'" v-model="data.allowedIps" autoResize :rows="1"></Textarea>
+                            <div class="row">
+                                <!-- make the border red if access is restricted and the ips are empty -->
+                                <div class="tags-container add-border" :style="{ 'border-color': data.access === 'restricted' && data.allowedIps.length === 0 ? 'red' : '#ccc' }">
+                                    <div v-for="ip in data.allowedIps" style="margin: 6px;">
+                                        <Tag severity="secondary">{{ ip }}
+                                            <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteIpItem(data.allowedIps, ip)"
+                                                v-if="data.access === 'restricted'"
+                                            ></i>
+                                        </Tag>
+                                    </div>
+                                </div>
+                            
+                                <Button @click="showAddIpPopover($event, data.allowedIps)" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                        :disabled="data.access !== 'restricted'" style="justify-self: flex-end !important; margin-left: 15px;"
+                                ></Button>
+                            </div>
                         </template>
                     </Column>
                 </DataTable>
             </div>
+
+
+
+
             <div class="col center" style="margin-top: 40px;">
-                <div class="row" style="justify-content: center; align-items: center; margin-bottom: 20px">
-                    <h2 style="margin: 0;">L7 Rules</h2>
-                    <i class="pi pi-ban" style="color: red; margin-left: 10px;"></i>
-                </div>
-                <DataTable :value="l7rules" style="width: 100%;">
+                <h2>L7 Rules</h2>
+                <DataTable :value="l7rules" style="width: 100%;" editMode="row"
+                @row-edit-save="(event) => onRowEditSave(event, l7rules)" v-model:editingRows="editingRowsL7" dataKey="id"
+                @row-edit-cancel="(event) => onRowEditCancel(event, l7rules)"
+                :pt="{
+                        table: { style: 'min-width: 50rem' }
+                    }"
+                >
                     <Column field="policy" header="Policy"></Column>
-                    <Column field="type" header="Type"></Column>
-                    <Column field="value" header="Value"></Column>
+                    <Column field="type" header="Type">
+                        <template #body="{ data }">
+                            <span v-if="data.categoryId === 'host'">
+                                HTTP Hostname
+                            </span>
+                            <span v-if="data.categoryId === 'port'">
+                                Port
+                            </span>
+                            <span v-if="data.categoryId === 'ipRange'">
+                                Remote IP Range and optionnal port
+                            </span>
+                            <span v-if="[ 'host', 'ipRange', 'port' ].indexOf(data.categoryId) === -1">
+                                <!-- else the type is an application, we need to display its name by finding the category which the data.value.id belongs to -->
+                                {{ applications.find(app => app.items.find((item: any) => item.id == data.objValue.id)).name }}
+                            </span>
+                        </template>
+                        <template #editor="{ data, field }">
+                            <Select v-model="data.categoryId" :options="applications" optionLabel="name" optionValue="categoryId" placeholder="select an application"
+                                @change="console.log('Selected category', data.categoryId, 'current data', data); data.value = data.categoryId === 'port' ? 1 : data.value"
+                            ></Select>
+                        </template>
+                    </Column>
+                    <Column field="value" header="Value">
+                        <template #body="{ data }">
+                            <span v-if="[ 'host', 'ipRange', 'port' ].indexOf(data.categoryId) !== -1">
+                                {{ data.value }}
+                            </span>
+                            <span v-else>
+                                <!-- else the value is an object and we need to display the name -->
+                                {{ data.objValue.name }}
+                            </span>
+                        </template>
+                        <template #editor="{ data, field }">
+                            <InputText v-if="data.categoryId === 'host' || data.categoryId === 'ipRange'" v-model="data.value" style="width: 80%"/>
+                            <InputNumber v-if="data.categoryId === 'port'" v-model="data.value" mode="decimal" style="width: 80%"/>
+                            <Select v-if="[ 'host', 'ipRange', 'port' ].indexOf(data.categoryId) === -1"
+                                v-model="data.objValue" :options="applications.find(app => app.categoryId === data.categoryId).items"
+                                optionLabel="name" placeholder="select an application"
+                                @change="console.log('Selected application', data.objValue)"
+                            ></Select>
+                        </template>
+                    </Column>
+                    <Column :row-editor="true" style="width: 8%"></Column>
+                    <Column>
+                        <template #body="{ data }">
+                            <Button @click="deleteRow(l7rules, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"></Button>
+                        </template>
+                    </Column>
                 </DataTable>
+                <Button @click="addL7Rule" class="add-rule-btn">
+                    <i class="pi pi-plus"></i>
+                </Button>
             </div>
+
+
+
+
+            <!--
             <div class="col center" style="margin-top: 40px;">
                 <h2>Port Forwarding Rules</h2>           
                 <DataTable :value="portForwardingRules" style="width: 100%;" editMode="row"
@@ -1398,7 +1725,7 @@ onMounted(() => {
                         table: { style: 'min-width: 50rem' },
                         column: {
                             bodycell: ({ state }) => ({
-                                class: [{ '!py-0': state['d_editing'] }]
+                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
                             })
                         }
                     }"
@@ -1478,8 +1805,17 @@ onMounted(() => {
                         </template>
                     </Column>
                     <Column :rowEditor="true" style="width: 8%"></Column>
+                    <Column>
+                        <template #body="{ data }">
+                            <Button @click="deleteRow(portForwardingRules, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"></Button>
+                        </template>
+                    </Column>
                 </DataTable>
+                <Button @click="addPortForwardingRule" class="add-rule-btn">
+                    <i class="pi pi-plus"></i>
+                </Button>
             </div>
+            -->
             <!-- div class="col center" style="margin-top: 40px;">
                 <h2>1:1 Nat rules</h2>
                 <-- table for 1:1 Nat Rules ->
@@ -1597,14 +1933,15 @@ onMounted(() => {
                 </div>
             </div-->
         </div>
-        <div class="col center" style="margin-top: 40px; margin-bottom: 60px;">
+        <v-progress-circular v-else indeterminate color="primary"></v-progress-circular>
+        <div class="col center" style="margin-top: 40px; margin-bottom: 60px;" v-if="!loadingConf">
             <Button @click="confirmChanges" :disabled="saving" class="constant-width-150 constant-height-40">
                 <v-progress-circular v-if="saving" indeterminate color="white"></v-progress-circular>
                 <span v-else>Save on Meraki</span>
             </Button>
             <div class="row center" style="margin-top: 20px;">
-                <Button @click="router.push(getRoutePath(configStore.prevPage()))" style="margin-right: 15px;">Back</Button>
-                <Button @click="router.push(getRoutePath(configStore.nextPage()))">Next</Button>
+                <Button @click="back" style="margin-right: 15px;">Back</Button>
+                <Button @click="nextPage" :disabled="!thisState">Next</Button>
             </div>
         </div>
 
@@ -1618,14 +1955,14 @@ onMounted(() => {
                     </div>
 
                     <!-- Policy Objects -->
-                    <div class="margin">
+                    <div class="margin" v-if="groupEditable">
                         <TieredMenu :model="objectsMenu"></TieredMenu>
                     </div>
 
                     <!-- add cidr input -->
-                    <div class="margin row">
-                        <InputText v-model="newCidrInput" placeholder="Add a CIDR" style="margin-right: 20px;" :disabled="!cidrEditable"/>
-                        <button @click="addCidrToRule()" :disabled="cidrEditable">Add</button>
+                    <div class="margin row" v-if="cidrEditable">
+                        <InputText v-model="newCidrInput" placeholder="Add a CIDR" style="margin-right: 20px;"/>
+                        <button @click="addCidrToRule()">Add</button>
                     </div>
                 </div>
             </div>
@@ -1750,12 +2087,21 @@ onMounted(() => {
     .tags-container {
         display: flex;
         flex-wrap: wrap;
-        width: 80%;
+        min-width: 60%;
     }
 
     .add-border {
         border: 1px solid #ccc;
         border-radius: 8px;
         padding: 5px;
+        min-height: 60px;
+    }
+
+    .add-rule-btn {
+        background-color: #ffffff;
+        color: #333;
+        border: 1px solid #ccc;
+
+        margin-top: 8px;
     }
 </style>
