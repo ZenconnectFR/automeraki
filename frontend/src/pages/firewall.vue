@@ -30,6 +30,7 @@ import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import Popover from 'primevue/popover'
 import TieredMenu from 'primevue/tieredmenu'
+import { rule } from 'postcss'
 
 const editingRowsL3in = ref([] as any[])
 const editingRowsL3out = ref([] as any[])
@@ -503,6 +504,37 @@ const portForwardingRules = ref([] as { id: number, [key: string]: any }[])
 const oneToOneNatRules = ref([] as { id: number, [key: string]: any }[])
 const oneToManyNatRules = ref([] as { id: number, [key: string]: any }[])
 
+const collapsedRules = ref({
+    l3inbound: {
+        rules: l3inbound as any,
+        cidrEditable: false,
+        groupEditable: false,
+        editingRows: editingRowsL3in.value,
+        title: 'L3 Inbound Rules'
+    },
+    l3outbound: {
+        rules: l3outbound as any,
+        cidrEditable: true,
+        groupEditable: true,
+        editingRows: editingRowsL3out.value,
+        title: 'L3 Outbound Rules'
+    },
+    cellularFailover: {
+        rules: cellularFailover as any,
+        cidrEditable: true,
+        groupEditable: true,
+        editingRows: editingRowsCellFail.value,
+        title: 'Cellular Failover Rules'
+    },
+    cellularInbound: {
+        rules: cellularInbound as any,
+        cidrEditable: false,
+        groupEditable: false,
+        editingRows: editingRowsCellIn.value,
+        title: 'Cellular Inbound Rules'
+    }
+});
+
 const loadingConf = ref(false)
 const confLoaded = ref(false)
 
@@ -567,6 +599,8 @@ const retrieveFirewallRules = useBoolStates([loadingConf],[confLoaded],async () 
         console.error('Error fetching firewall rules: ', firewallRulesResponse.error)
         return
     }
+
+    console.log('Firewall rules response at init: ', JSON.parse(JSON.stringify(firewallRulesResponse)));
 
     firewallRules.value = firewallRulesResponse
 
@@ -643,8 +677,12 @@ const retrieveFirewallRules = useBoolStates([loadingConf],[confLoaded],async () 
 
     console.log('Modified l7 rules: ', JSON.parse(JSON.stringify(l7rules.value)))
 
-    // Add an "allowedIps" field to all firewalled services
-    firewalledServices.value.forEach(rule => rule["allowedIps"] = [])
+    // Add an "allowedIps" field to all firewalled services if it doesn't exist
+    firewalledServices.value.forEach(rule => {
+        if (!rule.allowedIps) {
+            rule["allowedIps"] = []
+        }
+    })
 
     // parse the cidrs
     parseCidrs(l3inbound.value)
@@ -842,775 +880,200 @@ onMounted(() => {
         <Toast position="top-right" />
         <h1>Firewall Rules</h1>
         <div v-if="!loadingConf">
-            <div class="col center">
-                <h2>L3 Inbound Rules</h2>
 
-                <DataTable :value="l3inbound" style="width: 100%;" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event, l3inbound)" v-model:editingRows="editingRowsL3in" dataKey="id"
-                @row-edit-cancel="(event) => onRowEditCancel(event, l3inbound)"
+            <div class="col center" style="margin-top: 40px"
+                v-for="(ruleset, key) in collapsedRules" :key="key">
+
+                <h2>{{ ruleset.title }}</h2>
+                <DataTable :value="ruleset.rules" style="width: 100%;" editMode="row"
+                @row-edit-save="(event) => onRowEditSave(event, ruleset.rules)" v-model:editingRows="ruleset.editingRows"
+                @row-edit-cancel="(event) => onRowEditCancel(event, ruleset.rules)"
                 :pt="{
                         table: { style: 'min-width: 50rem' }
                     }"
                 >
-                    <Column field="policy" header="Policy" style="width: 8%;">
-                        <template #body="{ data }">
+
+                <Column field="policy" header="Policy" style="width: 8%;">
+                    <template #body="{ data }">
+                        <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
+                        <i class="pi pi-ban" v-else style="color: red;"></i>
+                        <span style="margin-left: 15px">{{ data.policy }}</span>
+                    </template>
+                    <template #editor="{ data, field }">
+                        <Select v-if="data.comment !== 'Default rule'" v-model="data.policy" :options="['allow', 'deny']"></Select>
+                        <div v-else>
                             <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
                             <i class="pi pi-ban" v-else style="color: red;"></i>
-                            <span style="margin-left: 15px">{{ data.policy }}</span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.policy" :options="['allow', 'deny']"></Select>
-                            <div v-else>
-                                <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
-                                <i class="pi pi-ban" v-else style="color: red;"></i>
-                                <span style="margin-left: 15px">{{ data[field] }}</span>
-                            </div>
-                        </template>
-                    </Column>
+                            <span style="margin-left: 15px">{{ data[field] }}</span>
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="comment" header="Description" style="width: 10%;">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.comment }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.comment" style="width: 120px"/>
-                            <div v-else>
-                                <span>{{ data.comment }}</span>
-                            </div>
-                        </template>
-                    </Column>
+                <Column field="comment" header="Description" style="width: 10%;">
+                    <template #body="{ data }">
+                        <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
+                            {{ data.comment }}
+                        </span>
+                    </template>
+                    <template #editor="{ data, field }">
+                        <InputText v-if="data.comment !== 'Default rule'" v-model="data.comment" style="width: 120px"/>
+                        <div v-else>
+                            <span>{{ data.comment }}</span>
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="protocol" header="Protocol" style="width: 10%">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.protocol }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.protocol" :options="['TCP', 'UDP', 'ICMP', 'Any']"></Select>
-                            <div v-else>
-                                <span>{{ data.protocol }}</span>
-                            </div>
-                        </template>
-                    </Column>
+                <Column field="protocol" header="Protocol" style="width: 10%">
+                    <template #body="{ data }">
+                        <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
+                            {{ data.protocol }}
+                        </span>
+                    </template>
+                    <template #editor="{ data, field }">
+                        <Select v-if="data.comment !== 'Default rule'" v-model="data.protocol" :options="['TCP', 'UDP', 'ICMP', 'Any']"></Select>
+                        <div v-else>
+                            <span>{{ data.protocol }}</span>
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="srcCidr" header="Source" style="width: 17%">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
+                <Column field="srcCidr" header="Source" style="width: 17%">
+                    <template #body="{ data }">
+                        <div class="tags-container">
+                            <div v-for="cidr in data.srcCidr" style="margin: 6px;">
+                                <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
+                                <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
+                                <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
                             </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.srcCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                        </div>
+                        </div>
+                    </template>
+                    <template #editor="{ data, field }">
+                        <div v-if="data.comment !== 'Default rule'">
+                            <div class="row">
+                                <div class="tags-container add-border">
+                                    <div v-for="(cidr, index) in data.srcCidr" style="margin: 6px;">
+                                        <Tag v-if="cidr.type === 'vlan'">
+                                            Vlan {{ cidr.cidr }}
+                                            <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
+                                        </Tag>
+                                        <Tag class="group-tag" v-if="cidr.type === 'group'">
+                                            {{ cidr.cidr }}
+                                            <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
+                                        </Tag>
+                                        <Tag severity="secondary" v-if="cidr.type === 'cidr'">
+                                            {{ cidr.cidr }}
+                                            <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
+                                        </Tag>
                                     </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
                                 </div>
+                                <Button @click="showMenuPopover($event, data[field], ruleset.cidrEditable, ruleset.groupEditable, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    style="justify-self: flex-end; margin-left: 15px;"
+                                ></Button>
                             </div>
-                            <div v-else>
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
+                        </div>
+                        <div v-else>
+                            <div v-for="cidr in data.srcCidr" style="margin: 6px;">
+                                <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
+                                <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
+                                <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
                             </div>
-                        </template>
-                    </Column>
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="srcPort" header="Src Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.srcPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.srcPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.srcPort)"
-                            />
-                            <div v-else>
-                                <span>{{ data.srcPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
+                <Column field="srcPort" header="Src Port" style="width: 13%;">
+                    <template #body="{ data }">
+                        <span>
+                            {{ data.srcPort }}
+                        </span>
+                    </template>
+                    <template #editor="{ data, field }">
+                        <InputText v-if="data.comment !== 'Default rule'" v-model="data.srcPort" style="width: 120px"
+                            :invalid="!portRegex.test(data.srcPort)"
+                        />
+                        <div v-else>
+                            <span>{{ data.srcPort }}</span>
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="destCidr" header="Destination" style="width: 17%;">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
+                <Column field="destCidr" header="Destination" style="width: 17%;">
+                    <template #body="{ data }">
+                        <div class="tags-container">
+                            <div v-for="cidr in data.destCidr" style="margin: 6px;">
+                                <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
+                                <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
+                                <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
                             </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.destCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                        </div>
+                        </div>
+                    </template>
+                    <template #editor="{ data, field }">
+                        <div v-if="data.comment !== 'Default rule'">
+                            <div class="row">
+                                <div class="tags-container add-border">
+                                    <div v-for="(cidr, index) in data.destCidr" style="margin: 6px;">
+                                        <Tag v-if="cidr.type === 'vlan'">
+                                            Vlan {{ cidr.cidr }}
+                                            <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
+                                        </Tag>
+                                        <Tag class="group-tag" v-if="cidr.type === 'group'">
+                                            {{ cidr.cidr }}
+                                            <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
+                                        </Tag>
+                                        <Tag severity="secondary" v-if="cidr.type === 'cidr'">
+                                            {{ cidr.cidr }}
+                                            <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
+                                        </Tag>
                                     </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
                                 </div>
+                                <Button @click="showMenuPopover($event, data[field], ruleset.cidrEditable, ruleset.groupEditable, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
+                                    style="justify-self: flex-end; margin-left: 15px;"
+                                ></Button>
                             </div>
-                            <div v-else>
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
+                        </div>
+                        <div v-else>
+                            <div v-for="cidr in data.destCidr" style="margin: 6px;">
+                                <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
+                                <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
+                                <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
                             </div>
-                        </template>
-                    </Column>
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="destPort" header="Dst Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.destPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.destPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.destPort)"                            
-                            />
-                            <div v-else>
-                                <span>{{ data.destPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column :rowEditor="true" style="width: 9%"></Column>
+                <Column field="destPort" header="Dst Port" style="width: 13%;">
+                    <template #body="{ data }">
+                        <span>
+                            {{ data.destPort }}
+                        </span>
+                    </template>
+                    <template #editor="{ data, field }">
+                        <InputText v-if="data.comment !== 'Default rule'" v-model="data.destPort" style="width: 120px"
+                            :invalid="!portRegex.test(data.destPort)"                            
+                        />
+                        <div v-else>
+                            <span>{{ data.destPort }}</span>
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column style="width: 0px">
-                        <template #body="{ data }">
-                            <Button @click="deleteRow(l3inbound, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
-                                v-if="data.comment !== 'Default rule'"
-                            ></Button>
-                        </template>
-                        <template #editor="{ data, field}" style="width: 0px;"></template>
-                    </Column>
+                <Column :rowEditor="true" style="width: 9%"></Column>
+
+                <Column style="width: 0px">
+                    <template #body="{ data }">
+                        <Button @click="deleteRow(ruleset.rules, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
+                            v-if="data.comment !== 'Default rule'"
+                        ></Button>
+                    </template>
+                </Column>
 
                 </DataTable>
-                <Button @click="addBasicRule(l3inbound)" class="add-rule-btn">
+
+                <Button @click="addBasicRule(ruleset.rules)" class="add-rule-btn">
                     <i class="pi pi-plus"></i>
                 </Button>
             </div>
 
-            <div class="col center" style="margin-top: 40px;">
-                <h2>L3 Outbound Rules</h2>
-
-                <DataTable :value="l3outbound" style="width: 100%;" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event, l3outbound)" v-model:editingRows="editingRowsL3out" dataKey="id"
-                @row-edit-cancel="(event) => onRowEditCancel(event, l3outbound)"
-                :pt="{
-                        table: { style: 'min-width: 50rem' }
-                    }"
-                >
-                    <Column field="policy" header="Policy" style="width: 8%;">
-                        <template #body="{ data }">
-                            <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
-                            <i class="pi pi-ban" v-else style="color: red;"></i>
-                            <span style="margin-left: 15px">{{ data.policy }}</span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.policy" :options="['allow', 'deny']"></Select>
-                            <div v-else>
-                                <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
-                                <i class="pi pi-ban" v-else style="color: red;"></i>
-                                <span style="margin-left: 15px">{{ data[field] }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="comment" header="Description" style="width: 10%;">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.comment }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.comment" style="width: 120px"/>
-                            <div v-else>
-                                <span>{{ data.comment }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="protocol" header="Protocol" style="width: 10%">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.protocol }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.protocol" :options="['TCP', 'UDP', 'ICMP', 'Any']"></Select>
-                            <div v-else>
-                                <span>{{ data.protocol }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="srcCidr" header="Source" style="width: 17%">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.srcCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                        </div>
-                                    </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], true, true, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="srcPort" header="Src Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.srcPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.srcPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.srcPort)"
-                            />
-                            <div v-else>
-                                <span>{{ data.srcPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="destCidr" header="Destination" style="width: 17%;">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.destCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                        </div>
-                                    </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], true, true, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="destPort" header="Dst Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.destPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.destPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.destPort)"                            
-                            />
-                            <div v-else>
-                                <span>{{ data.destPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column :rowEditor="true" style="width: 9%"></Column>
-                    <Column style="width: 0px">
-                        <template #body="{ data }">
-                            <Button @click="deleteRow(l3outbound, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
-                                v-if="data.comment !== 'Default rule'"
-                            ></Button>
-                        </template>
-                        <template #editor></template>
-                    </Column>
-                </DataTable>
-                <Button @click="addBasicRule(l3outbound)" class="add-rule-btn">
-                    <i class="pi pi-plus"></i>
-                </Button>
-            </div>
-            <div class="col center" style="margin-top: 40px;">
-                <h2>Cellular Failover Rules</h2>
-
-                <!-- 
-                    MARK: Cellular Failover Rules
-                -->
-
-                <DataTable :value="cellularFailover" style="width: 100%;" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event, cellularFailover)" v-model:editingRows="editingRowsCellFail" dataKey="id"
-                @row-edit-cancel="(event) => onRowEditCancel(event, cellularFailover)"
-                :pt="{
-                        table: { style: 'min-width: 50rem' }
-                    }"
-                >
-                    <Column field="policy" header="Policy" style="width: 8%;">
-                        <template #body="{ data }">
-                            <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
-                            <i class="pi pi-ban" v-else style="color: red;"></i>
-                            <span style="margin-left: 15px">{{ data.policy }}</span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.policy" :options="['allow', 'deny']"></Select>
-                            <div v-else>
-                                <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
-                                <i class="pi pi-ban" v-else style="color: red;"></i>
-                                <span style="margin-left: 15px">{{ data[field] }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="comment" header="Description" style="width: 10%;">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.comment }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.comment" style="width: 120px"/>
-                            <div v-else>
-                                <span>{{ data.comment }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="protocol" header="Protocol" style="width: 10%">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.protocol }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.protocol" :options="['TCP', 'UDP', 'ICMP', 'Any']"></Select>
-                            <div v-else>
-                                <span>{{ data.protocol }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="srcCidr" header="Source" style="width: 17%">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.srcCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                        </div>
-                                    </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], true, true, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="srcPort" header="Src Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.srcPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.srcPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.srcPort)"
-                            />
-                            <div v-else>
-                                <span>{{ data.srcPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="destCidr" header="Destination" style="width: 17%;">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.destCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                        </div>
-                                    </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], true, true, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="destPort" header="Dst Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.destPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.destPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.destPort)"                            
-                            />
-                            <div v-else>
-                                <span>{{ data.destPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column :rowEditor="true" style="width: 9%"></Column>
-
-                    <Column style="width: 0px">
-                        <template #body="{ data }">
-                            <Button @click="deleteRow(cellularFailover, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
-                                v-if="data.comment !== 'Default rule'"
-                            ></Button>
-                        </template>
-                        <template #editor></template>
-                    </Column>
-                </DataTable>
-                <Button @click="addBasicRule(cellularFailover)" class="add-rule-btn">
-                    <i class="pi pi-plus"></i>
-                </Button>
-            </div>
-            <div class="col center" style="margin-top: 40px;">
-                <h2>Cellular Inbound Rules</h2>
-                <!-- MARK: -Cellular Inbound -->
-                <DataTable :value="cellularInbound" style="width: 100%;" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event, cellularInbound)" v-model:editingRows="editingRowsCellIn" dataKey="id"
-                @row-edit-cancel="(event) => onRowEditCancel(event, cellularInbound)"
-                :pt="{
-                        table: { style: 'min-width: 50rem' }
-                    }"
-                >
-                    <Column field="policy" header="Policy" style="width: 8%;">
-                        <template #body="{ data }">
-                            <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
-                            <i class="pi pi-ban" v-else style="color: red;"></i>
-                            <span style="margin-left: 15px">{{ data.policy }}</span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.policy" :options="['allow', 'deny']"></Select>
-                            <div v-else>
-                                <i class="pi pi-check" v-if="data.policy === 'allow'" style="color: green;"></i>
-                                <i class="pi pi-ban" v-else style="color: red;"></i>
-                                <span style="margin-left: 15px">{{ data[field] }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="comment" header="Description" style="width: 10%;">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.comment }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.comment" style="width: 120px"/>
-                            <div v-else>
-                                <span>{{ data.comment }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="protocol" header="Protocol" style="width: 10%">
-                        <template #body="{ data }">
-                            <span :style="{ 'cursor' : data.comment !== 'Default rule' ? 'pointer' : 'not-allowed' }">
-                                {{ data.protocol }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-if="data.comment !== 'Default rule'" v-model="data.protocol" :options="['TCP', 'UDP', 'ICMP', 'Any']"></Select>
-                            <div v-else>
-                                <span>{{ data.protocol }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="srcCidr" header="Source" style="width: 17%">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.srcCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'src')"></i>
-                                            </Tag>
-                                        </div>
-                                    </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, false, 'src')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <div v-for="cidr in data.srcCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="srcPort" header="Src Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.srcPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.srcPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.srcPort)"
-                            />
-                            <div v-else>
-                                <span>{{ data.srcPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="destCidr" header="Destination" style="width: 17%;">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div v-if="data.comment !== 'Default rule'">
-                                <div class="row">
-                                    <div class="tags-container add-border">
-                                        <div v-for="(cidr, index) in data.destCidr" style="margin: 6px;">
-                                            <Tag v-if="cidr.type === 'vlan'">
-                                                Vlan {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag class="group-tag" v-if="cidr.type === 'group'">
-                                                {{ cidr.cidr }}
-                                                <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                            <Tag severity="secondary" v-if="cidr.type === 'cidr'">
-                                                {{ cidr.cidr }}
-                                                <i v-if="cidr.cidr.toLowerCase() !== 'any'" class="pi pi-times-circle" style="cursor: pointer;" @click="deleteItem(data[field], index, 'dest')"></i>
-                                            </Tag>
-                                        </div>
-                                    </div>
-                                    <!--Add the button to open the popover here, pass it data[field] and false (cidr isn't editable for this specific ruleset) -->
-                                    <Button @click="showMenuPopover($event, data[field], false, false, 'dest')" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                        style="justify-self: flex-end; margin-left: 15px;"
-                                    ></Button>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <div v-for="cidr in data.destCidr" style="margin: 6px;">
-                                    <Tag v-if="cidr.type === 'vlan'">Vlan {{ cidr.cidr }}</Tag>
-                                    <Tag class="group-tag" v-if="cidr.type === 'group'">{{ cidr.cidr }}</Tag>
-                                    <Tag severity="secondary" v-if="cidr.type === 'cidr'">{{ cidr.cidr }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="destPort" header="Dst Port" style="width: 13%;">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.destPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-if="data.comment !== 'Default rule'" v-model="data.destPort" style="width: 120px"
-                                :invalid="!portRegex.test(data.destPort)"                            
-                            />
-                            <div v-else>
-                                <span>{{ data.destPort }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column :rowEditor="true" style="width: 9%"></Column>
-
-                    <Column style="width: 0px">
-                        <template #body="{ data }">
-                            <Button @click="deleteRow(cellularInbound, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"
-                                v-if="data.comment !== 'Default rule'"
-                            ></Button>
-                        </template>
-                        <template #editor></template>
-                    </Column>
-
-                </DataTable>
-                <Button @click="addBasicRule(cellularInbound)" class="add-rule-btn">
-                    <i class="pi pi-plus"></i>
-                </Button>
-            </div>
 
 
             <div class="col center" style="margin-top: 40px;">
@@ -1712,226 +1175,6 @@ onMounted(() => {
                 </Button>
             </div>
 
-
-
-
-            <!--
-            <div class="col center" style="margin-top: 40px;">
-                <h2>Port Forwarding Rules</h2>           
-                <DataTable :value="portForwardingRules" style="width: 100%;" editMode="row"
-                @row-edit-save="(event) => onRowEditSave(event, portForwardingRules)" v-model:editingRows="editingRowsPortForwarding" dataKey="id"
-                @row-edit-cancel="(event) => onRowEditCancel(event, portForwardingRules)"
-                :pt="{
-                        table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                            })
-                        }
-                    }"
-                >
-                    <Column field="name" header="Description"></Column>
-                    <Column field="uplink" header="Uplink">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.uplink }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-model="data.uplink" :options="['both', 'internet1', 'internet2']"></Select>
-                        </template>
-                    </Column>
-                    <Column field="protocol" header="Protocol">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.protocol }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <Select v-model="data.protocol" :options="['TCP', 'UDP']"></Select>
-                        </template>
-                    </Column>
-                    <Column field="publicPort" header="Public Port">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.publicPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-model="data.publicPort" style="width: 120px"/>
-                        </template>
-                    </Column>
-                    <Column field="lanIp" header="Lan IP">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.lanIp }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-model="data.lanIp" style="width: 120px"/>
-                        </template>
-                    </Column>
-                    <Column field="localPort" header="Local Port">
-                        <template #body="{ data }">
-                            <span>
-                                {{ data.localPort }}
-                            </span>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <InputText v-model="data.localPort" style="width: 120px"/>
-                        </template>
-                    </Column>
-                    <Column field="allowedIps" header="Allowed IPs" style="width: 20%;">
-                        <template #body="{ data }">
-                            <div class="tags-container">
-                                <div v-for="ip in data.allowedIps" style="margin: 6px;">
-                                    <Tag severity="secondary">{{ ip }}</Tag>
-                                </div>
-                            </div>
-                        </template>
-                        <template #editor="{ data, field }">
-                            <div class="row">
-                                <div class="tags-container add-border">
-                                    <div v-for="(ip, index) in data.allowedIps" style="margin: 6px;">
-                                        <Tag severity="secondary">{{ ip }}
-                                            <i class="pi pi-times-circle" style="cursor: pointer;" @click="deleteIpItem(data.allowedIps, index)"></i>
-                                        </Tag>
-                                    </div>
-                                </div>
-                                <Button @click="showAddIpPopover($event, data.allowedIps)" icon="pi pi-plus" class="p-button-rounded p-button-text"
-                                    style="justify-self: flex-end; margin-left: 15px;"
-                                ></Button>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column :rowEditor="true" style="width: 8%"></Column>
-                    <Column>
-                        <template #body="{ data }">
-                            <Button @click="deleteRow(portForwardingRules, data.id)" icon="pi pi-trash" class="p-button-rounded p-button-text" style="color: red;"></Button>
-                        </template>
-                    </Column>
-                </DataTable>
-                <Button @click="addPortForwardingRule" class="add-rule-btn">
-                    <i class="pi pi-plus"></i>
-                </Button>
-            </div>
-            -->
-            <!-- div class="col center" style="margin-top: 40px;">
-                <h2>1:1 Nat rules</h2>
-                <-- table for 1:1 Nat Rules ->
-                <div v-for="rule in oneToOneNatRules" :key="rule">
-                    <-- top table with info about the first side of the nat mapping->
-                    <-- table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Lan Ip</th>
-                                <th>Public Ip</th>
-                                <th>Uplink</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{{ rule.name }}</td>
-                                <td>{{ rule.lanIp }}</td>
-                                <td>{{ rule.publicIp }}</td>
-                                <td>{{ rule.uplink }}</td>
-                            </tr>
-                        </tbody>
-                    </table ->
-                    <DataTable :value="[rule]" style="width: 100%;">
-                        <Column field="name" header="Name"></Column>
-                        <Column field="lanIp" header="Lan IP"></Column>
-                        <Column field="publicIp" header="Public IP"></Column>
-                        <Column field="uplink" header="Uplink"></Column>
-                    </DataTable>
-                    <h3>Rules</h3>
-                    <-- bottom table has the elements iterate over rule.allowedInbound->
-                    <-- table>
-                        <thead>
-                            <tr class="firewall-rule-line">
-                                <th>Protocol</th>
-                                <th>Ports</th>
-                                <th>Remote Ips</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="firewall-rule-line" v-for="inboundRule in rule.allowedInbound" :key="inboundRule">
-                                <td>
-                                    <input v-model="inboundRule.protocol"></input>
-                                </td>
-                                <td>
-                                    <v-textarea v-model="inboundRule.destinationPorts" variant="outlined" rows="1" auto-grow></v-textarea>
-                                </td>
-                                <td>
-                                    <v-textarea v-model="inboundRule.allowedIps" variant="outlined" rows="1" auto-grow></v-textarea>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table ->
-                    <DataTable :value="rule.allowedInbound" style="width: 100%;">
-                        <Column field="protocol" header="Protocol"></Column>
-                        <Column field="destinationPorts" header="Ports"></Column>
-                        <Column field="allowedIps" header="Remote IPs"></Column>
-                    </DataTable>
-                </div>
-            </div -->
-            <!-- div class="firewall-rule-section">
-                <h2>1:Many Nat rules</h2>
-                <!-- table for 1:Many Nat Rules ->
-                <div v-for="rule in oneToManyNatRules" :key="rule">
-                    <!-- top table with info about the first side of the nat mapping->
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Public Ip</th>
-                                <th>Uplink</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="firewall-rule-line">
-                                <td>{{ rule.publicIp }}</td>
-                                <td>{{ rule.uplink }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <h3>Rules</h3>
-                    <!-- bottom table has the elements iterate over rule.portRules->
-                    <table>
-                        <!-- Is the same structure as port forwarding minus the uplink field->
-                        <thead>
-                            <tr class="firewall-rule-line">
-                                <th>Description</th>
-                                <th>Protocol</th>
-                                <th>Public port</th>
-                                <th>Lan IP</th>
-                                <th>Local port</th>
-                                <th>Allowed remote IPs</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="firewall-rule-line" v-for="portRule in rule.portRules" :key="portRule">
-                                <td>{{ portRule.name }}</td>
-                                <td>
-                                    <input v-model="portRule.protocol"></input>
-                                </td>
-                                <td>
-                                    <v-textarea v-model="portRule.publicPort" variant="outlined" rows="1" auto-grow></v-textarea>
-                                </td>
-                                <td>
-                                    <v-textarea v-model="portRule.localIp" variant="outlined" rows="1" auto-grow></v-textarea>
-                                </td>
-                                <td>
-                                    <v-textarea v-model="portRule.localPort" variant="outlined" rows="1" auto-grow></v-textarea>
-                                </td>
-                                <td>
-                                    <v-textarea v-model="portRule.allowedIps" variant="outlined" rows="1" auto-grow></v-textarea>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div-->
         </div>
         <v-progress-circular v-else indeterminate color="primary"></v-progress-circular>
         <div class="col center" style="margin-top: 40px; margin-bottom: 60px;" v-if="!loadingConf">
@@ -1980,98 +1223,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
-    .firewall-rule-section {
-        margin-top: 20px;
-        justify-content: center;
-        border: 1px solid #ccc;
-        padding: 10px;
-    }
-
-    table {
-        width: 100%;
-        max-width: 100%;
-        border-collapse: collapse;
-    }
-
-    th, td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-        max-width: 200px;
-        height: fit-content;
-    }
-
-    .vlan-cidr {
-        background-color: #366ce0;
-        padding: 5px 10px;
-        margin: 5px;
-        border-radius: 8px;
-        border: none;
-        color: white;
-    }
-
-    .group-cidr {
-        background-color: #366ce0;
-        padding: 3px 10px;
-        margin: 5px;
-        border-radius: 8px;
-        border: none;
-        color: white;
-    }
-
-    .cidr {
-        padding: 5px 10px;
-        margin: 5px;
-        border: 1px solid #ccc;
-    }
-
-    .plus-button-container {
-        display: inline-block;
-        position: relative;
-    }
-
-    .plus-button {
-        background-color: #366ce0;
-        margin: 5px;
-        cursor: pointer;
-        border: none;
-        border-radius: 4px;
-        height: 24px;
-        width: 24px;
-    }
-
-    .plus-popup input {
-        margin-right: 10px;
-    }
-
-    .plus-popup button {
-        padding: 5px 10px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-    .plus-popup button:hover {
-        background-color: #0056b3;
-    }
-
     .active {
         background-color: #007bff;
         color: white;
-    }
-
-    .make-col {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .make-row {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
     }
 
     .margin {
@@ -2079,7 +1233,6 @@ onMounted(() => {
     }
 
     .group-tag {
-        /* invert the colors of the tag (info severity so it is blue text over light blue background) */
         color: white;
         background-color: var(--p-tag-primary-color);
     }
