@@ -17,14 +17,39 @@ from starlette.middleware.base import BaseHTTPMiddleware
 jwt_verifier = JWTVerifier(
     issuer="https://zenconnect.okta.com",
     client_id="0oa17tl96kdAzHuA70x8",
-    audience="0oa17tl96kdAzHuA70x8",
+    audience="https://zenconnect.okta.com",
 )
 
 # Cache the tokens and their expiration time
 token_cache = {}
 
+# general response creator
+@staticmethod
+def myResponse(status_code: int, message: str):
+    """Returns a JSON response for unauthorized access."""
+    if str(status_code).isdigit():
+        status_code = int(status_code)
+    else:
+        status_code = 500
+    return JSONResponse(
+        status_code=status_code,
+        content={"error": message},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
+        },
+    )
+
 class authMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
+
+        # exclude frontend routes from the middleware
+        frontend_routes = ["/", "/home", "login", "/setup", "/claim", "/naming", "/vlan", "/firewall", "/ports", "/fixed-ip", "/voice-and-spoke", "/tag-network", "/misc", "/complete", "/edit-network", "/blink", "/login/callback", "/login/okta"]
+
+        if request.url.path in frontend_routes or request.url.path.startswith("/assets"):
+            response = await call_next(request)
+            return response
 
         # Allow preflight requests
         if request.method == "OPTIONS":
@@ -44,15 +69,7 @@ class authMiddleware(BaseHTTPMiddleware):
         # If there is no token, return 401 Unauthorized
         if not token:
             print('\n\nNo token\n\n')
-            return JSONResponse(
-                status_code=401,
-                content={"error": "Unauthorized"},
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning",
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
-                },
-            )
+            return myResponse(401, "Unauthorized")
 
         # extract the token from the Authorization header
         token = token.split(" ")[1]
@@ -61,44 +78,31 @@ class authMiddleware(BaseHTTPMiddleware):
         # Verify the token
         try:
             # delete expired tokens from the cache
+            current_time = time.time()
             for key in list(token_cache):
-                if token_cache[key] < time.time():
+                if token_cache[key] < current_time:
                     del token_cache[key]
 
-            # if the token is in the cache, continue
             if token in token_cache:
-                print('\n\nToken is in cache\n\n')
-                response = await call_next(request)
-                return response
+                print('\n\nToken in cache\n\n')
+                return await call_next(request)
             
-            # if the token is not in the cache, verify it
-
-            await jwt_verifier.verify_access_token(token)
-            print('\n\nToken is valid\n\n')
-            # cache the token and its expiration time
+            # verify the token
+            try:
+                await jwt_verifier.verify_access_token(token)
+            except Exception as e:
+                if "expired" in str(e):
+                    return myResponse(401, "Token expired")
+                else:
+                    return myResponse(401, "Unauthorized")
+            
+            # add the token to the cache
             token_cache[token] = jwt.decode(token, options={"verify_signature": False})["exp"]
-            print('\n\nToken Cache:\n' + str(token_cache) + '\n\n')
 
-            # Call the next middleware
-            response = await call_next(request)
-            return response
-        except Exception as e:
-            print('\n\nToken is invalid\n\n')
-            print('\n\nError:\n' + str(e) + '\n\n')
-
-            # if the reason is that the token is expired, return 498 Invalid Token
-            # else, return 401 Unauthorized
-
-            status_code = 401
-            if "expired" in str(e):
-                status_code = 498
-
-            # return 401 Unauthorized
-            res = JSONResponse(status_code=status_code, content={"error": "Unauthorized"})
-            res.headers["Access-Control-Allow-Origin"] = "*"
-            res.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, ngrok-skip-browser-warning"
-            res.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-            return res
+            return await call_next(request)
+        except Exception as general_error:
+            print('\n\nGeneral error:\n' + str(general_error) + '\n\n')
+            raise
 
 # Load the environment variables
 load_dotenv()
@@ -118,13 +122,6 @@ else:
 # Initialize the Dashboard API
 dashboard = meraki.DashboardAPI(api_key, output_log=False, wait_on_rate_limit=True)
 
-frontend = FastAPI()
-
-# Serve frontend for all other routes
-@frontend.get("/{full_path:path}")
-async def serve_frontend():
-    return FileResponse("dist/index.html")
-
 app = FastAPI()
 
 # Allow CORS
@@ -136,10 +133,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
-
 # Add the authMiddleware
 app.add_middleware(authMiddleware)
+
+app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
 @app.options("/{full_path:path}")
 async def preflight_handler(full_path: str):
@@ -148,9 +145,16 @@ async def preflight_handler(full_path: str):
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Authorization, Content-Type",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
         }
     )
+
+@app.exception_handler(Exception)
+async def uvicorn_exception_handler(request, exc):
+    if isinstance(exc, meraki.APIError):
+        print('\n\nAPI Error:\n' + str(exc.status) + '\n' + str(exc.message) + '\n\n')
+        return myResponse(exc.status , exc.message)
+    return myResponse(500, "Internal Server Error")
 
 
 # ------------------ GET ------------------
@@ -314,6 +318,7 @@ def get_action_batch(org_id: str, actionBatchId: str):
     action_batch = dashboard.organizations.getOrganizationActionBatch(org_id, actionBatchId)
 
     return action_batch
+
 
 
 # ---------
@@ -1100,4 +1105,8 @@ def get_template(org_id: str, template_id: str):
 # Create a new template
 # TODO: create a new template (we'll see when we get to it)
 
-
+# Serve frontend for all other routes
+@app.get("/{full_path:path}")
+async def serve_frontend():
+    print('\n\nServing frontend\n\n')
+    return FileResponse("dist/index.html")

@@ -18,6 +18,7 @@ import blinkDevices from '@/pages/blinkDevices.vue'
 import Callback from '@/pages/callback.vue';
 import Login from '@/pages/login.vue';
 import Preload from '@/pages/preload.vue';
+import { red } from 'vuetify/util/colors';
 
 const routes = [
     { path: '/home', component: Home},
@@ -36,7 +37,8 @@ const routes = [
     { path: '/blink', component: blinkDevices },
     { path: '/login/callback', component: Callback },
     { path: '/login', component: Login },
-    { path: '/', component: Preload }
+    { path: '/', component: Preload },
+    { path: '/login/okta', redirect: '/login' },
 ]
 
 const Router = createRouter({

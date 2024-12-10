@@ -16,8 +16,6 @@ import { storeToRefs } from 'pinia'
 
 import { useBoolStates } from '@/utils/Decorators'
 
-import Dropdown from '@/components/Dropdown.vue'
-
 import { useRoute, useRouter } from 'vue-router'
 import { getNetwork } from '@/endpoints/networks/GetNetwork'
 

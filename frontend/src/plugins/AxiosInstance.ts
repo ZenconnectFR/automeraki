@@ -3,7 +3,7 @@ import { useSessionStore } from '@/stores/session';
 import Router from './Router';
 
 const axiosInstance = Axios.create({
-    baseURL: '',
+    baseURL: 'http://localhost:8000',
     headers: {
         'Content-Type': 'application/json',
         // Authorization: `Bearer ${meta.env.VUE_APP_API_KEY}`,
@@ -13,7 +13,7 @@ const axiosInstance = Axios.create({
 
 axiosInstance.interceptors.request.use((config) => {
     const sessionStore = useSessionStore();
-    const token = sessionStore.getIdToken();
+    const token = sessionStore.getSession();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
