@@ -12,13 +12,11 @@ import 'primeicons/primeicons.css';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';  
 import { definePreset } from '@primevue/themes';
-import piniaPluginPersistedState from 'pinia-plugin-persistedstate';
 import ToastService from 'primevue/toastservice';
 
 import Router from '@/plugins/Router'
 
 const pinia = createPinia()
-pinia.use(piniaPluginPersistedState)
 const app = createApp(App)
 const vuetify = createVuetify({
     components,
