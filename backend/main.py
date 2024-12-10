@@ -1,13 +1,104 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from typing import Optional, Any
 import meraki
 import os
 import json
 from dotenv import load_dotenv
+import asyncio
+import time
+from okta_jwt_verifier import JWTVerifier
+import jwt
+from starlette.middleware.base import BaseHTTPMiddleware
+
+jwt_verifier = JWTVerifier(
+    issuer="https://zenconnect.okta.com",
+    client_id="0oa17tl96kdAzHuA70x8",
+    audience="0oa17tl96kdAzHuA70x8",
+)
+
+# Cache the tokens and their expiration time
+token_cache = {}
+
+class authMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+
+        # Allow preflight requests
+        if request.method == "OPTIONS":
+            return Response(
+                content=None,
+                status_code=204,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning",
+                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
+                },
+            )
+
+        # Get the token from the Authorization header
+        token = request.headers.get("Authorization")
+
+        # If there is no token, return 401 Unauthorized
+        if not token:
+            print('\n\nNo token\n\n')
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Unauthorized"},
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning",
+                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
+                },
+            )
+
+        # extract the token from the Authorization header
+        token = token.split(" ")[1]
+        print('\n\nToken:\n' + str(token) + '\n\n')
+
+        # Verify the token
+        try:
+            # delete expired tokens from the cache
+            for key in list(token_cache):
+                if token_cache[key] < time.time():
+                    del token_cache[key]
+
+            # if the token is in the cache, continue
+            if token in token_cache:
+                print('\n\nToken is in cache\n\n')
+                response = await call_next(request)
+                return response
+            
+            # if the token is not in the cache, verify it
+
+            await jwt_verifier.verify_access_token(token)
+            print('\n\nToken is valid\n\n')
+            # cache the token and its expiration time
+            token_cache[token] = jwt.decode(token, options={"verify_signature": False})["exp"]
+            print('\n\nToken Cache:\n' + str(token_cache) + '\n\n')
+
+            # Call the next middleware
+            response = await call_next(request)
+            return response
+        except Exception as e:
+            print('\n\nToken is invalid\n\n')
+            print('\n\nError:\n' + str(e) + '\n\n')
+
+            # if the reason is that the token is expired, return 498 Invalid Token
+            # else, return 401 Unauthorized
+
+            status_code = 401
+            if "expired" in str(e):
+                status_code = 498
+
+            # return 401 Unauthorized
+            res = JSONResponse(status_code=status_code, content={"error": "Unauthorized"})
+            res.headers["Access-Control-Allow-Origin"] = "*"
+            res.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, ngrok-skip-browser-warning"
+            res.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            return res
 
 # Load the environment variables
 load_dotenv()
@@ -27,21 +118,42 @@ else:
 # Initialize the Dashboard API
 dashboard = meraki.DashboardAPI(api_key, output_log=False, wait_on_rate_limit=True)
 
+frontend = FastAPI()
+
+# Serve frontend for all other routes
+@frontend.get("/{full_path:path}")
+async def serve_frontend():
+    return FileResponse("dist/index.html")
+
 app = FastAPI()
 
 # Allow CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://*.ngrok-free.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
+
+# Add the authMiddleware
+app.add_middleware(authMiddleware)
+
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str):
+    return JSONResponse(
+        status_code=204,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        }
+    )
+
 
 # ------------------ GET ------------------
-
-app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
 # Test route
 '''
@@ -62,6 +174,13 @@ def del_test_networks():
 
     return {"Networks": "Deleted"}
 
+
+# ---------
+
+# reload the auth
+@app.get("/startup")
+def startup():
+    return {"Startup": "Success"}
 
 # ---------
 
@@ -981,15 +1100,4 @@ def get_template(org_id: str, template_id: str):
 # Create a new template
 # TODO: create a new template (we'll see when we get to it)
 
-
-
-
-
-
-# MARK: - SERVE FRONTEND
-
-# Serve frontend for all other routes
-@app.get("/{full_path:path}")
-async def serve_frontend():
-    return FileResponse("dist/index.html")
 

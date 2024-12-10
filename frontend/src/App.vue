@@ -1,8 +1,9 @@
 <script setup lang="ts">
 
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { RouterView, useRouter } from 'vue-router'
+import { axiosInstance as Axios } from '@/plugins/AxiosInstance'
 
 import NavBar from './components/NavBar.vue';
 
@@ -34,14 +35,14 @@ const showNavBar = ref(false)
 // listen for route changes
 const router = useRouter()
 router.afterEach((to, from) => {
+  const accessedPages = [
+    '/claim', '/naming', '/fixed-ip', '/firewall', '/vlan', '/ports', '/voice-and-spoke', '/tag-network', '/misc', '/complete', '/setup'
+  ]
   // show navbar if: 
-  // - user not in home page
-  // - user not in voice-and-spoke with query param orgWide=true
-  if (to.path !== '/' && !(to.path === '/voice-and-spoke' && to.query.orgWide === 'true')) {
-    showNavBar.value = true
-  } else {
-    showNavBar.value = false
-  }
+  // the page is one of the accessed pages and the orgWide query param is not set or is set to false
+  console.log('to', to)
+
+  showNavBar.value = accessedPages.includes(to.path) && (!to.query.orgWide || to.query.orgWide === 'false')
 })
 
 

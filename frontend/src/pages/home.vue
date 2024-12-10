@@ -1,53 +1,64 @@
+<template>
+    <Button icon="pi pi-user" @click="moreOptions = true" label="" class="vpn-btn"/>
+    <h1>Welcome to Automeraki</h1>
+
+    <Divider style="width: 250px;"></Divider>
+
+    <Button @click="goToConfig" label="Configure network" />
+
+    <Drawer v-model:visible="moreOptions" header="Your information" position="right" style="width: 400px;">
+        <div class="col center">
+
+            <Tag style="margin-top: 25px;" severity="secondary">
+                {{ userEmail }}
+            </Tag>
+
+            <Button @click="sessionStore.clearSession(); router.push('/')" label="Logout" style="margin-top: 25px;"/>
+        </div>
+    </Drawer>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-import { useIdsStore } from '@/stores/ids'
-import { useConfigurationStore } from '@/stores/configuration';
-
-import { useRouter, useRoute } from 'vue-router'
+import { useSessionStore } from '@/stores/session'
 
 import Button from 'primevue/button'
-import { Divider } from 'primevue';
+import Drawer from 'primevue/drawer'
+import Tag from 'primevue/tag'
+import Divider from 'primevue/divider'
 
 const router = useRouter()
-const route = useRoute()
+const sessionStore = useSessionStore()
 
-const ids = useIdsStore()
-const configuration = useConfigurationStore()
+const moreOptions = ref(false)
 
-const goToManage = () => {
-    router.push('/manage')
+const userEmail = ref('')
+
+const parseJwt = (token: string) => {
+    try {
+        const base64Url = token.split('.')[1]
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        }).join(''))
+
+        return JSON.parse(jsonPayload)
+    } catch (e) {
+        return {}
+    }
 }
 
 const goToConfig = () => {
     router.push('/setup')
 }
 
-const goToEdit = () => {
-    router.push('/edit-network')
-}
+onMounted(() => {
+    if (sessionStore.getIdToken()) {
+        const token = parseJwt(sessionStore.getSession())
+        userEmail.value = token.sub
+    }
+})
 
 </script>
-
-<template>
-    <div class="col home">
-        <h1>Home</h1>
-        <Divider />
-        <!-- Button @click="goToManage" label="Manage templates" /-->
-        <Button class="button" @click="goToConfig" label="Configure a network" />
-    </div>
-</template>
-
-<style scoped>
-.button {
-    margin: 10px;
-}
-
-.home {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    position: fixed;
-    top: 100px;
-}
-</style>

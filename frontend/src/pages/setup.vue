@@ -47,8 +47,8 @@ const configuration = useConfigurationStore()
 const nextStates = useNextStatesStore()
 
 // values from store
-const orgId = storeToRefs(ids.orgId)
-const networkId = storeToRefs(ids.networkId)
+const { orgId } = storeToRefs(ids)
+const { networkId } = storeToRefs(ids)
 
 // for tests
 // orgId.value = '738027388935340172'
@@ -56,11 +56,11 @@ const networkId = storeToRefs(ids.networkId)
 const organizationsNotLoaded = ref(true)
 
 // Organizations and networks from API
-const organizations = ref([])
-const networks = ref([])
+const organizations = ref([] as any[])
+const networks = ref([] as any[])
 
 // Network selection dropdown options and selected network
-const networkOptions = ref([])
+const networkOptions = ref([] as any[])
 
 const selectedNetwork = ref<Option | null>(null)
 
@@ -69,7 +69,7 @@ const newNetworkNameInput = ref('')
 const newNetworkAddress = ref('')
 
 // Templates
-const templates = ref([])
+const templates = ref([] as any[])
 const selectedTemplate = ref({ value: 'default.json', name: '' })
 const templateNetwork = ref('')
 
@@ -100,15 +100,15 @@ const blinkHelpRef = ref();
 
 
 // help button toggles
-const toggleVpnHelp = (event) => {
+const toggleVpnHelp = (event: any) => {
     vpnHelp.value.toggle(event)
 }
 
-const toggleEditNetHelp = (event) => {
+const toggleEditNetHelp = (event: any) => {
     editNetHelp.value.toggle(event)
 }
 
-const toggleBlinkHelp = (event) => {
+const toggleBlinkHelp = (event: any) => {
     blinkHelpRef.value.toggle(event)
 }
 
@@ -177,7 +177,9 @@ const populateNetworkOptions = () => {
 
 // Set the selected network
 const setNetworkOption = () => {
-    networkId.value = selectedNetwork.value.value
+    if (selectedNetwork.value) {
+        networkId.value = selectedNetwork.value.value
+    }
     console.log('[SETUP] Selected network:', selectedNetwork.value)
     newNetworkSelected.value = true
 }
@@ -281,7 +283,9 @@ const configureNetwork = async () => {
     console.log('[SETUP] Devices in network: ', devicesList)
 
     // add network name to the devices store
-    devices.setNetwork(selectedNetwork.value.name)
+    if (selectedNetwork.value) {
+        devices.setNetwork(selectedNetwork.value.name)
+    }
 
     // get the network address from the first device in the list, if there is no device, leave the address empty
     if (devicesList.length > 0) {
@@ -301,7 +305,7 @@ const configureNetwork = async () => {
     let associationTable = templateData.actions[0].data.associationTable
     console.log('[SETUP] Association table:', associationTable)
     // give each device their associationId, can break on complex format strings for devices names.
-    devicesList.forEach((device: { name: string, model: string}) => {
+    devicesList.forEach((device: { name: string, model: string, associationId?: string, associationName?: string, type?: string }) => {
         // find the associationId in the device name, format string is "{networkName}-{associationName}"
 
         if (!device.name || device.name.split('-').length < 2) {
@@ -328,6 +332,8 @@ const configureNetwork = async () => {
     configuration.setCurrentPageConfig(templateData.actions.find((action: { type: string }) => action.type === 'naming').data)
     configuration.setCurrentPageIndex(templateData.actions.findIndex((action: { type: string }) => action.type === 'naming'))
 
+    console.log('orgId getting saved in config net : ', orgId.value)
+
     ids.setOrgId(orgId.value)
 
     // init next states store with n = actions.length
@@ -351,7 +357,7 @@ const getOrgTemplates = useBoolStates([],[templatesLoaded], async () => {
     if (defaultTemplate) {
         selectedTemplate.value = defaultTemplate
     } else {
-        selectedTemplate.value = templates[0]
+        selectedTemplate.value = templates.value[0]
     }
 
 }, newTemplateSelected);
@@ -429,15 +435,18 @@ const setup = async () => {
     if (organizations.value.length > 0) {
         selectedOrgOption.value = organizations.value[0]
         ids.setOrgId(organizations.value[0].value)
-        setOrganizationOption()
+        orgId.value = organizations.value[0].value
+        await setOrganizationOption()
     }
 
     organizationsNotLoaded.value = false
 
+    console.log('orgId before removing from the store: ', JSON.parse(JSON.stringify(orgId.value)))
+
     // empty store values if set 
     ids.setNewNetworkId('')
     ids.setNetworkId('')
-    ids.setOrgId('')
+    console.log('orgId after removing it from the store : ', orgId.value)
 
     devices.setDevicesList([])
     devices.setNetwork('')

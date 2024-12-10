@@ -46,14 +46,6 @@ const availablePages = computed(() => {
     return configuration.value?.actions?.filter((action: { type: string; }) => action.type !== 'setup') || [];
 });
 
-const isClickable = computed(() => {
-    return /*__DEBUG__ || */(nextStates.value.lastIndexOf(true) > currentPageIndex.value);
-});
-
-const isChecked = computed(() => {
-    return currentPageIndex.value <= nextStates.value.lastIndexOf(true);
-});
-
 const lastIndexTrue = computed(() => {
     return nextStates.value.lastIndexOf(true);
 });

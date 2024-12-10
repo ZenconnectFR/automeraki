@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, routerKey } from 'vue-router';
+import { useSessionStore } from '@/stores/session';
 
 import Home from '@/pages/home.vue'
 import Setup from '@/pages/setup.vue'
@@ -14,9 +15,12 @@ import Misc from '@/pages/misc.vue';
 import Complete from '@/pages/complete.vue';
 import EditNetwork from '@/pages/editNetwork.vue'
 import blinkDevices from '@/pages/blinkDevices.vue'
+import Callback from '@/pages/callback.vue';
+import Login from '@/pages/login.vue';
+import Preload from '@/pages/preload.vue';
 
 const routes = [
-    { path: '/', component: Home},
+    { path: '/home', component: Home},
     { path: '/setup', component: Setup },
     { path: '/claim', component: Claim },
     { path: '/naming', component: Naming },
@@ -29,12 +33,23 @@ const routes = [
     { path: '/misc', component: Misc },
     { path: '/complete', component: Complete },
     { path: '/edit-network', component: EditNetwork },
-    { path: '/blink', component: blinkDevices }
+    { path: '/blink', component: blinkDevices },
+    { path: '/login/callback', component: Callback },
+    { path: '/login', component: Login },
+    { path: '/', component: Preload }
 ]
 
 const Router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+Router.beforeEach((to: any, from: any) => {
+    const sessionStore = useSessionStore()
+    // protect all routes except for by the presence of a session token in the sessionStore
+    if (!sessionStore.getSession() && to.path !== '/' && to.path !== '/login/callback' && to.path !== '/login') {
+        return '/'
+    }
 })
 
 export default Router
