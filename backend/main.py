@@ -13,6 +13,7 @@ import time
 from okta_jwt_verifier import JWTVerifier
 import jwt
 from starlette.middleware.base import BaseHTTPMiddleware
+import cryptography
 
 jwt_verifier = JWTVerifier(
     issuer="https://zenconnect.okta.com",
@@ -45,7 +46,7 @@ class authMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
 
         # exclude frontend routes from the middleware
-        frontend_routes = ["/", "/home", "login", "/setup", "/claim", "/naming", "/vlan", "/firewall", "/ports", "/fixed-ip", "/voice-and-spoke", "/tag-network", "/misc", "/complete", "/edit-network", "/blink", "/login/callback", "/login/okta"]
+        frontend_routes = ["/", "/home", "login", "/setup", "/claim", "/naming", "/vlan", "/firewall", "/ports", "/fixed-ip", "/voice-and-spoke", "/tag-network", "/misc", "/complete", "/edit-network", "/blink", "/login/callback", "/login/okta", "/favicon.ico"]
 
         if request.url.path in frontend_routes or request.url.path.startswith("/assets"):
             response = await call_next(request)
@@ -68,8 +69,8 @@ class authMiddleware(BaseHTTPMiddleware):
 
         # If there is no token, return 401 Unauthorized
         if not token:
-            print('\n\nNo token\n\n')
-            return myResponse(401, "Unauthorized")
+            print('\n\nNo token\n\n headers:\n' + str(request.headers) + '\n\n')
+            return myResponse(401, "Unauthorized: No token found in the Authorization header: \n\n" + str(request.headers))
 
         # extract the token from the Authorization header
         token = token.split(" ")[1]
@@ -94,6 +95,7 @@ class authMiddleware(BaseHTTPMiddleware):
                 if "expired" in str(e):
                     return myResponse(401, "Token expired")
                 else:
+                    print('\n\nError:\n' + str(e) + '\n\n')
                     return myResponse(401, "Unauthorized")
             
             # add the token to the cache
@@ -127,7 +129,7 @@ app = FastAPI()
 # Allow CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://*.ngrok-free.app"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://*.ngrok-free.app", "https://automeraki-987304829026.europe-west9.run.app", "https://automeraki-mg2dazcn4q-od.a.run.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

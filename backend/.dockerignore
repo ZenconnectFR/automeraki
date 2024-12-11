@@ -1,0 +1,8 @@
+*
+!configurations/
+!dist/
+!main.py
+!.gcloudignore
+!Dockerfile
+!requirements.txt
+!.env

@@ -44,7 +44,8 @@ const checkAuthorization = () => {
 }
 
 const client_id = '0oa17tl96kdAzHuA70x8'
-const redirect_uri = 'http://localhost:5173/login/callback'
+// const redirect_uri = `${window.location.protocol}//${window.location.host}/login/callback`
+const redirect_uri = `${window.location.protocol}//${window.location.host}/login/callback`
 const oktaDomain = 'zenconnect.okta.com'
 
 
@@ -92,7 +93,6 @@ const login = async () => {
 onMounted(() => {
     checkLogin()
     checkAuthorization()
-    login()
 })
 
 </script>

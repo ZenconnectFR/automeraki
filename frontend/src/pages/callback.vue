@@ -27,7 +27,6 @@ router.afterEach((to, from) => {
     loading.value = false
 })
 
-const codeVerifier = 'WPjUXlF31poKBpPP7DxfX_bcH5NDxT_2jCFCQQdNYvcUBY6R4Vm8L25CuSVvOGUGRF8'
 const oktaDomain = 'zenconnect.okta.com'
 
 const verifyState = () => {
@@ -66,7 +65,8 @@ const retreiveToken = async (code: string) => {
     const data = {
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: 'http://localhost:5173/login/callback',
+        // redirect_uri is this host + /login/callback (obtained dynamically)
+        redirect_uri: `${window.location.protocol}//${window.location.host}/login/callback`,
         client_id: '0oa17tl96kdAzHuA70x8',
         code_verifier: session.getCodeVerifier()
     }
