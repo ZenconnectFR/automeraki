@@ -468,7 +468,7 @@ onMounted(()  => {
     <!-- button to show more options, plus icon -->
     <Button icon="pi pi-chevron-left" @click="visibleRight = false; moreOptions = true" label="More" class="vpn-btn"/>
 
-    <Button icon="pi pi-chevron-left" @click="visibleRight = true; moreOptions = false" label="Debug" class="debug-btn"/>
+    <!-- Button icon="pi pi-chevron-left" @click="visibleRight = true; moreOptions = false" label="Debug" class="debug-btn"/ -->
 
     <Drawer v-model:visible="moreOptions" header="Extra features" position="right" style="width: 400px;">
         <Divider />
