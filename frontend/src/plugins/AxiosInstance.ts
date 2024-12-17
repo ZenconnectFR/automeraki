@@ -3,7 +3,7 @@ import { useSessionStore } from '@/stores/session';
 import Router from './Router';
 
 const axiosInstance = Axios.create({
-    baseURL: 'http://localhost:8000',
+    baseURL: '',
     headers: {
         'Content-Type': 'application/json',
         // Authorization: `Bearer ${meta.env.VUE_APP_API_KEY}`,
