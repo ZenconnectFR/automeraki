@@ -1,0 +1,474 @@
+{
+    "$schema": "../templateSchema.json",
+
+    "name": "Hippopotamus",
+    "description": "Hippopotamus configuration",
+
+    "networkToClone": "L_738027388935346752",
+    "preFilledName": "XXX - Hippopotamus ",
+    "actions": [
+        {
+            "type": "claim",
+            "data": {}
+        },
+        {
+            "type": "naming",
+            "data": {
+                "name": "{networkName} - {associationName}",
+                "associationLogic": {
+                    "ap": {
+                        "format": "AP{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "A"
+                    },
+                    "router": {
+                        "format": "R{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "R"
+                    },
+                    "switch": {
+                        "format": "S{number}",
+                        "initialNumber": 1,
+                        "initialLetter": "S"
+                    }
+                },
+                "associationTable": [
+                    {
+                        "id": "R1",
+                        "name": "R1",
+                        "type": "router",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "S1",
+                        "name": "S1",
+                        "type": "switch",
+                        "switchPorts": [ 24 ]
+                    },
+                    {
+                        "id": "S2",
+                        "name": "S2",
+                        "type": "switch",
+                        "switchPorts": [ 24 ]
+                    },
+                    {
+                        "id": "AP1",
+                        "name": "AP1",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "AP2",
+                        "name": "AP2",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "AP3",
+                        "name": "AP3",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "AP4",
+                        "name": "AP4",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "AP5",
+                        "name": "AP5",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "AP6",
+                        "name": "AP6",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "AP7",
+                        "name": "AP7",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    },
+                    {
+                        "id": "AP8",
+                        "name": "AP8",
+                        "type": "ap",
+                        "switchPorts": [ 0 ]
+                    }
+                ],
+                "tags": []
+            }
+        },
+        {
+            "type": "fixedIp",
+            "data": {
+                "fixedAssignments": [],
+                "dhcpAssignments": {
+                    "default": {
+                        "vlan": "999"
+                    },
+                    "static": []
+                }
+            }
+        },
+        {
+            "type": "firewall",
+            "data": {
+                "comment": "In L3 Outbound Rules: remove cidrs in the 3 first rules that start with 10.37.xx.xx/xx{n}We will add the right rules after modifying the CORP Vlan"
+            }
+        },
+        {
+            "type": "vlan",
+            "data": {
+                "vlans": [
+                    {
+                        "id": 301,
+                        "applianceIp": "10.37.48.1",
+                        "subnet": "10.37.48.0/20",
+                        "name": "CORP",
+                        "fixedAssignments": [],
+                        "reservedIpRanges": []
+                    }
+                ],
+                "perPortVlan": [
+                    {
+                        "ports": [
+                            {
+                                "id": "3",
+                                "type": "trunk",
+                                "vlan": "301"
+                            },
+                            {
+                                "id": "4",
+                                "type": "trunk",
+                                "vlan": "301"
+                            },
+                            {
+                                "id": "5",
+                                "type": "trunk",
+                                "vlan": "301"
+                            }
+                        ],
+                        "applianceName": "R1"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "firewall",
+            "data": {
+                "comment": "In L3 Outbound Rules: add the right rules for the CORP Vlan{n}The first two should be 10.xx.49.1/32 in destination.{n}The third should be 10.xx.50.1/32 and 10.xx.50.2/32 in source."
+            }
+        },
+        {
+            "type": "ports",
+            "data": {
+                "ports": [
+                    {
+                        "switchName": "S1",
+                        "nbPorts": 24,
+                        "config": {
+                            "default": {
+                                "vlan": "101",
+                                "name": "Encaissement",
+                                "type": "access"
+                            },
+                            "ports": [
+                                {
+                                    "id": "9",
+                                    "name": "Téléphonie",
+                                    "vlan": "401",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "10",
+                                    "name": "Téléphonie",
+                                    "vlan": "401",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "11",
+                                    "name": "Vidéo",
+                                    "vlan": "601",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "12",
+                                    "name": "IoT",
+                                    "vlan": "202",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "13",
+                                    "name": "IoT",
+                                    "vlan": "202",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "14",
+                                    "name": "IoT",
+                                    "vlan": "202",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "15",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "16",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "17",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "18",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "19",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "20",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "21",
+                                    "name": "WIFI",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "22",
+                                    "name": "WIFI",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "23",
+                                    "name": "WIFI",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "24",
+                                    "name": "Uplink",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "switchName": "S2",
+                        "nbPorts": 24,
+                        "config": {
+                            "default": {
+                                "vlan": "101",
+                                "name": "Encaissement",
+                                "type": "access"
+                            },
+                            "ports": [
+                                {
+                                    "id": "9",
+                                    "name": "Téléphonie",
+                                    "vlan": "401",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "10",
+                                    "name": "Téléphonie",
+                                    "vlan": "401",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "11",
+                                    "name": "Vidéo",
+                                    "vlan": "601",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "12",
+                                    "name": "IoT",
+                                    "vlan": "202",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "13",
+                                    "name": "IoT",
+                                    "vlan": "202",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "14",
+                                    "name": "IoT",
+                                    "vlan": "202",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "15",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "16",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "17",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "18",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "19",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "20",
+                                    "name": "CORP",
+                                    "vlan": "301",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "21",
+                                    "name": "WIFI",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "22",
+                                    "name": "WIFI",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "23",
+                                    "name": "WIFI",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "24",
+                                    "name": "Uplink",
+                                    "vlan": "301",
+                                    "type": "trunk"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "mtuSize": 9000,
+                "stp": [
+                    {
+                        "stpPriority": 0,
+                        "switches": [
+                            "S1", "S2"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "vpn",
+            "data": {
+                "vpnSubnets": [],
+                "siteToSite": {
+                    "useSpoke": true,
+                    "hubs": [
+                        {
+                            "hubId": "N_743656888469569555",
+                            "useDefaultRoute": false
+                        },
+                        {
+                            "hubId": "N_743656888469569556",
+                            "useDefaultRoute": false
+                        }
+                    ],
+                    "subnets": [
+                        {
+                            "localSubnet": "VLAN(301)",
+                            "useVpn": true,
+                            "translation": false
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "tags",
+            "data": {
+                "availableTags": [
+                    "WAN1-FTTH","WAN2-FTTH", "CSI", "4G", "franchise", "WAN1-ADSL", "WAN2-ADSL", "WAN1-4G", "WAN2-4G", "WAN1-FTTO", "WAN2-FTTO", "ZENDUTY_7/7_9-19"
+                ]
+            }
+        },
+        {
+            "type": "misc",
+            "data": {
+                "splashPages": [
+                    {
+                        "number": 4,
+                        "name": "HIPPOSPOT",
+                        "url": "https://sphere.nomosphere.fr/portal/meraki/5"
+                    },
+                    {
+                        "number": 2,
+                        "name": "HIPPOSPOT",
+                        "url": "https://sphere.nomosphere.fr/portal/meraki/3"
+                    }
+                ],
+                "useHostname": true,
+                "mxHostname": "hippo-{site}"
+            }
+        },
+        {
+            "type": "eof",
+            "data": {
+                "comments": [
+                    {
+                        "title": "Alerts",
+                        "content": [
+                            "- Set the alerts as in the procedure."
+                        ]
+                    },
+                    {
+                        "title": "DHCP Servers",
+                        "content": [
+                            "- Go to Switching > DHCP Servers & ARP and replace the mac with the one of the new MX."
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

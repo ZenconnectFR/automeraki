@@ -101,7 +101,7 @@ const initSplashPagesSection = () => {
     // populate options for the dropdown
     for (const splashPage of splashPages.value) {
         splashPagesOptions.value.push({
-            title: `SSID ${splashPage.ssidNumber} - ${splashPage.ssidName}`,
+            title: `SSID ${splashPage.ssidNumber + 1} - ${splashPage.ssidName}`,
             value: splashPage.ssidNumber
         })
     }
@@ -272,7 +272,7 @@ onMounted(() => {
                 />
                 <div v-for="splashPage in splashPages" :key="splashPage.ssidNumber">
                     <div v-if="splashPage.ssidNumber == selectedSplashPage">
-                        <h4>Currently selected SSID : SSID {{ splashPage.ssidNumber }}</h4>
+                        <h4>Currently selected SSID : SSID {{ splashPage.ssidNumber + 1 }}</h4>
                         <p style="margin-top: 10px;">Current splash URL: {{ splashPage.splashUrl }}</p>
                         <div class="row center" style="margin-top: 10px; margin-bottom: 20px;">
                             <p style="margin-right: 15px;">New URL to use:</p>

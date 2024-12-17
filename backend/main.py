@@ -14,6 +14,7 @@ from okta_jwt_verifier import JWTVerifier
 import jwt
 from starlette.middleware.base import BaseHTTPMiddleware
 import cryptography
+import requests
 
 jwt_verifier = JWTVerifier(
     issuer="https://zenconnect.okta.com",
@@ -59,7 +60,7 @@ class authMiddleware(BaseHTTPMiddleware):
                 status_code=204,
                 headers={
                     "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning",
+                    "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning, Refreshtoken",
                     "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
                 },
             )
@@ -93,7 +94,50 @@ class authMiddleware(BaseHTTPMiddleware):
                 await jwt_verifier.verify_access_token(token)
             except Exception as e:
                 if "expired" in str(e):
-                    return myResponse(401, "Token expired")
+                    # handle expired token: get the refresh token and refresh the access token
+                    print('\n\nToken expired\n\ntrying to refresh token...\n\n')
+                    try:
+                        refresh_token = request.headers.get("Refreshtoken")
+                        print('\n\nCurrent refresh token:\n' + str(refresh_token) + '\n\n')
+                        # request a new access token using the refresh token
+                        endpoint = "https://zenconnect.okta.com/oauth2/v1/token"
+                        headers = {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            "Accept": "application/json",
+                        }
+                        data = {
+                            "grant_type": "refresh_token",
+                            "client_id": "0oa17tl96kdAzHuA70x8",
+                            "refresh_token": refresh_token,
+                            "scope": "openid profile offline_access",
+                        }
+
+                        new_data = requests.post(endpoint, headers=headers, data=data).json()
+
+                        print('\n\nNew data:\n' + str(new_data) + '\n\n')
+
+                        new_token = new_data["access_token"]
+
+                        # add the new token to the cache
+                        token_cache[new_token] = jwt.decode(new_token, options={"verify_signature": False})["exp"]
+
+                        # proceed with the request
+                        response = await call_next(request)
+
+                        # add the new data to the response headers (access token, id token, refresh token)
+                        response.headers["Authorization"] = "Bearer " + new_token
+                        response.headers["Idtoken"] = new_data["id_token"]
+                        response.headers["Refreshtoken"] = new_data["refresh_token"]
+
+                        # change status code to 207 to indicate that the response has multiple parts
+                        response.status_code = 207
+
+                        return response
+
+                    except Exception as e:
+                        # refreshing the token failed, return 498 to indicate an expired token (since this was originally why we tried to refresh the token)
+                        print('\n\nError:\n' + str(e) + '\n\n')
+                        return myResponse(498, "Token expired")
                 else:
                     print('\n\nError:\n' + str(e) + '\n\n')
                     return myResponse(401, "Unauthorized")

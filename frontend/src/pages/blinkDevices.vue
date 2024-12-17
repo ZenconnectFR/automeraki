@@ -19,6 +19,7 @@ import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Toast from 'primevue/toast'
 
 const toast = useToast()
 
@@ -39,6 +40,9 @@ const loaded = ref(false)
 
 const populateDevices = async () => {
     devicesList.value = await getNetworkDevices(networkId.value)
+    if (devicesList.value.length === 0) {
+        toast.add({ severity: 'info', summary: 'No devices', detail: 'No devices found in this network' })
+    }
     loaded.value = true
 }
 
@@ -54,7 +58,9 @@ onMounted(() => {
 </script>
 
 <template>
+    <Toast position="top-right" />
     <div class="dark-overlay"></div>
+    <Button @click="router.push('/setup')" class="backbtn">Back</Button>
     <div style="margin-top: 60px; margin-bottom: 60px;">
         <h1 style="margin-bottom: 60px;">Blink Devices</h1>
         <v-progress-circular v-if="!loaded" indeterminate></v-progress-circular>
@@ -72,3 +78,12 @@ onMounted(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.backbtn {
+    margin-bottom: 20px;
+    left: 20px;
+    top: 20px;
+    position: fixed;
+}
+</style>

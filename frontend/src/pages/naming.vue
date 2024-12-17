@@ -49,30 +49,29 @@ const namesSaved = ref(false)
 
 const devicesLoaded = ref(false)
 
-const routers = ref([])
-const switches = ref([])
-const aps = ref([])
-const others = ref([])
+const routers = ref([] as any[])
+const switches = ref([] as any[])
+const aps = ref([] as any[])
+const others = ref([] as any[])
 
-const routersTable = ref([])
-const switchesTable = ref([])
-const apsTable = ref([])
-const othersTable = ref([])
-
+const routersTable = ref([] as any[])
+const switchesTable = ref([] as any[])
+const apsTable = ref([] as any[])
+const othersTable = ref([] as any[])
 const address = ref('')
 
-const editingRows = ref([])
-const editingRows2 = ref([])
+const editingRows = ref([] as any[])
+const editingRows2 = ref([] as any[])
 
 const saveAddressHelpRef = ref()
 
-const toggleSaveAddressHelp = (event) => {
+const toggleSaveAddressHelp = (event: any) => {
     saveAddressHelpRef.value.toggle(event);
 }
 
 const idHelpRef = ref()
 
-const toggleIdHelp = (event) => {
+const toggleIdHelp = (event: any) => {
     idHelpRef.value.toggle(event);
 }
 
@@ -370,21 +369,21 @@ const renameDevices = () => {
                     othersTable.value.push(association);
                     break;
             }
+        } else {
+            // mark the association as used
+            association.used = true;
+
+            console.log('[NAMING] after marking association as used: ', routersTable.value, switchesTable.value, apsTable.value, others.value);
+
+            // assign the association id to the device
+            device.associationId = association.id;
+
+            // assign the association name to the device
+            device.associationName = association.name;
+
+            // also assign the association type to the device
+            device.type = association.type;
         }
-
-        // mark the association as used
-        association.used = true;
-
-        console.log('[NAMING] after marking association as used: ', routersTable.value, switchesTable.value, apsTable.value, others.value);
-
-        // assign the association id to the device
-        device.associationId = association.id;
-
-        // assign the association name to the device
-        device.associationName = association.name;
-
-        // also assign the association type to the device
-        device.type = association.type;
 
         // finally, change the name of the device according to the format string
         device.name = config.name.replace('{networkName}', network.value).replace('{associationName}', device.associationName);
@@ -482,12 +481,18 @@ const changeNames = useBoolStates([renaming],[], async() => {
     console.log('[NAMING] changeNames: devicesList after renaming: ', devicesList.value);
     console.log('[NAMING] changeNames: device lists: ', routers.value, switches.value, aps.value, others.value);
 
-    for (const device of devicesList.value) {
-        await changeDeviceName(device.serial, device.name);
-    }
+    try {
+        for (const device of devicesList.value) {
+            await changeDeviceName(device.serial, device.name);
+        }
 
-    for (const device of devicesList.value) {
-        await updateTags(device.serial, device.tags);
+        for (const device of devicesList.value) {
+            await updateTags(device.serial, device.tags);
+        }
+    } catch (error) {
+        console.error('[NAMING] error changing names: ', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'An error occured while saving the names', life: 3000 });
+        return;
     }
 
     toast.add({ severity: 'success', summary: 'Names saved', detail: 'The names have been successfully saved', life: 3000 });
@@ -504,7 +509,7 @@ const goBack = () => {
 const setup = async() => {
 
     // add a "serialtag" field to each device, the field is "[serial]tag"
-    devicesList.value.forEach((device: { serial: any; }) => {
+    devicesList.value.forEach((device: { serial: any; serialtag?: string }) => {
         device["serialtag"] = `[${device.serial}]tag`;
     });
 
@@ -558,11 +563,6 @@ onMounted(() => {
                     @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
                     :pt="{
                         table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                            })
-                        }
                     }"
                 >
                     <Column field="model" header="Model" style="width: 20%;"></Column>
@@ -603,11 +603,6 @@ onMounted(() => {
                     @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
                     :pt="{
                         table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                            })
-                        }
                     }"
                 >
                     <Column field="model" header="Model" style="width: 20%;"></Column>
@@ -648,11 +643,6 @@ onMounted(() => {
                     @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
                     :pt="{
                         table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                            })
-                        }
                     }"
                 >
                     <Column field="model" header="Model" style="width: 20%;"></Column>
@@ -691,11 +681,6 @@ onMounted(() => {
                     @row-edit-init="(event) => console.log('[NAMING]: Row edit init: ', event)"
                     :pt="{
                         table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                            })
-                        }
                     }"
                 >
                     <Column field="model" header="Model" style="min-width: 0%;"></Column>

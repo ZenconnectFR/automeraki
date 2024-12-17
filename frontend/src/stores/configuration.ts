@@ -8,6 +8,11 @@ export const useConfigurationStore = defineStore('configuration', () => {
     const setConfiguration = (config: any) => configuration.value = config;
     const setCurrentPageConfig = (config: any) => currentPageConfig.value = config;
     const setCurrentPageIndex = (page: number) => currentPageIndex.value = page;
+    const reset = () => {
+        setConfiguration({actions: []});
+        setCurrentPageConfig({type: '', "data": {}});
+        setCurrentPageIndex(0);
+    }
 
     const nextPage = () => {
         setCurrentPageIndex(currentPageIndex.value + 1);
@@ -30,6 +35,7 @@ export const useConfigurationStore = defineStore('configuration', () => {
         setCurrentPageConfig,
         setCurrentPageIndex,
         nextPage,
-        prevPage
+        prevPage,
+        reset
     }
 });

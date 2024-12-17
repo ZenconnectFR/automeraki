@@ -3,8 +3,8 @@
 
     "orgName": "Popeyes (documentation field)",
     
-    "name": "default",
-    "networkToClone": "738027388935356697",
+    "name": "Popeyes",
+    "networkToClone": "L_738027388935356697",
     "preFilledName": "PY000000 - ",
     "actions": [
         {
@@ -276,6 +276,10 @@
             }
         },
         {
+            "type": "firewall",
+            "data": {}
+        },
+        {
             "type": "vlan",
             "data": {
                 "vlans": [
@@ -312,7 +316,7 @@
                             },
                             {
                                 "expectedEquipment": "AP7",
-                                "ip": "192.168.44.108"
+                                "ip": "192.168.44.107"
                             },
                             {
                                 "expectedEquipment": "AP8",

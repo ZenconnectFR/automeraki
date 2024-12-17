@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeMount } from 'vue'
 import { getOrganizations } from '@/endpoints/organizations/GetOrganizations'
 import { getNetworks } from '@/endpoints/networks/GetNetworks'
 import { getNetworkDevices } from '@/endpoints/networks/GetNetworkDevices'
@@ -26,6 +26,10 @@ import Button from 'primevue/button';
 import Drawer from 'primevue/drawer';
 import Divider from 'primevue/divider';
 import Popover from 'primevue/popover';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast()
 
 
 // interfaces
@@ -61,6 +65,8 @@ const networks = ref([] as any[])
 const networkOptions = ref([] as any[])
 
 const selectedNetwork = ref<Option | null>(null)
+const selectedNetworkToEdit = ref<Option | null>(null)
+const selectedNetworkToBlink = ref<Option | null>(null)
 
 // New network name and address fields inputs
 const newNetworkNameInput = ref('')
@@ -179,6 +185,8 @@ const setNetworkOption = () => {
         networkId.value = selectedNetwork.value.value
     }
     console.log('[SETUP] Selected network:', selectedNetwork.value)
+    console.log('[SETUP] Selected network to edit:', selectedNetworkToEdit.value)
+    console.log('[SETUP] Selected network to blink:', selectedNetworkToBlink.value)
     newNetworkSelected.value = true
 }
 
@@ -294,7 +302,7 @@ const configureNetwork = async () => {
 
     // add template data to the configuration store
     console.log('[SETUP] Getting template data for org:', orgId.value, 'template:', 'default.json')
-    let templateData = await getTemplateData(orgId.value, 'default.json')
+    let templateData = await getTemplateData(orgId.value, 'hippopotamus.json')
     console.log('[SETUP] Template data:', templateData)
     configuration.setConfiguration(templateData)
 
@@ -386,16 +394,26 @@ const goToVpn = async () => {
 
 const goToEditNames = async () => {
     // Go to the edit network names page, store the orgId and networkId in the store
+    if (!selectedNetworkToEdit.value) {
+        toast.add({ severity: 'error', summary: 'No network selected', detail: 'Please select a network to edit' })
+        return
+    }
+
     ids.setOrgId(orgId.value)
-    ids.setNetworkId(networkId.value)
+    ids.setNetworkId(selectedNetworkToEdit.value.value)
 
     router.push('/edit-network')
 }
 
 const goToBlink = async () => {
     // Go to the blink device page, store the orgId and networkId in the store
+    if (!selectedNetworkToBlink.value) {
+        toast.add({ severity: 'error', summary: 'No network selected', detail: 'Please select a network to blink' })
+        return
+    }
+
     ids.setOrgId(orgId.value)
-    ids.setNetworkId(networkId.value)
+    ids.setNetworkId(selectedNetworkToBlink.value.value)
 
     router.push('/blink')
 }
@@ -457,6 +475,10 @@ const setup = async () => {
     nextStates.initStates(0)
 };
 
+onBeforeMount(() => {
+    configuration.reset()
+})
+
 // Run setup function on page load
 onMounted(()  => {
   setup();
@@ -465,10 +487,12 @@ onMounted(()  => {
 </script>
 
 <template>
+    <Toast position="top-left" />
+
     <!-- button to show more options, plus icon -->
     <Button icon="pi pi-chevron-left" @click="visibleRight = false; moreOptions = true" label="More" class="vpn-btn"/>
 
-    <!-- Button icon="pi pi-chevron-left" @click="visibleRight = true; moreOptions = false" label="Debug" class="debug-btn"/ -->
+    <Button icon="pi pi-chevron-left" @click="visibleRight = true; moreOptions = false" label="Debug" class="debug-btn"/>
 
     <Drawer v-model:visible="moreOptions" header="Extra features" position="right" style="width: 400px;">
         <Divider />
@@ -487,9 +511,9 @@ onMounted(()  => {
             <span class="pi pi-question-circle" @click="toggleEditNetHelp" style="align-self: flex-end;"></span>
             <h3>Edit network</h3>
             <Popover ref="editNetHelp" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
-                <p>Edit different aspects of a network:<br>- All devices names at one<br>- All devices addresses</p>
+                <p>Edit different aspects of a network:<br>- All devices names at once<br>- All devices addresses</p>
             </Popover>
-            <Select v-model="selectedNetwork" :options="networkOptions" optionLabel="name" @change="setNetworkOption"
+            <Select v-model="selectedNetworkToEdit" :options="networkOptions" optionLabel="name" @change="setNetworkOption"
                 checkmark :highlightOnSelect="false" filter placeholder="Select a Network" class="dropdown"
                 :disabled="!networksLoaded"/>
 
@@ -503,7 +527,7 @@ onMounted(()  => {
             <Popover ref="blinkHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
                 <p>Blink a device to identify it</p>
             </Popover>
-            <Select v-model="selectedNetwork" :options="networkOptions" optionLabel="name" @change="setNetworkOption"
+            <Select v-model="selectedNetworkToBlink" :options="networkOptions" optionLabel="name" @change="setNetworkOption"
                 checkmark :highlightOnSelect="false" filter placeholder="Select a Network" class="dropdown"
                 :disabled="!networksLoaded"/>
             <Button @click="goToBlink" label="Blink network devices" class="margin-all-normal" :disabled="!templatesLoaded"/>
@@ -546,7 +570,7 @@ onMounted(()  => {
             checkmark :highlightOnSelect="false" filter placeholder="Select a Template" :disabled="!templatesLoaded" class="dropdown"
             v-if="!organizationsNotLoaded"/>
 
-        <p v-if="templateNetwork" style="margin-top: 10px;">Network to clone: {{ templateNetwork }}</p>
+        <p v-if="!organizationsNotLoaded && templatesLoaded" style="margin-top: 10px;">Network to clone: {{ templateNetwork }}</p>
 
         <br>
 

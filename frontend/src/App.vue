@@ -1,7 +1,9 @@
 <script setup lang="ts">
 
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onBeforeMount } from 'vue'
 import { useIdsStore } from '@/stores/ids'
+import { useNextStatesStore } from '@/stores/nextStates'
+import { useConfigurationStore } from '@/stores/configuration'
 import { RouterView, useRouter } from 'vue-router'
 import { axiosInstance as Axios } from '@/plugins/AxiosInstance'
 
@@ -17,6 +19,8 @@ const ready = ref(false)
 
 // stores
 const ids = useIdsStore()
+const nextStatesStore = useNextStatesStore()
+const configurationStore = useConfigurationStore()
 
 // Check if the orgId is in the root div of the app
 const orgId = document.getElementById('app')?.getAttribute('data-org-id')

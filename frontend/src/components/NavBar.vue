@@ -55,6 +55,15 @@ const isCurrentPage = (index: number) => {
 };
 
 const goToPage = (index: number) => {
+
+    // if trying to go to the same page path, refresh the page, else, if going to the same index, do nothing (the same path can be accessed from different indexes in the configuration)
+    if (currentPageIndex.value === index) {
+        return;
+    }
+    if (getRoutePath(availablePages.value[index].type) === router.currentRoute.value.path) {
+        window.location.reload();
+    }
+
     console.log('goToPage', index);
     console.log('availablePages', availablePages.value);
     configStore.setCurrentPageIndex(index);

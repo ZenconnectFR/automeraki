@@ -1,5 +1,6 @@
 import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
 import { getActionBatchStatus } from "./GetActionBatch"
+import { th } from "vuetify/locale"
 
 // split the actions into batches of batchSize. Beware of the last batch, it may be smaller than batchSize
 // returns an array of arrays
@@ -20,6 +21,7 @@ export async function sendBatch(batch: any[], orgId: string) {
         return response.data
     } catch (error) {
         console.error('[CONFIGURE PORTS BATCH] Error: ', error)
+        throw error
     }
 }
 
@@ -35,12 +37,18 @@ export async function handleActionBatches(actions: any, orgId: string) {
     for (let i = 0; i < 5; i++) {
         if (pendingBatches.length < 5 && batches.length > 0) {
             console.log('Sending batch: ', batches[0], 'with pending batches: ', pendingBatches)
-            const response = await sendBatch(batches[0], orgId)
-            pendingBatches.push({batchId: response.id, status: response.status.completed})
-            console.log('Batch sent: ', response.id, 'with status: ', response.status.completed)
-            // console.log('Pending batches: ', pendingBatches)
-            // remove the batch from the list of batches
-            batches.shift()
+            try {
+                const response = await sendBatch(batches[0], orgId)
+                pendingBatches.push({batchId: response.id, status: response.status.completed})
+                console.log('Batch sent: ', response.id, 'with status: ', response.status.completed)
+                // console.log('Pending batches: ', pendingBatches)
+                // remove the batch from the list of batches
+                batches.shift()
+                // console.log('Remaining batches: ', batches)
+            } catch (error) {
+                console.error('[CONFIGURE PORTS BATCH] Error: ', error)
+                return error
+            }
             // console.log('Remaining batches: ', batches)
         } else {
             // console.log('Max number of batches sent, breaking, pending batches: ', pendingBatches)

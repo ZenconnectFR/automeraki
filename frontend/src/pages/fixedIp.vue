@@ -46,8 +46,8 @@ const { devicesList } = storeToRefs(devices)
 const savingChanges = ref(false)
 const changesSaved = ref(false)
 
-const editingRows = ref([])
-const originalData = ref({})
+const editingRows = ref([] as any[])
+const originalData = ref({} as any)
 
 const onRowEditSave = async (event: any) => {
     const { newData, index } = event
@@ -158,8 +158,15 @@ const validate = useBoolStates([savingChanges],[],async () => {
     // validate the fixed ip assignments
     console.log('[FIXED IP] Validating fixed ip assignments: ', fixedIpAssignments.value)
 
+    let response;
+    try {
     // launch action batch to fix ip addresses
-    const response = await fixIpAssignments(fixedIpAssignments.value, orgId.value)
+        response = await fixIpAssignments(fixedIpAssignments.value, orgId.value)
+    } catch (error) {
+        console.error('[FIXED IP] Error fixing ip addresses: ', error)
+        toast.add({ severity: 'error', summary: 'Fixed IP', detail: 'Error saving fixed IP addresses', life: 3000 })
+        return
+    }
 
     console.log('[FIXED IP] Fix ip response: ', response)
 
@@ -196,11 +203,6 @@ onMounted(() => {
             @row-edit-init="onRowEditInit"
             :pt="{
                 table: { style: 'min-width: 70rem' },
-                column: {
-                    bodycell: ({ state }) => ({
-                        style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                    })
-                }
             }"
         >
             <Column field="useDhcp" header="DHCP">

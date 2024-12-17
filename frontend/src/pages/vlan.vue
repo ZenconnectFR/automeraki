@@ -10,13 +10,13 @@ import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan'
 import { createVlansIfNotExists } from '@/endpoints/networks/CreateVlansIfNotExists'
 import { enableVlans } from '@/endpoints/networks/EnableVlans'
 import { configurePerPortVlan } from '@/endpoints/actionBatches/ConfigurePerPortVlan'
-import { getActionBatchStatus } from '@/endpoints/actionBatches/GetActionBatch'
 
 import { getRoutePath } from '@/utils/PageRouter'
 
 import { useBoolStates } from '@/utils/Decorators'
 import { createMac } from '@/utils/Misc'
 import { maskIpWithSubnet, modifyIpWithoutChangingMask } from '@/utils/ipType'
+import { parseJsonError } from '@/utils/Misc'
 
 import { useRouter, useRoute } from 'vue-router'
 
@@ -30,6 +30,7 @@ import Popover from 'primevue/popover';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Tag from 'primevue/tag';
+import { Portal } from 'primevue'
 
 const toast = useToast();
 
@@ -51,9 +52,9 @@ const { newNetworkId, orgId } = storeToRefs(ids)
 const { devicesList } = storeToRefs(devices)
 
 const vlanIsAutoConfigured = ref(false)
-const vlanAutoConfigured = ref([])
+const vlanAutoConfigured = ref([] as any[])
 
-const perPortVlan = ref([])
+const perPortVlan = ref([] as any[])
 
 const moreOptions = ref(false)
 
@@ -61,7 +62,7 @@ let autoMac = createMac()
 
 const commonIpHelpRef = ref()
 
-const toggleCommonIpHelp = (event) => {
+const toggleCommonIpHelp = (event: any) => {
     commonIpHelpRef.value.toggle(event);
 }
 
@@ -119,7 +120,7 @@ const countCommonParts = (ip1: string, ip2: string | any) => {
 
 const autoMacHelpRef = ref()
 
-const toggleAutoMacHelp = (event) => {
+const toggleAutoMacHelp = (event: any) => {
     autoMacHelpRef.value.toggle(event);
 }
 
@@ -399,7 +400,7 @@ const configureVlans = () => {
 
     for (const vlan of vlanAutoConfigured.value) {
         console.log('[VLAN] Adding vlan: ', vlan.id, " to devices store")
-        devices.addVlan(`${vlan.id}`)
+        devices.addVlan(Number(vlan.id))
     }
 
     // sort by id
@@ -416,7 +417,7 @@ const preEnableVlans = async() => {
 }
 
 const formatFixedAssignments = (fixedAssignments: any) => {
-    let formattedFixedAssignments = {}
+    let formattedFixedAssignments = {} as any
     for (const fixedAssignment of fixedAssignments) {
         formattedFixedAssignments[fixedAssignment.mac] = {
             ip: fixedAssignment.ip,
@@ -457,7 +458,14 @@ const confirm = useBoolStates([savingChanges],[],async () => {
     // enable vlans
     await preEnableVlans()
 
-    let createdVlans = await createVlansIfNotExists(newNetworkId.value, vlanAutoConfiguredFormatted)
+    let createdVlans = await createVlansIfNotExists(newNetworkId.value, vlanAutoConfiguredFormatted) as any
+
+    /* if createdVlans failed, toast the error and return
+    if (createdVlans.data.error) {
+        toast.add({severity:'error', summary:'Error enabling vlans', detail: parseJsonError(createdVlans.data.error.errors)});
+        return
+    }
+    */
 
     // filter payload[0] part out of vlanAutoConfigured when vlan id is in createdVlans
     for (const vlan of vlanAutoConfiguredFormatted) {
@@ -470,7 +478,12 @@ const confirm = useBoolStates([savingChanges],[],async () => {
 
     // Save changes
     console.log('[VLAN] Saving changes')
-    await updateNetworkVlan(newNetworkId.value, vlanAutoConfiguredFormatted)
+    try {
+        await updateNetworkVlan(newNetworkId.value, vlanAutoConfiguredFormatted)
+    } catch (error) {
+        toast.add({severity:'error', summary:'Vlan', detail: 'Error saving vlan settings'});
+        return
+    }
 
     // update perPortVlan settings
     // for each perPortVlan in configuration.value, match the expectedEquipment with a device shortName
@@ -480,7 +493,7 @@ const confirm = useBoolStates([savingChanges],[],async () => {
         console.log('Template configuration: ', config)
         console.log('Devices list: ', devicesList.value)
         for (const device of devicesList.value) {
-            if (device.associationId === perPortVlanConfig.applianceName) {
+            if (device.associationId === perPortVlanConfig.applianceName && perPortVlan.value.length === 0) {
                 perPortVlan.value.push({
                     ports: perPortVlanConfig.ports
                 })
@@ -493,6 +506,12 @@ const confirm = useBoolStates([savingChanges],[],async () => {
     const response =  await configurePerPortVlan(perPortVlan.value, orgId.value, newNetworkId.value)
 
     console.log('[VLAN] Response: ', response)
+
+    // handle error in response
+    if (response.response) { // this means there was an axios error
+        toast.add({severity:'error', summary:'Error saving per port vlan settings', detail: `${parseJsonError(response.response.data.error)}\n\n If the error above says "Port x not found, switch the starting port between 1 and 3 in the "More" tab. This is due to MXs having different port numbering.`});
+        return
+    }
 
     toast.add({severity:'success', summary:'Success', detail:'VLAN configuration saved successfully'});
 
@@ -512,6 +531,9 @@ const goBack = () => {
 }
 
 onMounted(() => {
+    // empty vlan store lmao, there are 200 entries in the store because I forgot to clear it since the beginning
+    devices.clearVlans()
+
     configureVlans()
     // computeCommonIps()
     // console.log('[VLAN] commonIps: ', commonIps.value)
@@ -553,6 +575,36 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
+
+            <div class="col center" v-if="perPortVlan[0]">
+                <Divider />
+
+                <h2>Per port VLAN</h2>
+
+                <div class="row center">
+                    <Button icon="pi pi-minus"
+                        @click="() => { if (!(perPortVlan[0].ports[0].id == '1')) {perPortVlan[0].ports.forEach((port: any) => port.id = `${Number(port.id) - 1}`)}}"
+                    />
+
+                    <Button icon="pi pi-plus"
+                        @click="() => {if (!(perPortVlan[0].ports[0].id == '3')) {perPortVlan[0].ports.forEach((port: any) => port.id = `${Number(port.id) + 1}`)}}"
+                        style="margin-left: 20px;"
+                    />
+
+                </div>
+
+                <DataTable :value="perPortVlan[0].ports" dataKey="id"
+                    :pt="{
+                        table: { style: 'min-width: 20rem' }
+                    }"
+                >
+                    <Column field="id" header="Port">
+                        <template #body="{ data }">
+                            <span>{{ data.id }}</span>
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
         </Drawer>
         <h1>VLAN</h1>
         <!-- Show list of vlans from the config file, auto complete mac with the right equipement (filter name for the last group of letters) -->
@@ -562,68 +614,6 @@ onMounted(() => {
              that set will contain each part of the appliance IPs that are common to all vlans. If some parts differ, it'll be filled with ... and unable to be edited.
              When one of these part is edited, all the vlan appliance IPs will be updated with the new part. -->
             <h2>Auto configured VLANs</h2>
-            <!--div class="make-column" v-for="(vlan, index) in vlanAutoConfigured" :key="index">
-                <hr />
-                <hr />
-                <p>------------------------------------------------------------------------------------</p>
-                <p>
-                    {{ vlan.payload[0].name }}<br>
-                    Id: {{ vlan.id }}<br>
-                    Appliance IP: {{ vlan.payload[0].applianceIp }}<br>
-                </p>
-                <span>Subnet : </span>
-                <input class="margin-all-normal enboxed" v-model="vlan.payload[0].subnet" placeholder="Subnet"/>
-                <div class="vlan-fields-section">
-                    <p>Fixed IP assignments</p>
-                    <div v-for="(assignment, index) in vlan.payload[1].fixedIpAssignments" :key="index">
-                        <div class="align-items-horizontally">
-                            <input class="margin-all-normal enboxed" v-model="assignment.ip" placeholder="IP address"/>
-                            <input class="margin-all-normal enboxed" v-model="assignment.name" placeholder="Name"/>
-                            <input class="margin-all-normal enboxed" v-model="assignment.mac" placeholder="MAC"/>
-                            <button class="margin-all-normal enboxed" @click="deleteFixedIp(vlan.id, assignment.mac)">Delete</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="margin-all-normal make-column vlan-fields-section">
-                    <p>Reserved IP ranges</p>
-                    <table v-if="vlan.payload[1].reservedIpRanges.length > 0" class="margin-all-normal">
-                        <tr>
-                            <th>Start</th>
-                            <th>End</th>
-                            <th>Comment</th>
-                        </tr>
-                        <tr v-for="(range, index) in vlan.payload[1].reservedIpRanges" :key="index">
-                            <td><input class="margin-all-normal enboxed" v-model="range.start" placeholder="Start"/></td>
-                            <td><input class="margin-all-normal enboxed" v-model="range.end" placeholder="End"/></td>
-                            <td><input class="margin-all-normal enboxed" v-model="range.comment" placeholder="Comment"/></td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="margin-all-normal make-column vlan-fields-section">
-                    <p>DHCP options</p>
-                    <table v-if="vlan.payload[1].dhcpOptions.length > 0" class="margin-all-normal">
-                        <tr>
-                            <th>Code</th>
-                            <th>Type</th>
-                            <th>Value</th>
-                        </tr>
-                        <tr v-for="(option, index) in vlan.payload[1].dhcpOptions" :key="index">
-                            <td><input class="margin-all-normal enboxed" v-model="option.code" placeholder="Code"/></td>
-                            <td><input class="margin-all-normal enboxed" v-model="option.type" placeholder="Type"/></td>
-                            <td><input class="margin-all-normal enboxed" v-model="option.value" placeholder="Value"/></td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="margin-all-normal make-row">
-                </div>
-            </div>
-            <hr />
-            <p v-if="savingChanges">Saving changes...</p>
-            <Button style="margin-bottom: 20px;" @click="confirm">Save on Meraki</Button>
-            <div class="row center">
-                <Button style="margin-right: 15px;" @click="goBack">Back</Button>
-                <Button @click="validate">Next</Button>
-            </div-->
 
             <div class="col center" style="margin-top: 20px;" v-for="(vlan, index) in vlanAutoConfigured" :key="index">
                 <Divider style="margin-top: 20px; width:300px" />
@@ -643,12 +633,7 @@ onMounted(() => {
                     <h3 style="margin-top: 10px;">Fixed IP assignments</h3>
                     <DataTable :value="vlan.payload[1].fixedIpAssignments" editMode="row" dataKey="serial"
                         :pt="{
-                            table: { style: 'min-width: 50rem' },
-                            column: {
-                                bodycell: ({ state }) => ({
-                                    style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                                })
-                            }
+                            table: { style: 'min-width: 50rem' }
                         }"
                     >
                         <Column field="ip" header="IP Address"></Column>

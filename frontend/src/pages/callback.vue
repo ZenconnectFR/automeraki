@@ -53,6 +53,7 @@ const getCode = async () => {
         console.log('data', data)
         session.setSession(data.access_token)
         session.setIdToken(data.id_token)
+        session.setRefreshToken(data.refresh_token)
 
         router.push({ path: '/', query: { login: 'true' } })
     } else {

@@ -30,7 +30,7 @@ import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import Popover from 'primevue/popover'
 import TieredMenu from 'primevue/tieredmenu'
-import { rule } from 'postcss'
+import Card from 'primevue/card'
 
 const editingRowsL3in = ref([] as any[])
 const editingRowsL3out = ref([] as any[])
@@ -337,7 +337,7 @@ const addCidrToRule = () => {
     }
 
     // must be either a valid cidr or 'any'
-    let cidrRegex = new RegExp('^(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\/([12][0-9]|3[0-1]|[1-9])$')
+    let cidrRegex = new RegExp('^(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\/([12][0-9]|3[0-1]|[1-9]|32)$')
 
     if (!cidrRegex.test(newCidrInput.value.trim()) && newCidrInput.value.trim().toLowerCase() !== 'any') {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Please enter a valid CIDR or \'Any\'' })
@@ -872,6 +872,8 @@ onMounted(() => {
     retrievePolicyObjects()
     retrieveApplications()
     retrieveFirewallRules()
+    console.log('Config: ', config)
+    console.log('comment in config: ', config.comment)
 })
 </script>
 
@@ -880,6 +882,20 @@ onMounted(() => {
         <Toast position="top-right" />
         <h1>Firewall Rules</h1>
         <div v-if="!loadingConf">
+
+            <!-- Card that holds the "comment" of the configuration-->
+            <Card class="p-mb-2" v-if="config.comment">
+                <template #title>
+                    <h3>Instructions for this firewall step</h3>
+                </template>
+                <template #content>
+                    <div class="col">
+                        <div v-for="(line, index) in config.comment.split('{n}')" :key="index">
+                            <p>{{ line }}</p>
+                        </div>
+                    </div>
+                </template>
+            </Card>
 
             <div class="col center" style="margin-top: 40px"
                 v-for="(ruleset, key) in collapsedRules" :key="key">
@@ -983,9 +999,9 @@ onMounted(() => {
 
                 <Column field="srcPort" header="Src Port" style="width: 13%;">
                     <template #body="{ data }">
-                        <span>
-                            {{ data.srcPort }}
-                        </span>
+                        <div class="tags-container">
+                            <span v-for="port in data.srcPort.split(',')" style="margin-right: 5px;">{{ port }}</span>
+                        </div>
                     </template>
                     <template #editor="{ data, field }">
                         <InputText v-if="data.comment !== 'Default rule'" v-model="data.srcPort" style="width: 120px"
@@ -1043,9 +1059,12 @@ onMounted(() => {
 
                 <Column field="destPort" header="Dst Port" style="width: 13%;">
                     <template #body="{ data }">
-                        <span>
-                            {{ data.destPort }}
-                        </span>
+                        <div class="tags-container">
+                            <!-- remove spaces, split on ,-->
+                            <span v-for="(port, index) in data.destPort.split(',')" style="margin-right: 5px;">
+                                {{ port.trim() }}<span v-if="index !== data.destPort.split(',').length - 1">,</span>
+                            </span>
+                        </div>
                     </template>
                     <template #editor="{ data, field }">
                         <InputText v-if="data.comment !== 'Default rule'" v-model="data.destPort" style="width: 120px"

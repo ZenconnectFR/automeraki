@@ -6,6 +6,7 @@ export const useSessionStore = defineStore("session", () => {
     const idToken = useStorage("idToken", '')
     const stateString = useStorage("stateString", '')
     const codeVerifier = useStorage("codeVerifier", '')
+    const refreshToken = useStorage("refreshToken", '')
     const getSession = () => session.value
     const setSession = (token: string) => session.value = token
     const getIdToken = () => idToken.value
@@ -14,11 +15,14 @@ export const useSessionStore = defineStore("session", () => {
     const setCodeVerifier = (verifier: string) => codeVerifier.value = verifier
     const getStateString = () => stateString.value
     const setStateString = (state: string) => stateString.value = state
+    const getRefreshToken = () => refreshToken.value
+    const setRefreshToken = (token: string) => refreshToken.value = token
     const clearSession = () => {
         session.value = ''
         idToken.value = ''
         stateString.value = ''
         codeVerifier.value = ''
+        refreshToken.value = ''
     }
 
     return {
@@ -26,6 +30,7 @@ export const useSessionStore = defineStore("session", () => {
         idToken,
         stateString,
         codeVerifier,
+        refreshToken,
         setSession,
         clearSession,
         getSession,
@@ -34,6 +39,8 @@ export const useSessionStore = defineStore("session", () => {
         getCodeVerifier,
         setCodeVerifier,
         getStateString,
-        setStateString
+        setStateString,
+        getRefreshToken,
+        setRefreshToken
     }
 });

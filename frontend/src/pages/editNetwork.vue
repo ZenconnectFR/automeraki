@@ -188,6 +188,7 @@ onMounted(() => {
 <template>
     <div class="container" style="margin-bottom: 60px;">
         <Toast position="top-right" />
+        <Button @click="router.push('/setup')" class="backbtn">Back</Button>
         <div class="row">
             <div class="col-12">
                 <h1>Edit Network</h1>
@@ -335,6 +336,9 @@ li {
 
 .backbtn {
     margin-bottom: 20px;
+    left: 20px;
+    top: 20px;
+    position: fixed;
 }
 
 .bigger-card {

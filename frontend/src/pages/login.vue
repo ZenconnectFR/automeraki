@@ -85,14 +85,23 @@ const login = async () => {
     sessionStore.setStateString(state)
     sessionStore.setCodeVerifier(codeVerifier)
 
-    let oktaAuthEndpoint = `https://${oktaDomain}/oauth2/v1/authorize?client_id=${client_id}&response_type=code&scope=openid profile&redirect_uri=${redirect_uri}&state=${state}`
+    let oktaAuthEndpoint = `https://${oktaDomain}/oauth2/v1/authorize?client_id=${client_id}&response_type=code&scope=openid profile offline_access&redirect_uri=${redirect_uri}&state=${state}`
     oktaAuthEndpoint += `&code_challenge=${codeChallenge}&code_challenge_method=S256`
     window.location.href = oktaAuthEndpoint
+}
+
+const checkReferer = async () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const referer = urlParams.get('iss')
+    if (referer) {
+        login()
+    }
 }
 
 onMounted(() => {
     checkLogin()
     checkAuthorization()
+    checkReferer()
 })
 
 </script>

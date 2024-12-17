@@ -4,3 +4,4 @@ python-dotenv==1.0.1
 meraki==1.50.0
 okta_jwt_verifier
 cryptography
+requests

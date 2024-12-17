@@ -59,3 +59,17 @@ export function parseError(error: any): string {
     }
     return res;
 }
+
+export function parseJsonError(error: any): string {
+    let res = ''
+    // extract the list of errors from the error object (match using regex
+    if (error.errors) {
+        for (let i = 0; i < error.errors.length; i++) {
+            res += error.errors[i]
+            if (i < error.errors.length - 1) {
+                res += '\n'
+            }
+        }
+    }
+    return res;
+}
