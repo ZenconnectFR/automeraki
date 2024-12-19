@@ -12,6 +12,7 @@ import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
+import { useProgressStore } from '@/stores/progress'
 import { storeToRefs } from 'pinia'
 
 import { useBoolStates } from '@/utils/Decorators'
@@ -28,9 +29,9 @@ import Divider from 'primevue/divider';
 import Popover from 'primevue/popover';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import { prototype } from 'postcss/lib/previous-map'
 
 const toast = useToast()
-
 
 // interfaces
 
@@ -47,6 +48,7 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configuration = useConfigurationStore()
 const nextStates = useNextStatesStore()
+const progress = useProgressStore()
 
 // values from store
 const { orgId } = storeToRefs(ids)
@@ -74,7 +76,7 @@ const newNetworkAddress = ref('')
 
 // Templates
 const templates = ref([] as any[])
-const selectedTemplate = ref({ value: 'default.json', name: '' })
+const selectedTemplate = ref<Option | null>(null)
 const templateNetwork = ref('')
 
 // Loading states
@@ -91,7 +93,7 @@ const newAddressEntered = ref(true)
 const newNetworkSelected = ref(true)
 const newTemplateSelected = ref(true)
 
-const selectedOrgOption = ref(<Option> { name: '', value: '-1' });
+const selectedOrgOption = ref<Option | null>(null);
 
 // debug drawer
 const visibleRight = ref(false)
@@ -131,20 +133,20 @@ const typeFinder = (model: string) => {
 // if selectedOrgOption is modified, set the orgId in the store
 const setOrganizationOption = async () => {
     console.log('[SETUP] Selected org option in set org:', selectedOrgOption.value)
-    if (orgId.value === selectedOrgOption.value.value && templatesLoaded.value && networksLoaded.value) {
+    if (orgId.value === selectedOrgOption.value?.value && templatesLoaded.value && networksLoaded.value) {
         return
     }
 
     templatesLoaded.value = false
 
-    orgId.value = selectedOrgOption.value.value
-    ids.setOrgId(selectedOrgOption.value.value)
+    orgId.value = selectedOrgOption.value?.value
+    ids.setOrgId(selectedOrgOption.value?.value)
 
     // get the templates for the selected org
     getOrgTemplates()
 
     // get the name of the network to clone from the template
-    let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+    let templateData = await getTemplateData(orgId.value, selectedTemplate.value?.value || 'default.json')
 
     // set new network name and address to the pre-filled values from the template
     newNetworkNameInput.value = templateData.preFilledName
@@ -193,7 +195,7 @@ const setNetworkOption = () => {
 // Set the selected template
 const setTemplateOption = async () => {
     console.log('[SETUP] Selected template:', selectedTemplate.value)
-    let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+    let templateData = await getTemplateData(orgId.value, selectedTemplate.value?.value || 'default.json')
     templateNetwork.value = await getNetwork(templateData.networkToClone).then((network) => network.name)
 
     newNetworkNameInput.value = templateData.preFilledName
@@ -229,6 +231,9 @@ const cloneNetworkAction = async (toCloneId : string, templateData: any) => {
         devices.setAddress(newNetworkAddress.value)
         devices.setNetwork(newNetworkNameInput.value)
         configuration.setConfiguration(templateData)
+
+        progress.initSave(orgId.value, response.newNetworkId, selectedTemplate.value?.value || 'default.json')
+
         // automatically move to the next step
         router.push('/claim')
     } else {
@@ -238,7 +243,7 @@ const cloneNetworkAction = async (toCloneId : string, templateData: any) => {
 
 // Continue with the selected template
 const continueWithTemplate = async () => {
-    if (selectedTemplate.value.name == '') {
+    if (selectedTemplate.value?.name == '') {
         newTemplateSelected.value = false
         return
     }
@@ -246,7 +251,7 @@ const continueWithTemplate = async () => {
     if (!fieldsCheck()) {return}
 
     // get the template payload
-    let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+    let templateData = await getTemplateData(orgId.value, selectedTemplate.value?.value || 'default.json')
     console.log('[SETUP] Template data:', templateData)
 
     // set the template data in the configuration store
@@ -261,19 +266,6 @@ const continueWithTemplate = async () => {
     nextStates.initStates(templateData.actions.length)
 
     await cloneNetworkAction(templateData.networkToClone, templateData)
-
-    // debug: just wait for 2s, put back cloningNetwork to false, wait 1s and mush router to /claim
-
-    /*
-    setTimeout(() => {
-        cloningNetwork.value = false
-    }, 2000)
-
-    setTimeout(() => {
-        configuration.setConfiguration(templateData)
-        router.push('/claim')
-    }, 3000)
-    */
 }
 
 /**
@@ -371,7 +363,7 @@ const getOrgTemplates = useBoolStates([],[templatesLoaded], async () => {
 // go to the voice and spoke page
 const goToVpn = async () => {
     // set configuration store values
-    let templateData = await getTemplateData(orgId.value, selectedTemplate.value.value)
+    let templateData = await getTemplateData(orgId.value, selectedTemplate.value?.value || 'default.json')
 
     if (templateData.error) {
         alert('Error getting template data: ' + templateData.error)
@@ -430,39 +422,11 @@ const setup = async () => {
         }
     })
 
-    console.log('[SETUP] orgId at load:', orgId.value)
-
-    // orgId is set by App.vue if the app is contained in meraki, else it defaults to -1
-    if (orgId.value && orgId.value !== '-1') {
-        ids.setOrgId(orgId.value)
-
-        let selectedOrg = organizations.value.find(org => org.value === orgId.value)
-        console.log('[SETUP] Selected org at load:', selectedOrg)
-
-        selectedOrgOption.value = { name: selectedOrg.name, value: selectedOrg.value}
-        console.log('[SETUP] Selected orgOption at load:', selectedOrgOption.value)
-
-        // get the templates for the selected org
-        setOrganizationOption()
-    }
-    console.log('[SETUP] Organizations loaded: ', organizations.value)
-
-    // set the first organization as selected
-    if (organizations.value.length > 0) {
-        selectedOrgOption.value = organizations.value[0]
-        ids.setOrgId(organizations.value[0].value)
-        orgId.value = organizations.value[0].value
-        await setOrganizationOption()
-    }
-
     organizationsNotLoaded.value = false
-
-    console.log('orgId before removing from the store: ', JSON.parse(JSON.stringify(orgId.value)))
 
     // empty store values if set 
     ids.setNewNetworkId('')
     ids.setNetworkId('')
-    console.log('orgId after removing it from the store : ', orgId.value)
 
     devices.setDevicesList([])
     devices.setNetwork('')
@@ -496,7 +460,7 @@ onMounted(()  => {
 
     <Drawer v-model:visible="moreOptions" header="Extra features" position="right" style="width: 400px;">
         <Divider />
-        <div class="col" style="justify-content: center; align-items: center;">
+        <div class="col" style="justify-content: center; align-items: center;" v-if="selectedOrgOption?.value === '738027388935340172' || selectedOrgOption?.value === '282061'">
             <span class="pi pi-question-circle" @click="toggleVpnHelp" style="align-self: flex-end;"></span>
             <h3 style="margin-right: 10px;">Vpn subnets</h3>
             <Popover ref="vpnHelp" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
@@ -577,7 +541,7 @@ onMounted(()  => {
         <h3 style="margin-bottom: 10px;" v-if="!organizationsNotLoaded">New network name</h3>
 
         <InputText v-model="newNetworkNameInput" placeholder="New network name" @input="newNameEntered=true"
-            class="bigger-input" v-if="!organizationsNotLoaded && templatesLoaded"/>
+            class="bigger-input" :disabled="!templatesLoaded" v-if="!organizationsNotLoaded"/>
 
         <Message severity="error" size="small" variant="simple" v-if="!newNameEntered">Please enter a new network name</Message>
 
@@ -586,7 +550,7 @@ onMounted(()  => {
         <h3 style="margin-bottom: 10px;" v-if="!organizationsNotLoaded">New network address</h3>
 
         <InputText v-model="newNetworkAddress" placeholder="New network address" @input="newAddressEntered=true"
-            class="bigger-input" v-if="!organizationsNotLoaded && templatesLoaded"/>
+            class="bigger-input" :disabled="!templatesLoaded" v-if="!organizationsNotLoaded"/>
 
         <Message severity="error" size="small" variant="simple" v-if="!newAddressEntered">Please enter a new network address</Message>
 
@@ -626,7 +590,6 @@ onMounted(()  => {
         flex-direction: column;
         align-items: center;
         width: 100%;
-        position: fixed;
         top: 100px;
     }
 </style>

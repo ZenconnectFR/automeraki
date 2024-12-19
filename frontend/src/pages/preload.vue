@@ -21,6 +21,7 @@ const checkSession = () => {
                 router.push('/home')
             })
             .catch((error) => {
+                console.log('session is invalid, error:', error)
                 // if the session is invalid, empty the session and redirect to the login page and set the query param depending on the error (expired or unauthorized)
                 sessionStore.clearSession()
                 if (error.response.status === 401) {

@@ -6,6 +6,7 @@ export const getPolicyObjects = async (organizationId: string) => {
         console.log("getPolicyObjects response", response.data);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("getPolicyObjects error", error);
+        return error
     }
 };

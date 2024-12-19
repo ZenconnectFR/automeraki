@@ -9,6 +9,7 @@ export const updateSiteToSiteVpn = async (networkId: string, payload: any) => {
         console.log("updateSiteToSiteVpn response", response.data);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("updateSiteToSiteVpn error", error);
+        return error
     }
 };

@@ -5,6 +5,7 @@ import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
+import { useProgressStore } from '@/stores/progress'
 import { storeToRefs } from 'pinia'
 
 import { useRoute, useRouter } from 'vue-router'
@@ -28,9 +29,11 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import Popover from 'primevue/popover'
 import TieredMenu from 'primevue/tieredmenu'
 import Card from 'primevue/card'
+import ConfirmPopup from 'primevue/confirmpopup'
 
 const editingRowsL3in = ref([] as any[])
 const editingRowsL3out = ref([] as any[])
@@ -478,6 +481,7 @@ const deleteRow = (ruleset: any, index: number) => {
 }
 
 const toast = useToast()
+const confirm = useConfirm()
 
 const router = useRouter()
 const route = useRoute()
@@ -486,6 +490,7 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 const nextStates = useNextStatesStore()
+const progress = useProgressStore()
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
@@ -840,6 +845,7 @@ const back = () => {
 }
 
 const nextPage = () => {
+    progress.save(devices.getDevicesList(), currentPageIndex.value + 1, nextStates.getStates())
     router.push(getRoutePath(configStore.nextPage()))
 }
 
@@ -867,6 +873,27 @@ const addL7Rule = () => {
     })
 }
 
+const confirm1 = (event: any) => {
+    confirm.require({
+        target: event.currentTarget,
+        message: 'Are you sure you want to skip this step?',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'No',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Yes',
+        },
+        accept: () => {
+            nextStates.setStateTrue(currentPageIndex.value)
+            nextPage()
+        },
+        reject: () => {}
+    })
+}
+
 onMounted(() => {
     retrieveVlans()
     retrievePolicyObjects()
@@ -878,9 +905,15 @@ onMounted(() => {
 </script>
 
 <template>
-    <div style="width: 75%; margin-top: 40px;">
+    <div style="width: 75%; margin-top: 40px;" class="col center">
         <Toast position="top-right" />
+
+        <ConfirmPopup></ConfirmPopup>
+
         <h1>Firewall Rules</h1>
+
+        <Button label="skip" @click="confirm1($event)" severity="secondary" style="margin-bottom: 20px;"/>
+
         <div v-if="!loadingConf">
 
             <!-- Card that holds the "comment" of the configuration-->

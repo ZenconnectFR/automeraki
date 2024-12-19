@@ -9,6 +9,7 @@ export const updateNetwork = async (networkId: string, payload: any) => {
         console.log("updateNetwork response", response.data);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("updateNetwork error", error);
+        return error;
     }
 };

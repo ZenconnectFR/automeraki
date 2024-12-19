@@ -6,6 +6,7 @@ export const getSplashPage = async(networkId: string) => {
         console.log('[GetSplashPage] response:', response.data);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error('[GetSplashPage] error:', error);
+        return error;
     }
 };

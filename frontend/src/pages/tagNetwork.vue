@@ -5,6 +5,7 @@ import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
+import { useProgressStore } from '@/stores/progress'
 import { storeToRefs } from 'pinia'
 
 import { updateNetwork } from '@/endpoints/networks/UpdateNetwork'
@@ -27,6 +28,7 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 const nextStates = useNextStatesStore()
+const progress = useProgressStore()
 
 const { newNetworkId } = storeToRefs(ids)
 const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
@@ -95,6 +97,7 @@ const saveTags = useBoolStates([savingChanges],[changesSaved],async () => {
 });
 
 const nextPage = () => {
+    progress.save(devices.getDevicesList(), currentPageIndex.value + 1, nextStates.getStates())
     router.push(getRoutePath(configStore.nextPage()))
 }
 

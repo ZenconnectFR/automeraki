@@ -5,6 +5,7 @@ import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
+import { useProgressStore } from '@/stores/progress'
 import { storeToRefs } from 'pinia'
 
 import { fixIpAssignments } from '../endpoints/actionBatches/FixIpAssignments'
@@ -35,6 +36,7 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 const nextStates = useNextStatesStore()
+const progress = useProgressStore()
 
 const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
@@ -181,6 +183,8 @@ const goBack = () => {
 }
 
 const nextPage = () => {
+    progress.save(devices.getDevicesList(), currentPageIndex.value + 1, nextStates.getStates())
+
     router.push(getRoutePath(configStore.nextPage()));
 }
 

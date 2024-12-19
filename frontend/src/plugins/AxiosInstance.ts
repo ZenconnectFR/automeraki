@@ -24,18 +24,26 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use((response) => {
     console.log('[AxiosInstance] Response:', response);
     if (response.status === 207) {
+        console.log('[AxiosInstance]: changing session token')
         // the token has been refreshed in the backend
-        const newSessionToken = response.headers["Authorization"].split(' ')[1];
-        const newIdToken = response.headers["Idtoken"];
-        const newRefreshToken = response.headers["Refreshtoken"];
+        let newSessionToken = response.headers["authorization"];
+        // console.log('authorization header: ', newSessionToken)
+        if (!newSessionToken || typeof newSessionToken !== 'string') {
+            console.error('[AxiosInstance] New session token is not a string:', newSessionToken);
+            return response;
+        } else {
+            newSessionToken = newSessionToken.replace('Bearer ', '');
+        }
+        const newIdToken = response.headers["idtoken"];
+        const newRefreshToken = response.headers["rsefreshtoken"];
 
         const sessionStore = useSessionStore();
+        sessionStore.clearSession()
         sessionStore.setSession(newSessionToken);
         sessionStore.setIdToken(newIdToken);
         sessionStore.setRefreshToken(newRefreshToken);
 
-        console.log('[AxiosInstance] New session token:', newSessionToken);
-        delete response.data.extra_new_token;
+        // console.log('[AxiosInstance] New session token:', newSessionToken);
         return response;
     }
     return response;
@@ -48,51 +56,6 @@ axiosInstance.interceptors.response.use((response) => {
         Router.push({ path: '/login', query: { forbidden: 'true' } });
     }
     if (error.response.status === 498) {
-
-        /*
-        const sessionStore = useSessionStore();
-        // use the refresh token to get a new session token
-        console.log('[AxiosInstance] Refreshing token');
-        const refreshToken = sessionStore.getRefreshToken();
-        if (refreshToken) {
-            const oktaDomain = 'zenconnect.okta.com';
-            console.log('[AxiosInstance] Refresh token:', refreshToken);
-
-            const data = {
-                grant_type: 'refresh_token',
-                refresh_token: refreshToken,
-                scope: 'openid offline_access',
-                client_id: '0oa17tl96kdAzHuA70x8',
-            };
-
-            try {
-                const resp = await Axios.post(`https://${oktaDomain}/oauth2/v1/token`, data,
-                    {
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        }
-                    }
-                )
-        
-                sessionStore.setSession(resp.data.access_token);
-                sessionStore.setIdToken(resp.data.id_token);
-                sessionStore.setRefreshToken(resp.data.refresh_token);
-
-                console.log('[AxiosInstance] New session token:', resp.data.access_token);
-
-                // retry the original request here
-                error.config.headers['Authorization'] = `Bearer ${resp.data.access_token}`;
-                return Axios.request(error.config);
-            } catch (error) {
-                console.error('[AxiosInstance] Error refreshing token:', error);
-                Router.push({ path: '/', query: { login: 'false' } })
-            }
-        } else {
-            sessionStore.clearSession();
-            Router.push({ path: '/login', query: { forbidden: 'true' } });
-        }
-        */
-       
         const sessionStore = useSessionStore();
         sessionStore.clearSession();
         Router.push({ path: '/login', query: { expired: 'true' } });

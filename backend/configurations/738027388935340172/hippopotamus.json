@@ -138,17 +138,17 @@
                     {
                         "ports": [
                             {
+                                "id": "1",
+                                "type": "trunk",
+                                "vlan": "301"
+                            },
+                            {
+                                "id": "2",
+                                "type": "trunk",
+                                "vlan": "301"
+                            },
+                            {
                                 "id": "3",
-                                "type": "trunk",
-                                "vlan": "301"
-                            },
-                            {
-                                "id": "4",
-                                "type": "trunk",
-                                "vlan": "301"
-                            },
-                            {
-                                "id": "5",
                                 "type": "trunk",
                                 "vlan": "301"
                             }
@@ -406,11 +406,7 @@
                     "useSpoke": true,
                     "hubs": [
                         {
-                            "hubId": "N_743656888469569555",
-                            "useDefaultRoute": false
-                        },
-                        {
-                            "hubId": "N_743656888469569556",
+                            "hubId": "N_738027388935362105",
                             "useDefaultRoute": false
                         }
                     ],
@@ -419,6 +415,11 @@
                             "localSubnet": "VLAN(301)",
                             "useVpn": true,
                             "translation": false
+                        },
+                        {
+                            "localSubnet": "VLAN(101)",
+                            "useVpn": false,
+                            "translation": true
                         }
                     ]
                 }

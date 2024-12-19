@@ -32,33 +32,22 @@ const toast = useToast();
 const ids = useIdsStore();
 const devices = useDevicesStore();
 
-const devicesList = ref([]);
+const devicesList = ref([] as { name: string, serial: string }[]);
 const address = ref('');
 
 const saveAddressHelpRef = ref()
 
-const toggleSaveAddressHelp = (event) => {
-    saveAddressHelpRef.value.toggle(event)
-}
+const { networkId } = storeToRefs(ids);
 
-const { orgId, networkId } = storeToRefs(ids);
-
-const organizations = ref([]);
-const orgsLoaded = ref(false);
-
-const selectedOrgOption = ref(null);
-const selectedNetwork = ref(null);
+const selectedNetwork = ref({ name: '', value: '' });
 
 const loaded = ref(false);
 
-const networks = ref([]);
-const networkOptions = ref([]);
-const loadingNetworks = ref(false);
-const networksLoaded = ref(false);
-const newNetworkSelected = ref(false);
+const networks = ref([] as { name: string, value: string }[]);
+const networkOptions = ref([] as Option[]);
 
 const devicesNames = ref([]);
-const newDevicesNames = ref([]);
+const newDevicesNames = ref([] as { name: string, serial: string }[]);
 const devicesNamesLoaded = ref(false);
 
 const regexToReplaceString = ref('');
@@ -210,14 +199,14 @@ onMounted(() => {
                 <hr />
                 <div v-if="devicesNamesLoaded" class="col">
                     <div class="row center">
-                        <div class="col center" style="margin-right: 10px; width: 250px;">
+                        <div class="col center" style="margin-right: 10px">
                             <h2>Devices names</h2>
                             <ul>
                                 <Card v-for="(device, index) in highlightMatch" :key="index" v-html="device" class="bigger-card"></Card>
                             </ul>
                         </div>
                         <i class="pi pi-arrow-right" style="margin-right: 10px;"></i>
-                        <div class="col center" style="width: 250px">
+                        <div class="col center">
                             <h2>New devices names</h2>
                             <ul>
                                 <Card v-for="(device, index) in highlightReplacement" :key="index" v-html="device" class="bigger-card"></Card>
@@ -234,7 +223,7 @@ onMounted(() => {
                     </div>
                     <div class="col center" style="margin-top: 40px; margin-bottom: 10px">
                         <div class="col" style="width: 230px;">
-                            <span class="pi pi-question-circle" @click="toggleSaveAddressHelp" style="align-self: flex-end; transform: translateY(20px); cursor: pointer;"></span>
+                            <span class="pi pi-question-circle" @click="saveAddressHelpRef?.toggle" style="align-self: flex-end; transform: translateY(20px); cursor: pointer;"></span>
                             <h2 style="align-self: center;">Change address</h2>
                         </div>
                         <InputText v-model="address" placeholder="Enter an address" style="margin-bottom: 20px; width: 350px;"/>

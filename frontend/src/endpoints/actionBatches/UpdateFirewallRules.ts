@@ -9,6 +9,7 @@ export const updateFirewallRules = async (networkId: string, payload: any) => {
         console.log("updateFirewallRules response", response.data);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("updateFirewallRules error", error);
+        return error
     }
 };

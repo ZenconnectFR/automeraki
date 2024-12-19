@@ -25,6 +25,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useConfigurationStore } from '@/stores/configuration';
+import { useProgressStore } from '@/stores/progress';
+import { useDevicesStore } from '@/stores/devices';
 import { useNextStatesStore } from '@/stores/nextStates';
 import { getRoutePath, getPageLabel } from '@/utils/PageRouter';
 
@@ -34,6 +36,8 @@ import Button from 'primevue/button';
 const configStore = useConfigurationStore();
 const nextStatesStore = useNextStatesStore();
 const router = useRouter();
+const progress = useProgressStore()
+const devices = useDevicesStore();
 
 const { configuration, currentPageIndex, currentPageConfig } = storeToRefs(configStore);
 const { nextStates } = storeToRefs(nextStatesStore);
@@ -70,6 +74,10 @@ const goToPage = (index: number) => {
     configStore.setCurrentPageConfig(availablePages.value[index].data);
     console.log('currentPageIndex', currentPageIndex.value);
     console.log('currentPageConfig', currentPageConfig.value);
+
+    // save progress 
+    progress.save(devices.getDevicesList(), index, nextStatesStore.getStates());
+
     router.push(getRoutePath(availablePages.value[index].type));
 
     console.log('nextStates', nextStates.value);

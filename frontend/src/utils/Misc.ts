@@ -35,21 +35,6 @@ export function createMac(mac: string="00:00:00:00:00:00"): string {
     return newMac;
 }
 
-// error parsing
-/*
-example error : updateNetworkApplianceFirewallInboundFirewallRules - 400 Bad Request,
-{'errors': 
-    [
-        'At least one of your firewall rules is invalid: "network[firewall_rules][1][src_cidr] Source address must be an IPv6 address or a subnet in CIDR form (e.g. \'2001:db8::/64\'), a VLAN address using the VLAN ID (e.g. VLAN(10).*, VLAN(10).8) or \'any\'".'
-    ]
-}
-
-should turn into : 
-At least one of your firewall rules is invalid: "network[firewall_rules][1][src_cidr] Source address must be an IPv6 address or a subnet in CIDR form (e.g. '2001:db8::/64'), a VLAN address using the VLAN ID (e.g. VLAN(10).*, VLAN(10).8) or 'any'".
-
-Warning: the example contains the entire error message, but the function should only return the error message, not the entire error object.
-*/
-
 export function parseError(error: any): string {
     let res = ''
     // extract the list of errors from the error object (match using regex
@@ -69,6 +54,17 @@ export function parseJsonError(error: any): string {
             if (i < error.errors.length - 1) {
                 res += '\n'
             }
+        }
+    }
+    return res;
+}
+
+export function parseListError(errors: any[]): string {
+    let res = ''
+    for (let i = 0; i < errors.length; i++) {
+        res += errors[i]
+        if (i < errors.length - 1) {
+            res += '\n'
         }
     }
     return res;

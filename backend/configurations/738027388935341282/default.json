@@ -3,10 +3,14 @@
 
     "orgName": "Popeyes (documentation field)",
     
-    "name": "default",
-    "networkToClone": "738027388935356697",
+    "name": "Popeyes",
+    "networkToClone": "L_3846637031727825179",
     "preFilledName": "PY000000 - ",
     "actions": [
+        {
+            "type": "claim",
+            "data": {}
+        },
         {
             "type": "naming",
             "data": {
@@ -341,17 +345,17 @@
                         "applianceName": "associationId",
                         "ports": [
                             {
-                                "id": "1",
-                                "vlan": "401",
-                                "type": "trunk"
-                            },
-                            {
-                                "id": "2",
-                                "vlan": "401",
-                                "type": "trunk"
-                            },
-                            {
                                 "id": "3",
+                                "vlan": "401",
+                                "type": "trunk"
+                            },
+                            {
+                                "id": "4",
+                                "vlan": "401",
+                                "type": "trunk"
+                            },
+                            {
+                                "id": "5",
                                 "vlan": "401",
                                 "type": "trunk"
                             }
@@ -452,6 +456,67 @@
                         }
                     },
                     {
+                        "switchName": "S1",
+                        "nbPorts": 24,
+                        "config": {
+                            "default": {
+                                "vlan": "301",
+                                "name": "Encaissement Oracle/Acrelec",
+                                "type": "access"
+                            },
+                            "ports": [
+                                {
+                                    "id": "1",
+                                    "vlan": "401",
+                                    "name": "Uplink",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "13",
+                                    "vlan": "401",
+                                    "name": "Corp",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "16",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "18",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "20",
+                                    "vlan": "401",
+                                    "name": "AP",
+                                    "type": "trunk"
+                                },
+                                {
+                                    "id": "21",
+                                    "vlan": "501",
+                                    "name": "IoT",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "22",
+                                    "vlan": "501",
+                                    "name": "IoT",
+                                    "type": "access"
+                                },
+                                {
+                                    "id": "24",
+                                    "vlan": "501",
+                                    "name": "IoT",
+                                    "type": "access"
+                                }
+                            ]
+                        }
+                    },
+                    {
                         "switchName": "S2",
                         "nbPorts": 24,
                         "config": {
@@ -526,39 +591,11 @@
             }
         },
         {
-            "type": "wans",
-            "data": {
-                "wan1": [
-                    {
-                        "name": "default",
-                        "auto": true,
-                        "associatedTags" : [ "" ],
-                        "wanIp" : "",
-                        "mask" : "",
-                        "gateway" : "",
-                        "primaryDns" : "",
-                        "secondaryDns" : ""
-                    }
-                ],
-                "wan2": [
-                    {
-                        "name": "default",
-                        "auto": true,
-                        "associatedTags" : [ "" ],
-                        "wanIp" : "",
-                        "mask" : "",
-                        "gateway" : "",
-                        "primaryDns" : "",
-                        "secondaryDns" : ""
-                    }
-                ]
-            }
-        },
-        {
             "type": "tags",
             "data": {
                 "availableTags": [
                     "WAN1-DELIVEROO",
+                    "WAN1-FTTH",
                     "oracle"
                 ]
             }

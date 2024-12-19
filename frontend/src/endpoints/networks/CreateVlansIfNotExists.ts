@@ -7,7 +7,7 @@ import { axiosInstance as Axios } from "@/plugins/AxiosInstance"
  * @returns {Array} - The list of created vlans
  */
 
-export async function createVlansIfNotExists(networkId: string, vlans: Array<any>): Promise<string[]> {
+export async function createVlansIfNotExists(networkId: string, vlans: Array<any>): Promise<string[] | string> {
     try {
         let createdVlans = []
 
@@ -41,6 +41,6 @@ export async function createVlansIfNotExists(networkId: string, vlans: Array<any
     } catch (error) {
         console.error('[VLAN] Error creating vlans: ', error)
         console.error(error)
-        return null
+        return 'Error creating vlans'
     }
 }

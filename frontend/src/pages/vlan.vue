@@ -4,12 +4,14 @@ import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
+import { useProgressStore } from '@/stores/progress'
 import { storeToRefs } from 'pinia'
 
 import { updateNetworkVlan } from '@/endpoints/networks/UpdateNetworkVlan'
 import { createVlansIfNotExists } from '@/endpoints/networks/CreateVlansIfNotExists'
 import { enableVlans } from '@/endpoints/networks/EnableVlans'
 import { configurePerPortVlan } from '@/endpoints/actionBatches/ConfigurePerPortVlan'
+import { getMxPorts } from '@/endpoints/devices/GetMxPorts'
 
 import { getRoutePath } from '@/utils/PageRouter'
 
@@ -30,7 +32,6 @@ import Popover from 'primevue/popover';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Tag from 'primevue/tag';
-import { Portal } from 'primevue'
 
 const toast = useToast();
 
@@ -41,6 +42,7 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 const nextStates = useNextStatesStore()
+const progress = useProgressStore()
 
 const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
@@ -460,12 +462,11 @@ const confirm = useBoolStates([savingChanges],[],async () => {
 
     let createdVlans = await createVlansIfNotExists(newNetworkId.value, vlanAutoConfiguredFormatted) as any
 
-    /* if createdVlans failed, toast the error and return
-    if (createdVlans.data.error) {
-        toast.add({severity:'error', summary:'Error enabling vlans', detail: parseJsonError(createdVlans.data.error.errors)});
+    //if createdVlans failed, toast the error and return
+    if (typeof createdVlans === 'string') {
+        toast.add({severity:'error', summary:'Error enabling vlans', detail: `${createdVlans}`});
         return
     }
-    */
 
     // filter payload[0] part out of vlanAutoConfigured when vlan id is in createdVlans
     for (const vlan of vlanAutoConfiguredFormatted) {
@@ -501,6 +502,23 @@ const confirm = useBoolStates([savingChanges],[],async () => {
         }
     }
 
+    // before saving perPortVlan settings, check if the ports of the current mx correspond to the ports in the configuration
+    // if not, switch the starting port between 1 and 3
+    const mxPorts = await getMxPorts(newNetworkId.value)
+
+    // if mxPorts smallest id is 1: if perPortSmallest isn't 1, increase all perPort ids by 2
+    // if mxPorts smallest id is 3: if perPortSmallest isn't 3, decrease all perPort ids by 2
+    let perPortSmallest = Number(perPortVlan.value[0].ports[0].id)
+    let mxPortsSmallest = Number(mxPorts[0].number)
+
+    if (mxPortsSmallest === 1 && perPortSmallest !== 1) {
+        console.log('[VLAN]: MX ports smallest is 1, perPort smallest is not 1, decreasing perPort ids by 2')
+        perPortVlan.value[0].ports.forEach((port: any) => port.id = `${Number(port.id) - 2}`)
+    } else if (mxPortsSmallest === 3 && perPortSmallest !== 3) {
+        console.log('[VLAN]: MX ports smallest is 3, perPort smallest is not 3, increasing perPort ids by 2')
+        perPortVlan.value[0].ports.forEach((port: any) => port.id = `${Number(port.id) + 2}`)
+    }
+
     // save perPortVlan settings with endpoint
     console.log('[VLAN] Saving perPortVlan settings : ', perPortVlan.value)
     const response =  await configurePerPortVlan(perPortVlan.value, orgId.value, newNetworkId.value)
@@ -509,7 +527,7 @@ const confirm = useBoolStates([savingChanges],[],async () => {
 
     // handle error in response
     if (response.response) { // this means there was an axios error
-        toast.add({severity:'error', summary:'Error saving per port vlan settings', detail: `${parseJsonError(response.response.data.error)}\n\n If the error above says "Port x not found, switch the starting port between 1 and 3 in the "More" tab. This is due to MXs having different port numbering.`});
+        toast.add({severity:'error', summary:'Error saving per port vlan settings', detail: `${parseJsonError(response.response.data.error)}`});
         return
     }
 
@@ -521,8 +539,9 @@ const confirm = useBoolStates([savingChanges],[],async () => {
 
 
 const validate = () => {
+    progress.save(devices.getDevicesList(), currentPageIndex.value + 1, nextStates.getStates())
+
     let path =  getRoutePath(configStore.nextPage());
-    console.log('[VLAN] Next page: ', path)
     router.push(path)
 }
 

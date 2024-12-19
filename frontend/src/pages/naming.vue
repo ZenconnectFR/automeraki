@@ -11,6 +11,7 @@ import { getRoutePath } from '@/utils/PageRouter'
 import { useDevicesStore } from '@/stores/devices';
 import { useConfigurationStore } from '@/stores/configuration';
 import { useNextStatesStore } from '@/stores/nextStates';
+import { useProgressStore } from '@/stores/progress'
 
 import { useBoolStates } from '@/utils/Decorators';
 
@@ -37,6 +38,7 @@ const devices = useDevicesStore()
 const { network, devicesList} = storeToRefs(devices)
 const configStore = useConfigurationStore()
 const nextStatesStore = useNextStatesStore()
+const progress = useProgressStore()
 
 const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value;
@@ -250,15 +252,6 @@ const renameDevices = () => {
             return;
     }
 
-    /*
-    if (devicesList.value.some((device: { associationId: string; }) => device.associationId)) {
-        // if there are already devices with an associationId, then we are configuring an existing network
-        // we need to add the devices to the corresponding table and mark the association as used
-        // even on existing networks some devices may not have an associationId, so we need to calculate it if it's missing
-        
-    }
-        */
-
 
     for (const device of devicesList.value) {
         // assign a type to the device
@@ -339,7 +332,11 @@ const renameDevices = () => {
             association = routersTable.value.find((a) => a.type === 'router' && !a.used);
             routers.value.push(device);
         } else if (device.type === 'switch') {
-            association = switchesTable.value.find((a) => a.type === 'switch' && !a.used);
+            // special case for switches, we need to find the first unused association with the same number of switchPorts, if not found, we take the first unused association
+            association = switchesTable.value.find((a) => a.type === 'switch' && !a.used && a.switchPorts === device.switchPorts);
+            if (!association) {
+                association = switchesTable.value.find((a) => a.type === 'switch' && !a.used);
+            }
             switches.value.push(device);
         } else if (device.type === 'ap') {
             association = apsTable.value.find((a) => a.type === 'ap' && !a.used);
@@ -537,6 +534,9 @@ const validate = async () => {
     devices.setDevicesList(devicesList.value);
 
     console.log('[NAMING] current page config: ', currentPageConfig.value);
+
+    // save progress
+    progress.save(devices.getDevicesList(), currentPageIndex.value + 1, nextStatesStore.getStates());
 
     // go to the next page
     router.push(getRoutePath(configStore.nextPage()));

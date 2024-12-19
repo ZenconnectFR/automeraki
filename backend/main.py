@@ -40,6 +40,7 @@ def myResponse(status_code: int, message: str):
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
+            "Access-Control-Expose-Headers": "Authorization, Idtoken, Refreshtoken"
         },
     )
 
@@ -62,6 +63,7 @@ class authMiddleware(BaseHTTPMiddleware):
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Headers": "Authorization, Content-Type, ngrok-skip-browser-warning, Refreshtoken",
                     "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT",
+                    "Access-Control-Expose-Headers": "Authorization, Idtoken, Refreshtoken"
                 },
             )
 
@@ -125,7 +127,7 @@ class authMiddleware(BaseHTTPMiddleware):
                         response = await call_next(request)
 
                         # add the new data to the response headers (access token, id token, refresh token)
-                        response.headers["Authorization"] = "Bearer " + new_token
+                        response.headers["Authorization"] = f"Bearer {new_token}"
                         response.headers["Idtoken"] = new_data["id_token"]
                         response.headers["Refreshtoken"] = new_data["refresh_token"]
 
@@ -177,6 +179,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Add the authMiddleware
@@ -463,6 +466,18 @@ def get_applications(network_id: str):
     applications = dashboard.appliance.getNetworkApplianceFirewallL7FirewallRulesApplicationCategories(network_id)
 
     return applications
+
+
+# ---------
+
+# get an appliance's ports settings
+@app.get("/devices/{networkId}/mxports")
+def get_mx_ports(networkId: str):
+    ports = dashboard.appliance.getNetworkAppliancePorts(networkId)
+
+    print('\nPorts:\n' + str(ports) + '\n')
+
+    return ports
 
 
 

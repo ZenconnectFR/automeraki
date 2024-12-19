@@ -5,6 +5,7 @@ export const getVlanSettings = async (networkId: string) => {
         const response = await Axios.get(`/networks/${networkId}/vlanSettings`);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("getVlanSettings error", error);
+        return error
     }
 };

@@ -6,6 +6,7 @@ export const getFirewallRules = async (networkId: string) => {
         console.log("getFirewallRules response", response.data);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("getFirewallRules error", error);
+        return error
     }
 };

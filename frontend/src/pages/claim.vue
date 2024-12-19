@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { claimDevices } from '@/endpoints/devices/ClaimDevices'
-import { removeDeviceFromNetwork } from '@/endpoints/networks/RemoveDeviceFromNetwork'
 import { getNetwork } from '@/endpoints/networks/GetNetwork'
 import { getInventoryDevices } from '@/endpoints/organizations/GetInventoryDevices'
 import { parseDevices } from '@/utils/Misc'
@@ -10,6 +9,7 @@ import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
 import { storeToRefs } from 'pinia'
+import { useProgressStore } from '@/stores/progress'
 import { changeDeviceAddress } from '@/endpoints/devices/ChangeDeviceAddress'
 
 import { useRouter, useRoute } from 'vue-router'
@@ -33,6 +33,7 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 const nextStates = useNextStatesStore()
+const progress = useProgressStore()
 
 
 // info from the stores
@@ -44,22 +45,16 @@ const newNetworkDevices = ref('') // Input field for new network devices serials
 const confirmMoveNetwork = ref(false) // Confirm the move network warning
 const showMoveNetwork = ref(false) // Show the move network warning
 
-const inventoryDevices = ref([]) // devices in the organization inventory
+const inventoryDevices = ref([] as any[]) // devices in the organization inventory
 const inventoryFetched = ref(false) // flag to know if the inventory has been fetched
 const inventoryUpdated = ref(false) // flag to know if the inventory has been updated
-const parsedDevices = ref([]) // devices parsed from the input field
+const parsedDevices = ref([] as any[]) // devices parsed from the input field
 
-const alreadyInNetwork = ref([]) // devices already in a network (full devices info)
-const alreadyInNetworkWithInfo = ref([]) // devices already in a network (with network info and abridged device info)
-const toClaim = ref([]) // devices to claim (string serials)
+const alreadyInNetwork = ref([] as any[]) // devices already in a network (full devices info)
+const alreadyInNetworkWithInfo = ref([] as any[]) // devices already in a network (with network info and abridged device info)
+const toClaim = ref([] as any[]) // devices to claim (string serials)
 
-const devicesAdded = ref(false)
-const noDevicesToAdd = ref(false)
-
-const fullFinalDevices = ref([]) // full devices info after adding them to the network
-
-const usedByAnotherOrg = ref(false)
-const alreadyInCurrentNetwork = ref(false)
+const fullFinalDevices = ref([] as any[]) // full devices info after adding them to the network
 
 const claiming = ref(false)
 
@@ -219,61 +214,13 @@ const addDevices = async () => {
     nextStates.setStateTrue(configStore.currentPageIndex)
 }
 
-/**
- * Handle the move network warning: remove the devices from their networks and add them to the new network
- */
-const moveDevices = async () => {
-    // remove the devices already in network from their networks
-    for (const device of alreadyInNetwork.value) {
-        console.log('[CLAIM] Removing device from network: ', device)
-        await removeDeviceFromNetwork(device.networkId, device.serial)
-    }
-
-    // add the devices to the toClaim array
-    for (const device of alreadyInNetwork.value) {
-        toClaim.value.push(device.serial)
-    }
-
-    // set the confirmMoveNetwork to true
-    confirmMoveNetwork.value = true
-
-    inventoryUpdated.value = true
-
-    // add the devices to the new network
-    await addDevices()
-
-    // reset the alreadyInNetworkWithInfo array
-    alreadyInNetworkWithInfo.value = []
-
-    // reset the alreadyInNetwork array
-    alreadyInNetwork.value = []
-
-    // close the move network warning
-    showMoveNetwork.value = false
-}
-
-/**
- * Remove the devices that are already in a network from the toClaim array and the input field
- * Used when the user continues without the devices in the move network warning
- */
-const removeAlreadyInNetwork = () => {
-    // Empty the toClaim array
-    toClaim.value = []
-
-    // remove the devices from the input field by regex matching
-    for (const device of alreadyInNetwork.value) {
-        const regex = new RegExp(device.serial, 'g')
-        newNetworkDevices.value = newNetworkDevices.value.replace(regex, '');
-    }
-
-    // remove empty lines
-    newNetworkDevices.value = newNetworkDevices.value.replace(/^\s*[\r\n]/gm, '');
-}
-
 const validate = async() => {
     // 
     configStore.setCurrentPageIndex(1)
     configStore.setCurrentPageConfig(configuration.value.actions[1].data)
+
+    progress.save(devices.getDevicesList(), 1, nextStates.getStates()) // next page is 1 since claim is always the first step
+
     router.push(getRoutePath(configuration.value.actions[1].type))
 }
 

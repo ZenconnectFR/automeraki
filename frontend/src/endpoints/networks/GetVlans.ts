@@ -5,6 +5,7 @@ export const getVlans = async (networkId : string) => {
         const response = await Axios.get(`/networks/${networkId}/vlans`)
         return response.data
     } catch (error) {
-        throw new Error(error)
+        console.error('getVlans error', error)
+        return error
     }
 }

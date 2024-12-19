@@ -5,6 +5,7 @@ export const getVpnStatuses = async (orgId: string) => {
         const response = await Axios.get(`/organizations/${orgId}/vpnStatuses`);
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("getVpnStatuses error", error);
+        return error
     }
 };

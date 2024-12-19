@@ -18,7 +18,6 @@ import blinkDevices from '@/pages/blinkDevices.vue'
 import Callback from '@/pages/callback.vue';
 import Login from '@/pages/login.vue';
 import Preload from '@/pages/preload.vue';
-import { red } from 'vuetify/util/colors';
 
 const routes = [
     { path: '/home', component: Home},

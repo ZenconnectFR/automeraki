@@ -118,3 +118,14 @@ body {
     background-color: #fff;
     size: fit-content;
 }
+
+.skip-button {
+    position: fixed;
+    right: 0;
+    margin-top: 0px;
+    z-index: 1002;
+    margin-right: 0;
+    align-self: flex-end;
+    height: 40px;
+    background-color: #f9f9f9;
+}

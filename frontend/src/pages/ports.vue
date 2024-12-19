@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, Ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
+import { useProgressStore } from '@/stores/progress'
 import { storeToRefs } from 'pinia'
 
 import { getPorts } from '@/endpoints/devices/GetPorts'
@@ -14,6 +15,7 @@ import { getVlans } from '@/endpoints/networks/GetVlans'
 
 import { useBoolStates } from '@/utils/Decorators'
 import { getRoutePath } from '@/utils/PageRouter'
+import { parseListError } from '@/utils/Misc'
 
 import { useRouter, useRoute } from 'vue-router'
 
@@ -35,6 +37,7 @@ const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 const nextStates = useNextStatesStore()
+const progress = useProgressStore()
 
 const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
@@ -69,7 +72,7 @@ interface Option {
     value: any;
 }
 
-const onRowEditSave = (event) => {
+const onRowEditSave = (event: any) => {
     console.log('Row edit save')
     const { index, newData } = event
     stpPayload.value[index] = newData
@@ -245,9 +248,15 @@ const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
     // portsAutoConfigured.value = portsAutoConfigured.value.concat(portsAutoConfigured.value).concat(portsAutoConfigured.value)
 
     // send the portsAutoConfigured to the Endpoint that creates action batches
-    let response = await configurePortsBatch(portsAutoConfigured.value, orgId.value)
+    let response = await configurePortsBatch(portsAutoConfigured.value, orgId.value) as any
 
     console.log('Action batch response : ', response)
+
+    // if the response is not a success, show an error toast
+    if (response.status.failed) {
+        toast.add({ severity: 'error', summary: 'Error', detail: `Error while saving configuration on Meraki:\n${parseListError(response.status.errors)}`})
+        return
+    }
 
     // also change switch mtu size
     const mtnRes = await updateMTUSize(newNetworkId.value, config.mtuSize)
@@ -264,8 +273,14 @@ const confirm = useBoolStates([savingChanges],[changesSaved],async () => {
     */
 
     console.log('Setting STP : ', stpPayload.value)
-    const stpRes = await updateSTPSettings(newNetworkId.value, stpPayload.value)
-    console.log('STP settings updated : ', stpRes)
+    try {
+        const stpRes = await updateSTPSettings(newNetworkId.value, stpPayload.value)
+        console.log('STP settings updated : ', stpRes)
+    } catch (error) {
+        console.error('Error while updating STP settings : ', error)
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error while updating STP settings on Meraki'})
+        return
+    }
 
     toast.add({ severity: 'success', summary: 'Success', detail: 'Configuration saved on Meraki', life: 5000 })
 
@@ -294,6 +309,7 @@ const back = () => {
 }
 
 const nextPage = () => {
+    progress.save(devices.getDevicesList(), currentPageIndex.value + 1, nextStates.getStates())
     router.push(getRoutePath(configStore.nextPage()))
 }
 
@@ -368,11 +384,6 @@ onMounted(() => {
                 v-model:editingRows="editingRows" dataKey="stpPriority"
                 :pt="{
                         table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                            })
-                        }
                     }"
                 >
                 <Column field="stpPriority" header="STP Priority">

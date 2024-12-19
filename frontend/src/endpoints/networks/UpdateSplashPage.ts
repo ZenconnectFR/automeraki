@@ -8,6 +8,7 @@ export const updateSplashPage = async(networkId: string, splashPageSettings: any
         });
         return response.data;
     } catch (error) {
-        throw new Error(error);
+        console.error("updateSplashPage error", error);
+        return error
     }
 };

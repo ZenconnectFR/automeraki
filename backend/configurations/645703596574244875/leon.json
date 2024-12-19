@@ -1,11 +1,11 @@
 {
     "$schema": "../templateSchema.json",
 
-    "name": "Hippopotamus",
+    "name": "léon",
     "description": "Hippopotamus configuration",
 
-    "networkToClone": "L_3818489534056759908",
-    "preFilledName": "XXX - Hippopotamus ",
+    "networkToClone": "L_3818489534056760710",
+    "preFilledName": "AXXX - Leon de Bruxelles -",
     "actions": [
         {
             "type": "claim",
@@ -116,19 +116,13 @@
             }
         },
         {
-            "type": "firewall",
-            "data": {
-                "comment": "In L3 Outbound Rules: remove cidrs in the 3 first rules that start with 10.37.xx.xx/xx{n}We will add the right rules after modifying the CORP Vlan"
-            }
-        },
-        {
             "type": "vlan",
             "data": {
                 "vlans": [
                     {
                         "id": 301,
-                        "applianceIp": "10.37.48.1",
-                        "subnet": "10.37.48.0/20",
+                        "applianceIp": "192.168.114.254",
+                        "subnet": "192.168.114.0/24",
                         "name": "CORP",
                         "fixedAssignments": [],
                         "reservedIpRanges": []
@@ -156,12 +150,6 @@
                         "applianceName": "R1"
                     }
                 ]
-            }
-        },
-        {
-            "type": "firewall",
-            "data": {
-                "comment": "In L3 Outbound Rules: add the right rules for the CORP Vlan{n}The first two should be 10.xx.49.1/32 in destination.{n}The third should be 10.xx.50.1/32 and 10.xx.50.2/32 in source."
             }
         },
         {
@@ -451,8 +439,8 @@
             "data": {
                 "splashPages": [
                     {
-                        "number": 4,
-                        "name": "HIPPOSPOT",
+                        "number": 0,
+                        "name": "LDB_SITE",
                         "url": "https://sphere.nomosphere.fr/portal/meraki/5"
                     },
                     {
@@ -462,7 +450,7 @@
                     }
                 ],
                 "useHostname": true,
-                "mxHostname": "hippo-{site}"
+                "mxHostname": "leon-{site}"
             }
         },
         {

@@ -5,6 +5,7 @@ export async function getApplications(networkId: string): Promise<any> {
         const response = await Axios.get(`/networks/${networkId}/applications`);
         return response.data;
     } catch (error) {
-        throw new Error(error.response.data.message);
+        console.error("getApplications error", error);
+        return error
     }
 }

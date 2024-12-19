@@ -9,5 +9,6 @@ export async function updateMxSettings(networkId: string, settings: any) {
         return response.data;
     } catch (error) {
         console.error("[UPDATE MX SETTINGS] Error: ", error);
+        return error;
     }
 }

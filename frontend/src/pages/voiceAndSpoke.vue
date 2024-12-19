@@ -5,6 +5,7 @@ import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
 import { useNextStatesStore } from '@/stores/nextStates'
+import { useProgressStore } from '@/stores/progress'
 
 import { storeToRefs } from 'pinia'
 
@@ -26,12 +27,14 @@ import Button from 'primevue/button';
 import Drawer from 'primevue/drawer';
 import Divider from 'primevue/divider';
 import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Popover from 'primevue/popover';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import Checkbox from 'primevue/checkbox';
+import ConfirmPopup from 'primevue/confirmpopup'
 
 const router = useRouter()
 const route = useRoute()
@@ -39,11 +42,13 @@ const route = useRoute()
 const allLoaded = ref(false)
 
 const toast = useToast()
+const confirm = useConfirm()
 
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
 const nextStatesStore = useNextStatesStore()
+const progress = useProgressStore()
 
 const { currentPageConfig, currentPageIndex } = storeToRefs(configStore)
 let config = currentPageConfig.value
@@ -70,13 +75,13 @@ const onRowEditSave = (event: any) => {
 
 const mustEditHelpRef = ref()
 
-const toggleMustEditHelp = (event) => {
+const toggleMustEditHelp = (event: any) => {
     mustEditHelpRef.value.toggle(event)
 }
 
 const translationHelpRef = ref()
 
-const toggleTranslationHelp = (event) => {
+const toggleTranslationHelp = (event: any) => {
     translationHelpRef.value.toggle(event)
 }
 
@@ -131,7 +136,7 @@ const vpnSiteToSite = ref({} as { [key: string]: any })
 
 const vpnStatusesError = ref('')
 
-let vlans = []
+let vlans = [] as any[]
 
 const loading = ref(false)
 const loaded = ref(false)
@@ -301,7 +306,7 @@ const setup = useBoolStates([loading], [loaded, allLoaded], async () => {
     }
 
     // order by vlan id (string, parse to int)
-    vpnSiteToSite.value.subnets.sort((a, b) => {
+    vpnSiteToSite.value.subnets.sort((a: any, b: any) => {
         if (a.vlanId && b.vlanId) {
             return parseInt(a.vlanId) - parseInt(b.vlanId)
         } else {
@@ -386,7 +391,12 @@ const saveVpnConfig = useBoolStates([loading], [loaded], async () => {
 
     console.log('Site to Site VPN payload: ', siteToSitePayload)
 
-    await updateSiteToSiteVpn(newNetworkId.value, siteToSitePayload)
+    const response = await updateSiteToSiteVpn(newNetworkId.value, siteToSitePayload)
+
+    if (response.error) {
+        toast.add({severity: 'error', summary: 'Error saving VPN configuration!', detail: response.error})
+        return
+    }
 
     thisState = true
     nextStatesStore.setStateTrue(currentPageIndex.value)
@@ -418,6 +428,7 @@ const goBack = () => {
 }
 
 const nextPage = () => {
+    progress.save(devices.getDevicesList(), currentPageIndex.value + 1, nextStatesStore.getStates())
     router.push(getRoutePath(configStore.nextPage()))
 };
 
@@ -426,6 +437,27 @@ const backSetup = () => {
     configStore.setConfiguration(null);
     router.push('/setup');
 };
+
+const confirm1 = (event: any) => {
+    confirm.require({
+        target: event.currentTarget,
+        message: 'Are you sure you want to skip this step?',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'No',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Yes',
+        },
+        accept: () => {
+            nextStatesStore.setStateTrue(currentPageIndex.value)
+            nextPage()
+        },
+        reject: () => {}
+    })
+}
 
 onMounted(() => {
     console.log('config: ', config)
@@ -441,9 +473,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <div style="margin-top: 40px;">
+    <div style="margin-top: 40px;" class="row center">
         <h1>VPN Configuration</h1>
     </div>
+
+    <ConfirmPopup></ConfirmPopup>
+
+    <Button @click="confirm1" severity="secondary" v-if="!orgWide">Skip</Button>
 
     <Toast position="top-right" />
 
@@ -505,30 +541,10 @@ onMounted(() => {
                     <p>{{ hub.name }}</p>
                 </div>
                 <h3 style="margin-top: 15px;">Subnets</h3>
-                <!--div v-for="subnet in vpnSiteToSite.subnets" :key="subnet">
-                    <p style="margin-bottom: 10px;">{{ subnet.vlanName }}</p>
-                    <label for="modify">Modify</label>
-                    <input id="modify" type="checkbox" v-model="subnet.modify" @click="subnet.localSubnet = subnet.modify?subnet.localSubnet:subnet.originalLocalSubnet"/>
-                    <input v-if="subnet.modify" type="text" v-model="subnet.localSubnet"/>
-                    <span v-else>{{ subnet.localSubnet }}</span>
-                    use vpn: <input type="checkbox" v-model="subnet.useVpn" />
-                    
-                    <p v-if="subnet.translation" style="max-width: 400px;">This VLAN subnet should use translation, pick a free subnet for it at the top and enter it in Meraki</p>
-
-                    <p v-if="subnet.modify" class="red">
-                        Warning: Changing the subnet will change the vlan subnet and appliance IP ! <br>
-                        Make sure that there are no conflicts with fixed Ips, DHCP ranges, firewall rules, etc.
-                    </p>
-                </div-->
                 <DataTable :value="vpnSiteToSite.subnets" :rows="10" :rowsPerPageOptions="[5, 10, 20]" editMode="row"
                     @row-edit-save="(event) => onRowEditSave(event)" v-model:editingRows="editingRows" dataKey="vlanId"
                     :pt="{
-                        table: { style: 'min-width: 50rem' },
-                        column: {
-                            bodycell: ({ state }) => ({
-                                style:  state['d_editing']&&'padding-top: 0.75rem; padding-bottom: 0.75rem'
-                            })
-                        }
+                        table: { style: 'min-width: 50rem' }
                     }"
                 >
                     <Column field="vlanName" header="VLAN Name"></Column>
@@ -552,6 +568,10 @@ onMounted(() => {
                             <Popover ref="translationHelpRef" style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);" appendTo="body">
                                 <p>This vlan uses translation !<br>You must enable it and enter the next free subnet directly in Meraki Dashboard<br>as the API does not support VNAT translations.</p>
                             </Popover>
+                        </template>
+                        <template #editor="{ data, field }">
+                            <Checkbox v-model="data[field]" v-if="!data.translation" binary/>
+                            <span v-else>{{ data[field] ? 'Yes' : 'No' }}</span>
                         </template>
                     </Column>
                     <Column :row-editor="true" headerStyle="width: 7rem"></Column>

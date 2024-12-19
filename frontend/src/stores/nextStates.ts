@@ -6,6 +6,7 @@ export const useNextStatesStore = defineStore('nextStates', () => {
     const nextStates = useStorage('nextStates', [] as boolean[]);
 
     const getState = (index: number) => nextStates.value[index];
+    const getStates = () => nextStates.value;
 
     const setNextStates = (states: boolean[]) => nextStates.value = states;
     const setAllTrue = () => nextStates.value = nextStates.value.map(() => true);
@@ -15,6 +16,7 @@ export const useNextStatesStore = defineStore('nextStates', () => {
     return {
         nextStates,
         getState,
+        getStates,
         setNextStates,
         setAllTrue,
         setStateTrue,

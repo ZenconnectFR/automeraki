@@ -9,6 +9,7 @@ export const updateTags = async (serial: string, tags: string[]) => {
         console.log('updateTags response', response.data)
         return response.data
     } catch (error) {
-        throw new Error(error)
+        console.error('[UPDATE TAGS] Error: ', error)
+        return null
     }
 }

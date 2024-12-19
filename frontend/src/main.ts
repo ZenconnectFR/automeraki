@@ -13,6 +13,8 @@ import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';  
 import { definePreset } from '@primevue/themes';
 import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice';
+
 
 import Router from '@/plugins/Router'
 
@@ -49,6 +51,7 @@ app.use(pinia)
 app.use(Router)
 app.use(vuetify)
 app.use(ToastService)
+app.use(ConfirmationService);
 app.use(PrimeVue, {
     theme: {
         preset: MyPreset,

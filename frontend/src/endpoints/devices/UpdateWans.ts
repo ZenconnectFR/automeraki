@@ -33,5 +33,6 @@ export async function updateWans(serial: string, payload : any) : Promise<any> {
         return response.data
     } catch (error) {
         console.error('[UPDATE WANS] Error: ', error)
+        return null
     }
 }

@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import { useIdsStore } from '@/stores/ids'
 import { useDevicesStore } from '@/stores/devices'
 import { useConfigurationStore } from '@/stores/configuration'
+import { useProgressStore } from '@/stores/progress'
 import { storeToRefs } from 'pinia'
 
 import { useRoute, useRouter } from 'vue-router'
@@ -13,15 +14,19 @@ import { getRoutePath } from '@/utils/PageRouter'
 import { useBoolStates } from '@/utils/Decorators'
 
 import Button from 'primevue/button'
-
 import Card from 'primevue/card'
+import { useConfirm } from 'primevue/useconfirm'
+import ConfirmPopup from 'primevue/confirmpopup'
 
 const router = useRouter()
 const route = useRoute()
 
+const confirm = useConfirm()
+
 const ids = useIdsStore()
 const devices = useDevicesStore()
 const configStore = useConfigurationStore()
+const progress = useProgressStore()
 
 const { newNetworkId, orgId } = storeToRefs(ids)
 const { currentPageConfig } = storeToRefs(configStore)
@@ -33,8 +38,25 @@ const populateComments = async () => {
     comments.value = config.comments
 }
 
-const redirectToRickroll = () => {
-    window.location.href = 'https://youtu.be/dQw4w9WgXcQ'
+const confirm1 = (event: any) => {
+    confirm.require({
+        target: event.currentTarget,
+        message: `Are you sure you want to complete the configuration ? You will not be able to make any changes after this.`,
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'No',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Yes',
+        },
+        accept: () => {
+            progress.deleteSave()
+            router.push('/home')
+        },
+        reject: () => {}
+    })
 }
 
 onMounted(() => {
@@ -44,6 +66,7 @@ onMounted(() => {
 
 <template>
     <div class="dark-overlay"></div>
+    <ConfirmPopup />
     <div style="margin-top: 60px;">
         <h1>Comments</h1>
         <Card v-for="comment in comments" style="margin-bottom: 30px;">
@@ -56,8 +79,7 @@ onMounted(() => {
         </Card>
 
         <Button @click="router.push(getRoutePath(configStore.prevPage()))" style="margin-right: 20px;">Back</Button>
-        <!-- redirect to rickroll once complete-->
-        <!--Button @click="redirectToRickroll" class="eerie-button">Ç̸̢̢̡̡̛̛̬̟̘̩̤̪͔̤͓̰̪̱͎̖̟͚̣̣͖̺͙̠̱̩̟̮̦̺͙̝͔̭̪̝̞̗̹̘̱̙̥̤̖͈̘̤̞̯̘̱͇̗̤̣̮̣̞̠͔̦̞̰̘̺̞̗̣̰͈̮͈͙̼͙̘͇̬̖͉͉̳͒͆̏̔͊̍̋͆̎̽̋͊̀͆́̈̽̀̊̊̎̄̀͌͐̍͊̆̀͛͑̒̊̀̿̇̏̓̄͗̊̄̀͒̊̔̋̏̿̅̍͗́̄̐̑̿̿̏̐͑̓̾͂̒͒̀̾̾̉͗̿̍̇̓̈́̇̓̐̈́͊͑̋̍͆̌̕̕̚͘͘͜͝͝͝͝͝͝͝͠ͅǫ̷̢̢̧̡̧̢̡̧̢̧̢̧̢̡̨̡̨̢̧̨̨̧̧̡̢̛̛̛̛̛̛̱͍͇̞͎̺̙͍̮̘̯͇͎͙̱͕̼̣͉͇̳͙̙͔̯̻͍̼̟͍̣͖̹̖̫̠͔̲̰̱̟̝̤͉̬̬͎̗̪̰͙͇̣̱̙̰͖̦͔͖̘̬̦͇̮̜̟̺̲̪̘͕͚͕͚͖̝͖̭̲̱̜̻̟̩̩͚͔̲̜̺̙̹̮̤̦͙̘̞͎͓̠̬͙̬̲͈̝͖̪̞̰̘̟̘̥̗̖̪̗̳̺͇͈͖͓̫̥̗͍͕̣̫͔͕̬̘̠̤̼̻̱̘̬͇͎͙̮͇̦̞̳̳̟̗̥̻̠̺̱̮͍̰̼̝̟̮͓̪̮̣̠̬̺̠͙̪̳̤̤͖͖̮̩̣̣̰̯͕̮͚̙̤̻̖̳̣̲̦̬̬̭̜͔̙̪̥̪͚͇̙͔̥̤̥̹̭̞̜̣̦͎͈͔͇̙̟͎̙̗̻͍͎̖̤͓̗͍̹͇̲͕͔̥̼̀͒͆̿̊̔͗̔̎͋͛̄̍̉̽̈̂͒͗̾͆̃̑̑̓̉̋͒̃̔͆̓́̍͑͗̊́͐̈͗͐̋̓́͐͋̊̓̏̂̀̄̎͋͐̔̓̌̿̑͛̓̓̈́́̾̅̿̑͑́̈́͛̊̑͑̿̇̒̈͛͑̍̐͆̀͐̆̈̔̊̔͑̌̅͒̈́̆̆̄̏̎̊̓͛͊͊̔̓̂̈̀͛̏̾̈́̄̈́̎́̃͆͐͆͑̐̅̑̂̌͛̑̃̒̅̋̌̈́̓̉̌͋̅͆̈́͌̑̇̀́̀̏̓̒͛́̐̀̊͗̓̉̆̎͌̈́̉̋͂̇͋̃̐́̈́̈́͑̌̀̃̎̋̒̆̓̄̃̑̏̏͐͆̀́̉͆͊̾͂̓̐͑̉͌̎̂͂́̈́̎̏͒́́̇̓́͑͑̊͗͆͌́͐͐̚̚͘͘͘̚͘͘͘̕͘̕̕̚͘͘̚͘̕̚̕̕̚͜͜͜͜͜͜͜͠͠͝͝͠͝͠͝͠͠͠͝ͅͅͅͅͅͅͅͅͅͅm̵̛̛͚̪̝̋̈́̓͂͋͑̍̔̾̑̂̆̆̓̂̏́̋́͋̆͆͛͛̌̌̀̓̿̍̎̽̆̇̋̌̀̐͊̂͆͐͒̇̔̔́̊̍̽̂̄̓̒̀͌̾̀͊̆̀̈̈́̉̄̊́̂͊͊́͐̄̊̓̎̊̈́̓̔͑̈́̇̊́̿͗͋̒́̓̄́̍̆͂̓͑͑̍̾͂̈̊͒͐̄̽̿͋̌͐̊̇̋́͐̐̈́̽̈̈́̀̏̀̈͌̚̚̚̕̕̚͘̚̚̕͘̕̚̕͝͝͝͝͝͠p̶̢̨̨̢̡̧̨̨̡̢̢̡̡̛̛̛̛̛̛̲̤̱̞͇̰͚̩̦̜̥̰̫̩͍̙͈̦̹͓̗̳͇̤͍̩̱̯̼̪̖͚̱͚͚͈͍̥̯͔̭̥͓̟̝͈͈͓͔̳̬͙̞̱̳͙͍̻̭͇̝̩̼̹̺̲̫̰͚̮͍̺̫̦̙͉̗̯̖̫̦̜̦̤͈̻̞̜̤̣͔̮̳͇͓͍̰͙̼̠̭̲̼̹̟̳̱̜͖̦̟̪͓̞͎̠̩̳͓̦͙͚̺͖̳̹̥̣͙̲̖̼̝̦̼͈͙̩̼̗̥̭̟̩̺͉̰̤̦̬̏̑̍͊̍̇͋̀͗̄̈́̍͗̄̌̔͑́̆̅̆̓͌̏̓̀̾̈́́̅͌͋͐͗̈́̿̉̀̽́͌̓̉͊̇̉͗̐̓̈̈́͂̔̔͌́̆̍̒̎̈̀̉͋́͗̿̾̒̎̑͊̊̃̾̅̽͂͒̄̒̋̍̾͛͋̍͛̃͑̆̈́̉̐̈́̉̔͋̀̍̌̂͑̀̍̅̊̃̇͑́̈̓̈́͊̾͗̎̅̒̊̿̀͑̀̾͐̊̓͌̊̑̉͊́͐̋̂͐̑̌͒́̏̒̄͛̊̓̈͆̑͆̓͐̔͐̅̋̽̊̓͊͛̀̋̽̀̎͒͂̀̒̄͂͊̔̃̈́̂̍̀͗̈́̑͑͐̿̅̽͑̎̀̋͌̀̐̚͘͘̚̚̚̚̚͘̕̚̕̕̚͘̚̕͘̚̕̕͘͘̕̕̚͜͜͜͝͠͠͠͠͠͝͠͝͝͠͝͝͝͝͝ͅͅͅͅͅͅľ̶̨̢̨̧̢̨̧̡̧̧̧̛̜̼̯̜̰̰̹̫̜̠̝̰̹̩̥̲̘̭̺̖̤̘͈̪̲̯̟̮͙̺̯̫͇̺̳̟͓͓͔̬̘̜͎̟̫̯̜̗̤̬͔̹̹̮͖̫̙͖̠͙̰̩͕̣̦̘̮̬̰̰̖͓͔̗͉̪̱͔͍̠̟̠̹͍̣̯͕͕̆̂͑̎̍̓̅͊̍̾̎̈́̉̀̔̍̃̇̆̾́͊̀̋̅̀̆̈̃̃̾̆̈͆̈́͋̍̓̍̅̔̐͛͑̽͂̂̕̚͘̚͜͜͝͝͝ȩ̶̢̛̲̲̬̖͈̗͎̥̟̹̹̠̥̹̱̠̙̈̃̍̇̓̀͆̐̊͑̈́̈́̏̇̏́̅̀̀̓̎͐̈͊̋͆̐̿͗̐̎̑̋̃̈́͗̏̽̋̎̉̔̄̋̔̌̿̐̓́̆̋̔̿̈́̔͛͂̉́̂͋̌̋̅͑́́̔͂̅̓̏̒̾̍̈́̿͆̽̀̊̀̋̆͋͛̌͛͂̿͒̽͐̈́̆͛̽̍̓̌̋̇͂̋͛͐͗͗̅͛̋̉̎͋̎̈́̕̕̚̕͘̕̕͝͝͝͝͝͝͝͝͠ẗ̸̨̧̨̢̧̨̡̨̧̧̧̡̢̢̧̢̨̨̨̡̛̛̛̖̟̮̠͙̙̲̹̟͖̥̣͙̲̗̮̳͚͕̘̰̣̟͙͚̠̥̦̼͕̝̜̖̣̟̞̥̼̦̝̗͍͎̦͎͙̺̙̫̻̮͚͈̪̯̱̬̬͍͕̥̱̻̭̤̟̫̖̹̩̞̲̗̭̙͇͔̰̞̩̮̼̗͎͔͔͇͙̯̖̫͈͓̖̺̳͓̣͍̺̝͈̤̪̺̭̦̹̪̦̞̪͎͇̭͎̖̱̖͕̭̤͉̰̙̭̟̣̹͈̳̫̠͙͇̖̥̱̹͓̺̱̬͉̪̳̜̫̠͓̠͇͔͖̝̥̹͚̦͔̳͔͇̦̦̯̳̮̭̫̬̝̆̑́̓̓͗͗̆͊̇̉̅̅͋̒̎͒̃̇͌̍͑̈́̽́̎̉̔̀̿̋͐̀̽̍̉̈̅͒͊͐̂̓̒̆̆́͐́̾̏̆͗͆̍̄̌̐̃̍̎̃̄͌̃̈̅̏̈́̏̉̔͂͂̈́̌͊̑͗̇̄̀͆̋̈́̈́̋͌̎͆̌͑̇̅̌̉̅̅̅̂̀̓̿̈̊̇̈́̒́̒̄̃͋̂̃͐̄̈́́̈̈̅͛̔̐̈́̋̇̆̇̌́͆̾̍̒̾͋͑̉̑̈́̓̅͂̊̐́͛̓̉͋̔̾̕̚͘̕͘͘̕̚͘̚̚̕̕̕͘̕̚͜͜͠͝͠͠͝͝͠͝͝͝͝͝͝͠͝ͅͅͅe̸̡̢̧̧̧̢̧̧̢̧̧̢̢̡̛̛͚̞̲̖͉̬̱̹̥̪̬̦̲̩͖̯̠̱̥͇̳̩̖̣͖̟̘̠̟̟̱͖͕̹̥͔̦̦̦̮̲̭͓̮̗͙̤͖̰̬͓̩̝͖͚̤̝̫̩͔̤͕̣̼͍̰̪͔̱͇͈͎̜͖͍̞͇͓̹͎͕͚̜̝͙͔̫͖̣̜̹̟͖̖̞͚̱̬̙̪͚̹̤̥̣̰̱̱͓̺̬̣̦̥̺̪͍̤͍̠̹̥̥̮͔̤̠̦̝͉͓̰̮̰̱̰͉̙̤͕̣̝͓̘̝̥̘͉͕̪͎̭͇͇̞͖̠̘͚̳̞͕͉̱̟̯̯͙̜͓͖̦̘͖͍̗͙̮̙̯̪̟͍͍̰͈͉̻̘͇̗̩̻̺̣͖̰̗̹̳͍̮͓̙̹̯̠̲̰̞̟̞̜̻͙̰̮͙̻͈͓͙̙͔̪̳̣̘̲͈̗̬̗͎̟̘̖̞̪̪̠͔̳̯͎̖̖͕̳̪͋̀͑̅̒̏̿͗̊̅̈́͋̇̐͊̏̈́̽͌͐͆̒̂̄̓͆̔̿͒́̑͗̑̂̉̈́̋͂̊̂̊̈́̒͆̓̍̃̌́͆̈͗̑̾̓͐̒͒̂̂̌̐̆̾̎̒̾͊͗̓̂̀͂̎̄͐̆͗̑̑̿̀̄̉́̀̏͛̂͂̾͋͒̂̓̄͒̑͋̀̆̇́̿̎̉̍́̑̈́̓̔͊́̒́̒͗̎̄́̔̇͑̂͂̓̈̊̓̃̃̿̈́̄̂͛̽͂̍̂͛͐͌͛̇͋̈̀̉̈́̏̎̓̀͛͆̈́̔̇͆̆̐͒́̅̒̓́̅̍́̊̇͆̃͒͋̽̔͗̈̀̐͂̔̅͒̔̎̒́͑͌̍́̒̓̉̈̓̈́̇̀͊̈́͛͌̂̾́͂͘̕̚͘̕͜͜͜͜͜͜͜͜͜͝͝͝͝͝͠͠͝͠͝͠͠͝͝͝͠͝͝ͅͅͅͅͅͅͅͅͅͅ</Button -->
+        <Button @click="confirm1" label="Complete"/>
     </div>
 </template>
 
